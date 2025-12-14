@@ -1,0 +1,110 @@
+import customtkinter as ctk
+from logic.task_manager import get_tasks_for_project, add_task
+from logic.hierarchy import get_my_team
+from ui.screens.task_edit_dialog import TaskEditDialog  # Nezabudni na tento import
+
+
+class ProjectDetailView(ctk.CTkFrame):
+    def __init__(self, parent, project_data, user_data, back_callback):
+        super().__init__(parent, fg_color="transparent")
+        self.project_id, self.project_name, _, _ = project_data
+        self.user_id = user_data[0]
+        self.back_callback = back_callback
+
+        # --- HLAVIČKA ---
+        header = ctk.CTkFrame(self, fg_color="transparent")
+        header.pack(fill="x", pady=(0, 20))
+
+        # Tlačidlo Späť
+        btn_back = ctk.CTkButton(header, text="⬅ Späť", width=60, fg_color="gray", command=self.back_callback)
+        btn_back.pack(side="left", padx=(0, 20))
+
+        title = ctk.CTkLabel(header, text=f"Projekt: {self.project_name}", font=("Arial", 24, "bold"))
+        title.pack(side="left")
+
+        # Tlačidlo Nová Úloha
+        btn_add = ctk.CTkButton(header, text="+ Pridať úlohu", command=self.open_add_task_dialog)
+        btn_add.pack(side="right")
+
+        # --- ZOZNAM ÚLOH ---
+        self.scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.scroll.pack(fill="both", expand=True)
+
+        self.refresh_tasks()
+
+    def refresh_tasks(self):
+        # 1. Vyčistíme staré widgety
+        for w in self.scroll.winfo_children(): w.destroy()
+
+        # 2. Načítame úlohy
+        tasks = get_tasks_for_project(self.project_id)
+
+        if not tasks:
+            ctk.CTkLabel(self.scroll, text="Žiadne úlohy.").pack(pady=20)
+            return
+
+        # 3. Vykreslíme riadky
+        for t in tasks:
+            # OPRAVA: Posielame celé 't' do funkcie
+            self.create_task_row(t)
+
+    def create_task_row(self, task_data):
+        # Tu si to rozbalíme my
+        tid, name, status, date, assigned_user = task_data
+
+        row = ctk.CTkFrame(self.scroll, fg_color="#2B2B2B")
+        row.pack(fill="x", pady=2)
+
+        # Checkbox
+        ctk.CTkCheckBox(row, text="", width=20).pack(side="left", padx=10)
+
+        # Názov
+        ctk.CTkLabel(row, text=name, font=("Arial", 14)).pack(side="left", padx=10)
+
+        # TLAČIDLO EDIT (Ceruzka) ✏️
+        btn_edit = ctk.CTkButton(row, text="✏️", width=40, fg_color="gray",
+                                 command=lambda: self.open_task_detail(task_data))
+        btn_edit.pack(side="right", padx=10)
+
+        # Komu je pridelená
+        if assigned_user:
+            ctk.CTkLabel(row, text=f"👤 {assigned_user}", text_color="lightblue").pack(side="right", padx=10)
+
+        # Status
+        color = "green" if status == "completed" else "orange"
+        ctk.CTkLabel(row, text=status, text_color=color).pack(side="right", padx=10)
+
+    def open_task_detail(self, task_data):
+        # Otvoríme nové okno a po zavretí zavoláme refresh_tasks
+        TaskEditDialog(self, task_data, self.user_id, on_close_callback=self.refresh_tasks)
+
+    def open_add_task_dialog(self):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Nová Úloha")
+        dialog.geometry("400x400")
+
+        ctk.CTkLabel(dialog, text="Názov úlohy:").pack(pady=10)
+        entry_name = ctk.CTkEntry(dialog, width=250)
+        entry_name.pack(pady=5)
+
+        ctk.CTkLabel(dialog, text="Prideliť komu:").pack(pady=10)
+
+        team = get_my_team(self.user_id)
+        team_dict = {t[3]: t[0] for t in team}
+        team_names = list(team_dict.keys())
+
+        combo_assign = ctk.CTkComboBox(dialog, values=team_names)
+        combo_assign.pack(pady=5)
+        if not team_names: combo_assign.set("Nikto (Len ja)")
+
+        def save():
+            name = entry_name.get()
+            chosen_user_name = combo_assign.get()
+            assigned_id = team_dict.get(chosen_user_name, self.user_id)
+
+            if name:
+                add_task(self.project_id, name, assigned_id, self.user_id)
+                dialog.destroy()
+                self.refresh_tasks()
+
+        ctk.CTkButton(dialog, text="Vytvoriť", command=save).pack(pady=20)
