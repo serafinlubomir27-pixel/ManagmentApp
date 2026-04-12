@@ -103,6 +103,28 @@ def create_database():
     )
     ''')
 
+    # --- 7. TABUĽKA ZÁVISLOSTÍ ÚLOH (task_dependencies) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS task_dependencies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id INTEGER NOT NULL,
+        depends_on_task_id INTEGER NOT NULL,
+        type TEXT DEFAULT 'finish_to_start',
+        FOREIGN KEY (task_id) REFERENCES tasks(id),
+        FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id)
+    )
+    ''')
+
+    # --- Bezpečná migrácia: nové stĺpce v tasks ---
+    for column_sql in [
+        "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
+        "ALTER TABLE tasks ADD COLUMN estimated_hours REAL",
+    ]:
+        try:
+            cursor.execute(column_sql)
+        except Exception:
+            pass  # Stĺpec už existuje, preskakujeme
+
     # --- Vytvorenie prvého ADMINA (aby si sa mal ako prihlásiť) ---
     try:
         # Heslo je zatiaľ v čistom texte pre testovanie: 'admin123'

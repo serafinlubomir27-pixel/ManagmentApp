@@ -1,0 +1,52 @@
+"""Repository for task_attachments table."""
+from repositories.base_repo import get_connection, rows_to_dicts
+
+
+def add_attachment(task_id, file_name, file_path, uploaded_by):
+    """Insert a file attachment record."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO task_attachments (task_id, file_name, file_path, uploaded_by)
+            VALUES (?, ?, ?, ?)
+            """,
+            (task_id, file_name, file_path, uploaded_by),
+        )
+        conn.commit()
+        return True
+    except Exception as exc:
+        print(f"file_repo.add_attachment error: {exc}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_attachments_for_task(task_id):
+    """Return list of attachment dicts for a task."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, file_name, file_path, uploaded_by, uploaded_at FROM task_attachments WHERE task_id = ?",
+            (task_id,),
+        )
+        return rows_to_dicts(cursor.fetchall())
+    finally:
+        conn.close()
+
+
+def delete_attachment(attachment_id):
+    """Delete a specific attachment record by id."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM task_attachments WHERE id = ?", (attachment_id,))
+        conn.commit()
+        return True
+    except Exception as exc:
+        print(f"file_repo.delete_attachment error: {exc}")
+        return False
+    finally:
+        conn.close()

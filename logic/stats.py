@@ -1,8 +1,4 @@
-import sqlite3
-import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "my_project_app.db")
+from repositories import task_repo, project_repo, activity_repo
 
 
 def get_dashboard_stats(user_id):
@@ -11,48 +7,26 @@ def get_dashboard_stats(user_id):
         "projects_count": 0,
         "tasks_count": 0,
         "critical_count": 0,
-        "recent_activity": []
+        "recent_activity": [],
     }
 
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        # 1. Počet aktívnych projektov (kde som vlastník alebo mám úlohu)
-        cursor.execute("""
-                       SELECT COUNT(DISTINCT p.id)
-                       FROM projects p
-                                LEFT JOIN tasks t ON p.id = t.project_id
-                       WHERE (p.user_id = ? OR t.assigned_to = ?)
-                         AND p.status = 'active'
-                       """, (user_id, user_id))
-        stats["projects_count"] = cursor.fetchone()[0]
-
-        # 2. Počet mojich nedokončených úloh
-        cursor.execute("""
-                       SELECT COUNT(*)
-                       FROM tasks
-                       WHERE assigned_to = ?
-                         AND status != 'completed'
-                       """, (user_id,))
-        stats["tasks_count"] = cursor.fetchone()[0]
-
-        # 3. Posledných 5 aktivít (Čo sa stalo v mojich projektoch?)
-        # Toto je zložitejšie query, spája logy s projektmi, ktoré vidím
-        cursor.execute("""
-                       SELECT al.user_name, al.action, al.new_value, al.created_at
-                       FROM activity_logs al
-                                JOIN tasks t ON al.task_id = t.id
-                                JOIN projects p ON t.project_id = p.id
-                       WHERE p.user_id = ?
-                          OR t.assigned_to = ?
-                       ORDER BY al.created_at DESC LIMIT 5
-                       """, (user_id, user_id))
-
-        stats["recent_activity"] = cursor.fetchall()
-
-        conn.close()
+        stats["projects_count"] = project_repo.count_active_projects_for_user(user_id)
+        stats["tasks_count"] = task_repo.count_incomplete_tasks_for_user(user_id)
+        stats["recent_activity"] = activity_repo.get_recent_activity_for_user(user_id, limit=5)
     except Exception as e:
         print(f"Chyba stats: {e}")
 
     return stats
+
+
+def get_task_status_breakdown(user_id):
+    """Returns dict: {pending: N, in_progress: N, completed: N, blocked: N}
+    for tasks assigned to or created by user_id."""
+    defaults = {"pending": 0, "in_progress": 0, "completed": 0, "blocked": 0}
+    try:
+        breakdown = task_repo.get_status_breakdown_for_user(user_id)
+        defaults.update(breakdown)
+    except Exception as e:
+        print(f"Chyba get_task_status_breakdown: {e}")
+    return defaults
