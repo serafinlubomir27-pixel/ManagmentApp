@@ -214,20 +214,22 @@ class CalendarView(ctk.CTkFrame):
         )
         num_label.grid(row=0, column=0, sticky="ne", padx=4, pady=(3, 0))
 
-        # Dots row
-        date_key = date.strftime("%Y-%m-%d")
-        tasks_for_day = self._tasks_by_date.get(date_key, [])
-        if tasks_for_day:
-            self._add_dots(cell, date, tasks_for_day)
-
         # Click bindings — bind on cell + all children
         callback = lambda e, d=date: self._on_day_click(d)
         cell.bind("<Button-1>", callback)
         num_label.bind("<Button-1>", callback)
 
-    def _add_dots(self, cell: ctk.CTkFrame, date: datetime.date, tasks: list[dict]):
+        # Dots row
+        date_key = date.strftime("%Y-%m-%d")
+        tasks_for_day = self._tasks_by_date.get(date_key, [])
+        if tasks_for_day:
+            self._add_dots(cell, date, tasks_for_day, callback)
+
+    def _add_dots(self, cell: ctk.CTkFrame, date: datetime.date, tasks: list[dict], callback=None):
         dot_frame = ctk.CTkFrame(cell, fg_color="transparent")
         dot_frame.grid(row=1, column=0, sticky="sw", padx=3, pady=(0, 3))
+        if callback:
+            dot_frame.bind("<Button-1>", callback)
 
         visible = tasks[:3]
         extra = len(tasks) - 3
@@ -258,6 +260,8 @@ class CalendarView(ctk.CTkFrame):
             more.bind("<Button-1>", lambda e, d=date: self._on_day_click(d))
 
     def _dot_color(self, task: dict, date: datetime.date) -> str:
+        if task.get("status") == "completed":
+            return DOT_FUTURE  # completed tasks are never "overdue"
         if date < self._today:
             return DOT_PAST
         if date == self._today:

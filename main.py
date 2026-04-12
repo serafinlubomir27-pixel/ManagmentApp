@@ -72,6 +72,7 @@ class MainApp(ctk.CTk):
         # Zničíme starý obsah
         if self.content_area:
             self.content_area.destroy()
+            self.content_area = None
 
         # --- TU JE ZMENA ---
         if kam_ist == "dashboard":
