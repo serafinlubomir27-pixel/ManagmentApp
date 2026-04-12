@@ -5,7 +5,7 @@ import os
 import customtkinter as ctk
 
 from repositories import user_repo
-from ui.theme import PRIMARY, BG_CARD, TEXT_PRIMARY, TEXT_SECONDARY
+from ui.theme import PRIMARY, PRIMARY_HOVER, BG_CARD, TEXT_PRIMARY, TEXT_SECONDARY
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "config.json")
 
@@ -19,8 +19,11 @@ def _load_config() -> dict:
 
 
 def _save_config(data: dict) -> None:
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except OSError:
+        pass  # Non-critical: theme preference not saved, but app continues
 
 
 class SettingsScreen(ctk.CTkFrame):
@@ -125,7 +128,7 @@ class SettingsScreen(ctk.CTkFrame):
             card,
             text="Uložiť heslo",
             fg_color=PRIMARY,
-            hover_color="#1565C0",
+            hover_color=PRIMARY_HOVER,
             command=self._save_password,
         ).grid(row=len(pw_labels) + 1, column=0, columnspan=2, padx=16, pady=(8, 6), sticky="w")
 
@@ -133,14 +136,20 @@ class SettingsScreen(ctk.CTkFrame):
         self._pw_msg.grid(row=len(pw_labels) + 2, column=0, columnspan=2, sticky="w", padx=16, pady=(0, 12))
 
     def _save_password(self):
-        old_entry, new_entry, confirm_entry = self._pw_entries
-        old_pw = old_entry.get()
-        new_pw = new_entry.get()
-        confirm_pw = confirm_entry.get()
+        old_pw = self._pw_entries[0].get()
+        new_pw = self._pw_entries[1].get()
+        confirm_pw = self._pw_entries[2].get()
+        if not old_pw or not new_pw or not confirm_pw:
+            self._set_pw_msg("Vyplňte všetky polia.", error=True)
+            return
 
         old_hashed = hashlib.sha256(old_pw.encode()).hexdigest()
         if old_hashed != self.user.get("password", ""):
             self._set_pw_msg("Aktuálne heslo je nesprávne.", error=True)
+            return
+
+        if new_pw == old_pw:
+            self._set_pw_msg("Nové heslo musí byť iné ako aktuálne.", error=True)
             return
 
         if len(new_pw) < 6:

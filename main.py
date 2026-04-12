@@ -86,6 +86,9 @@ class MainApp(ctk.CTk):
         elif kam_ist == "settings":
             self.content_area = SettingsScreen(self, self.current_user)
 
+        if self.content_area is None:
+            return
+
         self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
 
