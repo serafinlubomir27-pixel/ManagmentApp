@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from logic.stats import get_dashboard_stats, get_task_status_breakdown
 from ui.theme import (
-    PRIMARY, ACCENT, DANGER, BG_CARD, BG_MAIN,
+    PRIMARY, ACCENT, DANGER, BG_CARD, BG_MAIN, BG_ROW,
     TEXT_PRIMARY, TEXT_SECONDARY,
 )
 
@@ -29,6 +29,19 @@ class DashboardScreen(ctk.CTkFrame):
         self.breakdown = get_task_status_breakdown(self.user_id)
 
         self._build_ui()
+        self.bind("<Destroy>", self._on_destroy)
+
+    # ------------------------------------------------------------------
+    # Destroy hook
+    # ------------------------------------------------------------------
+
+    def _on_destroy(self, event):
+        if event.widget is self and hasattr(self, "_chart_canvas"):
+            try:
+                self._chart_canvas.get_tk_widget().destroy()
+            except Exception:
+                pass
+            plt.close("all")
 
     # ------------------------------------------------------------------
     # UI construction
@@ -94,8 +107,9 @@ class DashboardScreen(ctk.CTkFrame):
         outer.grid_rowconfigure(0, weight=1)
 
         # Left-border accent strip
-        accent_strip = ctk.CTkFrame(outer, fg_color=accent_color, width=6, corner_radius=0)
-        accent_strip.grid(row=0, column=0, sticky="ns", padx=0, pady=0)
+        ctk.CTkFrame(outer, fg_color=accent_color, width=6, corner_radius=0).grid(
+            row=0, column=0, sticky="ns", padx=0, pady=0
+        )
 
         # Content area
         content = ctk.CTkFrame(outer, fg_color="transparent")
@@ -187,7 +201,7 @@ class DashboardScreen(ctk.CTkFrame):
         # Legend
         ax.legend(
             wedges,
-            [f"{l}  {v}" for l, v in zip(labels, values)],
+            [f"{lbl}  {v}" for lbl, v in zip(labels, values)],
             loc="lower center",
             bbox_to_anchor=(0.5, -0.22),
             ncol=2,
@@ -198,9 +212,9 @@ class DashboardScreen(ctk.CTkFrame):
 
         fig.tight_layout(pad=0.5)
 
-        canvas = FigureCanvasTkAgg(fig, master=chart_frame)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        self._chart_canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+        self._chart_canvas.draw()
+        self._chart_canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
         plt.close(fig)
 
     # ------------------------------------------------------------------
@@ -249,7 +263,7 @@ class DashboardScreen(ctk.CTkFrame):
             else:
                 user_name, action, detail, timestamp = entry[0], entry[1], entry[2], str(entry[3])[:16]
 
-            row = ctk.CTkFrame(scroll, fg_color="#333333", corner_radius=8)
+            row = ctk.CTkFrame(scroll, fg_color=BG_ROW, corner_radius=8)
             row.pack(fill="x", pady=3, padx=2)
             row.grid_columnconfigure(1, weight=1)
 
@@ -272,7 +286,6 @@ class DashboardScreen(ctk.CTkFrame):
                 text=action_text,
                 font=("Arial", 12),
                 text_color=TEXT_PRIMARY,
-                wraplength=220,
                 justify="left",
                 anchor="w",
             ).grid(row=0, column=1, sticky="w", padx=(0, 8), pady=(8, 2))
