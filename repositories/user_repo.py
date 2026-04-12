@@ -83,3 +83,13 @@ def username_exists(username):
         return cursor.fetchone() is not None
     finally:
         conn.close()
+
+
+def update_password(user_id: int, hashed_password: str) -> None:
+    """Update the hashed password for a user."""
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_password, user_id))
+        conn.commit()
+    finally:
+        conn.close()

@@ -1,3 +1,6 @@
+import json
+import os
+
 import customtkinter as ctk
 from ui.screens.team_view import TeamView
 from ui.screens.project_view import ProjectsView
@@ -5,6 +8,19 @@ from database.setup import create_database
 from ui.screens.login_screen import LoginScreen
 from ui.screens.dashboard import DashboardScreen  # <-- Importujeme nový Dashboard
 from ui.components.sidebar import Sidebar  # <-- Importujeme Sidebar
+from ui.screens.settings import SettingsScreen
+
+_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+
+
+def _load_appearance_from_config():
+    try:
+        with open(_CONFIG_PATH, "r", encoding="utf-8") as f:
+            cfg = json.load(f)
+        theme = cfg.get("theme", "dark")
+        ctk.set_appearance_mode(theme)
+    except (FileNotFoundError, json.JSONDecodeError):
+        ctk.set_appearance_mode("dark")
 
 
 class MainApp(ctk.CTk):
@@ -12,7 +28,6 @@ class MainApp(ctk.CTk):
         super().__init__()
         self.title("Management System v1.0")
         self.geometry("1100x700")  # Zväčšíme okno
-        ctk.set_appearance_mode("Dark")
 
         self.current_user = None
         self.show_login()
@@ -68,11 +83,15 @@ class MainApp(ctk.CTk):
         elif kam_ist == "team":
             self.content_area = TeamView(self, self.current_user)
 
+        elif kam_ist == "settings":
+            self.content_area = SettingsScreen(self, self.current_user)
+
         self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
 
 
 def main():
     create_database()
+    _load_appearance_from_config()
     app = MainApp()
     app.mainloop()
 
