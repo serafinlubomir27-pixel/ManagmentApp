@@ -5,7 +5,12 @@ from logic.task_manager import update_task_status, add_comment, get_task_comment
 class TaskEditDialog(ctk.CTkToplevel):
     def __init__(self, parent, task_data, user_id, on_close_callback):
         super().__init__(parent)
-        self.task_id, self.task_name, self.task_status, _, _ = task_data
+        if isinstance(task_data, dict):
+            self.task_id = task_data.get("id")
+            self.task_name = task_data.get("name", "")
+            self.task_status = task_data.get("status", "pending")
+        else:
+            self.task_id, self.task_name, self.task_status, _, _ = task_data
         self.user_id = user_id
         self.on_close = on_close_callback
 
@@ -52,7 +57,12 @@ class TaskEditDialog(ctk.CTkToplevel):
 
         comments = get_task_comments(self.task_id)
         for c in comments:
-            msg, time, author = c
+            if isinstance(c, dict):
+                msg = c.get("content", "")
+                time = c.get("created_at", "")
+                author = c.get("username", "")
+            else:
+                msg, time, author = c
             self.create_chat_bubble(author, msg, time)
 
     def create_chat_bubble(self, author, msg, time):

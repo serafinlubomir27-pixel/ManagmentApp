@@ -1,12 +1,17 @@
 import customtkinter as ctk
+from ui.theme import PRIMARY
+
 
 class Sidebar(ctk.CTkFrame):
     def __init__(self, parent, callback_funkcia):
         super().__init__(parent, width=200, corner_radius=0)
-        self.callback = callback_funkcia # Funkcia, ktorá prepína obrazovky
+        self.callback = callback_funkcia  # Funkcia, ktorá prepína obrazovky
 
         # Farba pozadia (trochu tmavšia ako zvyšok)
         self.configure(fg_color="#2B2B2B")
+
+        # Internal mapping of key -> button
+        self._nav_buttons = {}
 
         # --- Logo / Názov ---
         self.logo_label = ctk.CTkLabel(self, text="MANAŽÉR APP", font=("Arial", 20, "bold"))
@@ -35,7 +40,16 @@ class Sidebar(ctk.CTkFrame):
                             fg_color="transparent",
                             text_color=("gray10", "gray90"),
                             hover_color=("gray70", "gray30"),
-                            anchor="w", # Zarovnanie textu doľava
+                            anchor="w",  # Zarovnanie textu doľava
                             command=lambda: self.callback(hodnota))
         btn.pack(pady=5, padx=10, fill="x")
+        self._nav_buttons[hodnota] = btn
         return btn
+
+    def set_active(self, key: str):
+        """Highlight the nav button matching key; un-highlight all others."""
+        for btn_key, btn in self._nav_buttons.items():
+            if btn_key == key:
+                btn.configure(fg_color=PRIMARY, font=("Arial", 13, "bold"))
+            else:
+                btn.configure(fg_color="transparent", font=("Arial", 13))

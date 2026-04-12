@@ -1,6 +1,13 @@
 import customtkinter as ctk
 from logic.project_manager import get_user_projects, create_test_project
 from ui.screens.project_detail import ProjectDetailView
+from repositories import task_repo
+
+STATUS_COLORS = {
+    "active": "#1976D2",
+    "completed": "#81C784",
+    "archived": "#90A4AE",
+}
 
 
 class ProjectsView(ctk.CTkFrame):
@@ -47,22 +54,57 @@ class ProjectsView(ctk.CTkFrame):
     def create_project_card(self, project_data):
         pid, name, desc, status = project_data
 
+        # Outer card
         card = ctk.CTkFrame(self.scroll_frame, fg_color="#2B2B2B", corner_radius=10)
         card.pack(fill="x", pady=5, padx=5)
 
+        # Colored status strip on the left (3px wide)
+        strip_color = STATUS_COLORS.get(status, "#90A4AE")
+        strip = ctk.CTkFrame(card, width=4, fg_color=strip_color, corner_radius=0)
+        strip.pack(side="left", fill="y", padx=(0, 0))
+        strip.pack_propagate(False)
+
+        # Content frame (everything to the right of the strip)
+        content = ctk.CTkFrame(card, fg_color="transparent")
+        content.pack(side="left", fill="both", expand=True)
+
         # TLAČIDLO OTVORIŤ
-        btn_open = ctk.CTkButton(card, text="Otvoriť", width=80,
+        btn_open = ctk.CTkButton(content, text="Otvoriť", width=80,
                                  command=lambda p=project_data: self.open_project_detail(p))
         btn_open.pack(side="right", padx=20, pady=20)
 
         # Názov
-        lbl_name = ctk.CTkLabel(card, text=name, font=("Arial", 16, "bold"))
+        lbl_name = ctk.CTkLabel(content, text=name, font=("Arial", 16, "bold"))
         lbl_name.pack(anchor="w", padx=15, pady=(10, 0))
 
         # Popis
         desc_text = desc if desc else "Bez popisu"
-        lbl_desc = ctk.CTkLabel(card, text=desc_text, text_color="gray70", font=("Arial", 12))
-        lbl_desc.pack(anchor="w", padx=15, pady=(0, 10))
+        lbl_desc = ctk.CTkLabel(content, text=desc_text, text_color="gray70", font=("Arial", 12))
+        lbl_desc.pack(anchor="w", padx=15, pady=(0, 6))
+
+        # Progress bar row
+        progress_frame = ctk.CTkFrame(content, fg_color="transparent")
+        progress_frame.pack(anchor="w", padx=15, pady=(0, 10), fill="x")
+
+        try:
+            breakdown = task_repo.get_status_breakdown_for_project(pid)
+            total = breakdown["total"]
+            completed = breakdown["completed"]
+            progress = breakdown["progress"]
+        except Exception:
+            total = 0
+            completed = 0
+            progress = 0.0
+
+        progress_bar = ctk.CTkProgressBar(progress_frame, width=180, progress_color="#81C784")
+        progress_bar.set(progress)
+        progress_bar.pack(side="left", padx=(0, 8))
+
+        task_label = ctk.CTkLabel(progress_frame,
+                                  text=f"{completed}/{total} úloh",
+                                  text_color="gray70",
+                                  font=("Arial", 11))
+        task_label.pack(side="left")
 
     def open_project_detail(self, project_data):
         """Prepne zobrazenie na detail projektu"""

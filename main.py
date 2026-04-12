@@ -62,6 +62,7 @@ class MainApp(ctk.CTk):
         # Na začiatku tam vložíme Dashboard
         self.content_area = DashboardScreen(self, self.current_user)
         self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.sidebar.set_active("dashboard")
 
     def handle_navigation(self, kam_ist):
         if kam_ist == "logout":
@@ -95,6 +96,7 @@ class MainApp(ctk.CTk):
             return
 
         self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.sidebar.set_active(kam_ist)
 
 
 def main():

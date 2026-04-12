@@ -187,6 +187,22 @@ def get_tasks_with_due_dates(user_id: int) -> list:
         conn.close()
 
 
+def get_status_breakdown_for_project(project_id: int) -> dict:
+    """Return dict with total, completed and progress (0.0-1.0) for a project."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT status, COUNT(*) as cnt FROM tasks WHERE project_id = ? GROUP BY status",
+            (project_id,)
+        ).fetchall()
+        dicts = rows_to_dicts(rows)
+        total = sum(r["cnt"] for r in dicts)
+        completed = next((r["cnt"] for r in dicts if r["status"] == "completed"), 0)
+        return {"total": total, "completed": completed, "progress": completed / total if total > 0 else 0.0}
+    finally:
+        conn.close()
+
+
 def get_tasks_with_project_for_user(user_id):
     """Return task+project rows for reporting (tasks in user's projects)."""
     conn = get_connection()
