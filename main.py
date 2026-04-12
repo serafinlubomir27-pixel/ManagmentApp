@@ -9,6 +9,7 @@ from ui.screens.login_screen import LoginScreen
 from ui.screens.dashboard import DashboardScreen  # <-- Importujeme nový Dashboard
 from ui.components.sidebar import Sidebar  # <-- Importujeme Sidebar
 from ui.screens.settings import SettingsScreen
+from ui.screens.calendar_view import CalendarView
 
 _CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
@@ -85,6 +86,9 @@ class MainApp(ctk.CTk):
 
         elif kam_ist == "settings":
             self.content_area = SettingsScreen(self, self.current_user)
+
+        elif kam_ist == "calendar":
+            self.content_area = CalendarView(self, self.current_user)
 
         if self.content_area is None:
             return

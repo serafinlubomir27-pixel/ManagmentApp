@@ -166,6 +166,27 @@ def create_task_from_template(project_id, name, description, assigned_to, create
         conn.close()
 
 
+def get_tasks_with_due_dates(user_id: int) -> list:
+    """Returns all tasks with due_date set, for user (assigned_to OR project owner)"""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT t.id, t.name, t.status, t.due_date, t.assigned_to,
+                   p.name as project_name, p.user_id as project_owner
+            FROM tasks t
+            JOIN projects p ON t.project_id = p.id
+            WHERE t.due_date IS NOT NULL AND t.due_date != ''
+              AND (t.assigned_to = ? OR p.user_id = ?)
+            ORDER BY t.due_date
+            """,
+            (user_id, user_id),
+        ).fetchall()
+        return rows_to_dicts(rows)
+    finally:
+        conn.close()
+
+
 def get_tasks_with_project_for_user(user_id):
     """Return task+project rows for reporting (tasks in user's projects)."""
     conn = get_connection()

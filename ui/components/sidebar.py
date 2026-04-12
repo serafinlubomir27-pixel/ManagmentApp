@@ -16,6 +16,7 @@ class Sidebar(ctk.CTkFrame):
         self.btn_dashboard = self.create_menu_btn("📊 Prehľad", "dashboard")
         self.btn_projects = self.create_menu_btn("📁 Projekty", "projects")
         self.btn_team = self.create_menu_btn("👥 Môj Tím", "team")
+        self.btn_calendar = self.create_menu_btn("📅 Kalendár", "calendar")
         self.btn_settings = self.create_menu_btn("⚙️ Nastavenia", "settings")
 
         # --- Medzera a Odhlásenie ---
