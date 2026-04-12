@@ -16,9 +16,6 @@ def add_attachment(task_id, file_name, file_path, uploaded_by):
         )
         conn.commit()
         return True
-    except Exception as exc:
-        print(f"file_repo.add_attachment error: {exc}")
-        return False
     finally:
         conn.close()
 
@@ -37,16 +34,18 @@ def get_attachments_for_task(task_id):
         conn.close()
 
 
-def delete_attachment(attachment_id):
-    """Delete a specific attachment record by id."""
+def delete_attachment(attachment_id) -> "str | None":
+    """Delete a specific attachment record by id. Returns the file_path or None."""
     conn = get_connection()
     try:
         cursor = conn.cursor()
+        cursor.execute(
+            "SELECT file_path FROM task_attachments WHERE id = ?", (attachment_id,)
+        )
+        row = cursor.fetchone()
+        file_path = row["file_path"] if row else None
         cursor.execute("DELETE FROM task_attachments WHERE id = ?", (attachment_id,))
         conn.commit()
-        return True
-    except Exception as exc:
-        print(f"file_repo.delete_attachment error: {exc}")
-        return False
+        return file_path
     finally:
         conn.close()

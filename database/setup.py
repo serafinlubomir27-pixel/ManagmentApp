@@ -1,3 +1,4 @@
+import hashlib
 import sqlite3
 import os
 
@@ -127,11 +128,11 @@ def create_database():
 
     # --- Vytvorenie prvého ADMINA (aby si sa mal ako prihlásiť) ---
     try:
-        # Heslo je zatiaľ v čistom texte pre testovanie: 'admin123'
-        cursor.execute('''
-        INSERT INTO users (username, password, full_name, role) 
-        VALUES ('admin', 'admin123', 'Hlavný Admin', 'admin')
-        ''')
+        admin_password_hash = hashlib.sha256(b'admin123').hexdigest()
+        cursor.execute(
+            "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)",
+            ('admin', admin_password_hash, 'Hlavný Admin', 'admin'),
+        )
         print("✅ Vytvorený užívateľ: admin / heslo: admin123")
     except sqlite3.IntegrityError:
         print("ℹ️ Admin už existuje, preskakujem vytváranie.")

@@ -136,7 +136,11 @@ def get_tasks_for_template(template_project_id):
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM tasks WHERE project_id = ?",
+            """
+            SELECT id, project_id, name, description, status, assigned_to,
+                   created_by, due_date, priority, estimated_hours
+            FROM tasks WHERE project_id = ?
+            """,
             (template_project_id,),
         )
         return rows_to_dicts(cursor.fetchall())

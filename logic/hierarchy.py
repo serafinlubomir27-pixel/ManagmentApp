@@ -1,3 +1,5 @@
+import hashlib
+
 from repositories import user_repo
 
 
@@ -13,7 +15,8 @@ def get_my_team(manager_id):
 def add_new_member(manager_id, full_name, username, password, role="employee"):
     """Vytvorí nového užívateľa a priradí ho pod aktuálneho manažéra"""
     try:
-        success, message = user_repo.create_user(username, password, full_name, role, manager_id)
+        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        success, message = user_repo.create_user(username, hashed_password, full_name, role, manager_id)
         if not success and "UNIQUE constraint" in message:
             return False, "Užívateľské meno už existuje!"
         return success, message

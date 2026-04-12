@@ -1,3 +1,5 @@
+import os
+
 from repositories import file_repo
 
 
@@ -19,10 +21,21 @@ def get_attachments_for_task(task_id):
         return []
 
 
+def delete_task_file(attachment_id):
+    """Remove an attachment record and delete the physical file."""
+    try:
+        file_path = file_repo.delete_attachment(attachment_id)
+        if file_path:
+            try:
+                os.remove(file_path)
+            except FileNotFoundError:
+                pass
+        return True
+    except Exception as e:
+        print(f"Chyba delete_task_file: {e}")
+        return False
+
+
 def delete_attachment(attachment_id):
     """Remove an attachment record."""
-    try:
-        return file_repo.delete_attachment(attachment_id)
-    except Exception as e:
-        print(f"Chyba delete_attachment: {e}")
-        return False
+    return delete_task_file(attachment_id)

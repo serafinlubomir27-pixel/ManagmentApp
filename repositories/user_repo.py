@@ -1,17 +1,20 @@
 """Repository for all user / auth / hierarchy SQL."""
+import hashlib
+
 from repositories.base_repo import get_connection, row_to_dict, rows_to_dicts
 
 
 def get_by_username_and_password(username, password):
     """Return the user row as a dict if credentials match, else None."""
+    hashed = hashlib.sha256(password.encode()).hexdigest()
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM users WHERE username = ? AND password = ?",
-            (username, password),
-        )
-        return row_to_dict(cursor.fetchone())
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        row = row_to_dict(cursor.fetchone())
+        if row and row.get("password") == hashed:
+            return row
+        return None
     finally:
         conn.close()
 

@@ -32,7 +32,7 @@ def create_project_from_template(template_id, new_project_name, owner_id):
                 new_project_id,
                 t["name"],
                 t.get("description"),
-                t.get("assigned_to"),
+                None,
                 owner_id,
                 None,
             )
