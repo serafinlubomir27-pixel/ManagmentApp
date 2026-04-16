@@ -4,7 +4,7 @@ Dual-mode: ROLE_COLORS a STATUS_COLORS z theme, card borders, Segoe UI font.
 """
 import customtkinter as ctk
 
-from logic.hierarchy import get_my_team, add_new_member
+from logic.hierarchy import get_my_team, get_full_tree, add_new_member
 from repositories import task_repo, user_repo
 from ui.theme import (
     PRIMARY, PRIMARY_HOVER, ACCENT, DANGER, WARNING, SUCCESS,
@@ -32,6 +32,8 @@ class TeamView(ctk.CTkFrame):
         self.user_id   = user_data["id"]   if isinstance(user_data, dict) else user_data[0]
         self.user_role = user_data["role"]  if isinstance(user_data, dict) else user_data[4]
         self.user_data = user_data
+        # Admin can toggle between direct reports only vs full hierarchy tree
+        self._show_full_tree = False
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -53,13 +55,25 @@ class TeamView(ctk.CTkFrame):
         ).grid(row=0, column=0, sticky="w")
 
         if self.user_role in ("admin", "manager"):
+            # Admin: toggle full hierarchy tree
+            if self.user_role == "admin":
+                self._tree_btn = ctk.CTkButton(
+                    header, text="Cely strom", width=120,
+                    fg_color="transparent", hover_color=BG_ROW,
+                    text_color=TEXT_SECONDARY, border_width=1, border_color=BORDER,
+                    height=HEIGHT_BTN_MD, corner_radius=RADIUS_SM,
+                    font=get_font(FONT_SIZE_BASE),
+                    command=self._toggle_tree_view,
+                )
+                self._tree_btn.grid(row=0, column=2, padx=(SPACE_MD, 0))
+
             ctk.CTkButton(
                 header, text="+ Pridat clena", width=140,
                 fg_color=PRIMARY, hover_color=PRIMARY_HOVER,
                 height=HEIGHT_BTN_MD, corner_radius=RADIUS_SM,
                 font=get_font(FONT_SIZE_BASE, "bold"),
                 command=self._open_add_dialog,
-            ).grid(row=0, column=2, padx=(SPACE_MD, 0))
+            ).grid(row=0, column=3, padx=(SPACE_SM, 0))
 
     # ── Content ────────────────────────────────────────────────────────────────
 
@@ -69,11 +83,31 @@ class TeamView(ctk.CTkFrame):
         self._scroll.grid_columnconfigure(0, weight=1)
         self._refresh()
 
+    def _toggle_tree_view(self):
+        self._show_full_tree = not self._show_full_tree
+        if hasattr(self, "_tree_btn"):
+            if self._show_full_tree:
+                self._tree_btn.configure(
+                    text="Priami podriadeni",
+                    fg_color=PRIMARY, text_color=("white", "white"),
+                    border_width=0,
+                )
+            else:
+                self._tree_btn.configure(
+                    text="Cely strom",
+                    fg_color="transparent", text_color=TEXT_SECONDARY,
+                    border_width=1,
+                )
+        self._refresh()
+
     def _refresh(self):
         for w in self._scroll.winfo_children():
             w.destroy()
 
-        members = get_my_team(self.user_id)
+        if self._show_full_tree and self.user_role == "admin":
+            members = get_full_tree(self.user_id)
+        else:
+            members = get_my_team(self.user_id)
 
         if not members:
             ctk.CTkLabel(
@@ -138,20 +172,35 @@ class TeamView(ctk.CTkFrame):
 
     def _build_member_card(self, member):
         if isinstance(member, dict):
-            mid       = member.get("id")
-            full_name = member.get("full_name", "")
-            username  = member.get("username", "")
-            role      = member.get("role", "employee")
+            mid          = member.get("id")
+            full_name    = member.get("full_name", "")
+            username     = member.get("username", "")
+            role         = member.get("role", "employee")
+            depth        = member.get("depth", 0)           # set by get_full_tree
+            manager_name = member.get("manager_name", "")   # set by get_full_tree
         else:
             mid, full_name, role, username = member[0], member[1], member[2], member[3]
+            depth, manager_name = 0, ""
 
         wl = task_repo.get_workload_for_user(mid)
+
+        # Indent deeper levels to show hierarchy visually
+        indent_px = depth * 20
 
         card = ctk.CTkFrame(
             self._scroll, fg_color=BG_CARD, corner_radius=RADIUS_MD,
             border_width=1, border_color=BORDER,
         )
-        card.pack(fill="x", pady=4)
+        card.pack(fill="x", pady=4, padx=(indent_px, 0))
+
+        # Show hierarchy level indicator when in tree view
+        if depth > 0 and manager_name:
+            ctk.CTkLabel(
+                card,
+                text=f"{'  ' * depth}↳ Podriadeý {manager_name}",
+                font=get_font(FONT_SIZE_XS),
+                text_color=TEXT_SECONDARY,
+            ).pack(anchor="w", padx=SPACE_LG, pady=(SPACE_SM, 0))
 
         main_row = ctk.CTkFrame(card, fg_color="transparent")
         main_row.pack(fill="x", padx=SPACE_LG, pady=SPACE_MD)
