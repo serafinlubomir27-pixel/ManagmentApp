@@ -12,7 +12,7 @@ from logic.task_manager import get_tasks_for_project, add_task, update_task_stat
 from logic.hierarchy import get_my_team
 from logic.cpm_manager import recalculate_project_cpm
 from logic.cpm_engine import CPMResult, calculate_health_score
-from logic.export_manager import export_project_pdf
+from logic.export_manager import export_project_pdf, export_tasks_csv, import_tasks_csv
 from logic.file_manager import add_attachment, get_attachments_for_task, delete_attachment
 from repositories import task_repo
 from ui.theme import (
@@ -108,6 +108,24 @@ class ProjectDetailView(ctk.CTkFrame):
             font=get_font(FONT_SIZE_BASE, "bold"),
             command=self._export_pdf,
         ).grid(row=0, column=3, padx=(SPACE_SM, 0))
+
+        ctk.CTkButton(
+            header, text="CSV ↓", width=80,
+            fg_color="transparent", hover_color=BG_ROW,
+            text_color=TEXT_SECONDARY, border_width=1, border_color=BORDER,
+            height=HEIGHT_BTN_MD, corner_radius=RADIUS_SM,
+            font=get_font(FONT_SIZE_BASE),
+            command=self._export_csv,
+        ).grid(row=0, column=4, padx=(SPACE_SM, 0))
+
+        ctk.CTkButton(
+            header, text="CSV ↑", width=80,
+            fg_color="transparent", hover_color=BG_ROW,
+            text_color=TEXT_SECONDARY, border_width=1, border_color=BORDER,
+            height=HEIGHT_BTN_MD, corner_radius=RADIUS_SM,
+            font=get_font(FONT_SIZE_BASE),
+            command=self._import_csv,
+        ).grid(row=0, column=5, padx=(SPACE_SM, 0))
 
         # Tab bar
         tab_bar = ctk.CTkFrame(
@@ -619,6 +637,47 @@ class ProjectDetailView(ctk.CTkFrame):
                 "Chyba exportu",
                 "PDF sa nepodarilo vygenerovať.\nSkontroluj konzolu pre detaily.",
             )
+
+    # ------------------------------------------------------------------
+    # CSV Export / Import
+    # ------------------------------------------------------------------
+
+    def _export_csv(self):
+        """Exportuje úlohy projektu do CSV súboru."""
+        default_name = f"{self.project_name.replace(' ', '_')}_ulohy.csv"
+        path = fd.asksaveasfilename(
+            title="Exportovať úlohy do CSV",
+            defaultextension=".csv",
+            initialfile=default_name,
+            filetypes=[("CSV súbory", "*.csv"), ("Všetky súbory", "*.*")],
+        )
+        if not path:
+            return
+
+        ok, msg = export_tasks_csv(self.project_id, path)
+        if ok:
+            mb.showinfo("Export úspešný", msg)
+        else:
+            mb.showerror("Chyba exportu", msg)
+
+    def _import_csv(self):
+        """Importuje úlohy z CSV súboru do projektu."""
+        path = fd.askopenfilename(
+            title="Importovať úlohy z CSV",
+            filetypes=[("CSV súbory", "*.csv"), ("Všetky súbory", "*.*")],
+        )
+        if not path:
+            return
+
+        ok, msg = import_tasks_csv(self.project_id, path, self.user_id)
+        if ok:
+            mb.showinfo("Import dokončený", msg)
+            self._recalc_cpm()
+            # Refresh task list if currently on tasks tab
+            if hasattr(self, "_task_scroll"):
+                self._refresh_task_list()
+        else:
+            mb.showerror("Chyba importu", msg)
 
 
 # ======================================================================

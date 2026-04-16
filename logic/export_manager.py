@@ -5,6 +5,7 @@ Fonty: DejaVu Sans (bundled v matplotlib) — plná podpora slovenčiny + Unicod
 """
 from __future__ import annotations
 
+import csv
 import io
 import os
 from datetime import date
@@ -410,3 +411,143 @@ def export_project_pdf(
         print(f"PDF export chyba: {exc}")
         traceback.print_exc()
         return False
+
+
+# ── CSV Export ────────────────────────────────────────────────────────────────
+
+# Columns included in CSV export (in order)
+CSV_FIELDS = [
+    "id", "name", "status", "priority", "category",
+    "duration", "due_date", "assigned_username",
+    "es", "ef", "ls", "lf", "total_float", "is_critical",
+    "description", "notes",
+]
+
+CSV_HEADERS = {
+    "id": "ID", "name": "Názov", "status": "Stav", "priority": "Priorita",
+    "category": "Kategória", "duration": "Trvanie (dni)", "due_date": "Deadline",
+    "assigned_username": "Priradený", "es": "ES", "ef": "EF", "ls": "LS", "lf": "LF",
+    "total_float": "Float", "is_critical": "Kritická cesta",
+    "description": "Popis", "notes": "Poznámky",
+}
+
+# Import columns that must be present in an uploaded CSV
+CSV_IMPORT_REQUIRED = ["name"]
+CSV_IMPORT_OPTIONAL = ["status", "priority", "category", "duration", "due_date", "description", "notes"]
+
+VALID_STATUSES  = {"pending", "in_progress", "completed", "blocked"}
+VALID_PRIORITIES = {"low", "medium", "high", "critical"}
+
+
+def export_tasks_csv(project_id: int, file_path: str) -> tuple[bool, str]:
+    """Export all tasks for a project to a UTF-8 CSV file.
+
+    Returns (success, message).
+    """
+    try:
+        tasks = task_repo.get_tasks_for_project_with_cpm(project_id)
+        with open(file_path, "w", newline="", encoding="utf-8-sig") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=CSV_FIELDS,
+                extrasaction="ignore",
+            )
+            # Write header row with human-readable names
+            writer.writerow(CSV_HEADERS)
+            for t in tasks:
+                row = {k: t.get(k, "") for k in CSV_FIELDS}
+                row["is_critical"] = "Áno" if row["is_critical"] else "Nie"
+                writer.writerow(row)
+        return True, f"Exportovaných {len(tasks)} úloh do {os.path.basename(file_path)}"
+    except Exception as exc:
+        return False, f"Chyba exportu: {exc}"
+
+
+def import_tasks_csv(
+    project_id: int,
+    file_path: str,
+    created_by: int,
+) -> tuple[bool, str]:
+    """Import tasks from a CSV file into a project.
+
+    Expects UTF-8 (with or without BOM). First row = header.
+    Returns (success, message) with count or error details.
+    """
+    from repositories.task_repo import create_task_from_template  # avoid circular at module level
+
+    errors: list[str] = []
+    imported = 0
+
+    try:
+        with open(file_path, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+
+            # Map human-readable headers back to field names
+            reverse_headers = {v: k for k, v in CSV_HEADERS.items()}
+
+            for row_num, raw_row in enumerate(reader, start=2):
+                # Normalise keys: strip whitespace, map translated headers → field names
+                row = {}
+                for k, v in raw_row.items():
+                    key = (k or "").strip()
+                    key = reverse_headers.get(key, key)
+                    row[key] = (v or "").strip()
+
+                # Validate required fields
+                name = row.get("name", "").strip()
+                if not name:
+                    errors.append(f"Riadok {row_num}: chýba názov úlohy — preskočené")
+                    continue
+
+                # Sanitise optional fields
+                status   = row.get("status", "pending")
+                if status not in VALID_STATUSES:
+                    status = "pending"
+
+                priority = row.get("priority", "medium")
+                if priority not in VALID_PRIORITIES:
+                    priority = "medium"
+
+                due_date = row.get("due_date") or None
+                duration_raw = row.get("duration", "1")
+                try:
+                    duration = max(1, int(float(duration_raw)))
+                except (ValueError, TypeError):
+                    duration = 1
+
+                description = row.get("description", "")
+                notes = row.get("notes", "")
+                category = row.get("category", "Other")
+
+                # Insert via existing repo function
+                try:
+                    task_id = create_task_from_template(
+                        project_id, name, description,
+                        assigned_to=None, created_by=created_by, due_date=due_date,
+                    )
+                    # Update extra fields that create_task_from_template doesn't set
+                    from repositories.base_repo import get_connection
+                    conn = get_connection()
+                    try:
+                        conn.execute(
+                            """UPDATE tasks SET status=?, priority=?, category=?,
+                               duration=?, notes=? WHERE id=?""",
+                            (status, priority, category, duration, notes, task_id),
+                        )
+                        conn.commit()
+                    finally:
+                        conn.close()
+                    imported += 1
+                except Exception as exc:
+                    errors.append(f"Riadok {row_num} ({name}): {exc}")
+
+        msg = f"Importovaných {imported} úloh."
+        if errors:
+            msg += f"\nUpozornenia ({len(errors)}):\n" + "\n".join(errors[:5])
+            if len(errors) > 5:
+                msg += f"\n... a {len(errors) - 5} ďalších"
+        return True, msg
+
+    except Exception as exc:
+        return False, f"Chyba importu: {exc}"
+
