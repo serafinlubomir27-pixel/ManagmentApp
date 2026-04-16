@@ -11,8 +11,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
 from logic.stats import get_dashboard_stats, get_task_status_breakdown
+from repositories.task_repo import get_tasks_with_due_dates
 from ui.theme import (
-    PRIMARY, ACCENT, DANGER,
+    PRIMARY, ACCENT, DANGER, WARNING,
     BG_CARD, BG_MAIN, BG_ROW, BORDER,
     TEXT_PRIMARY, TEXT_SECONDARY,
     GRAD_BLUE, GRAD_TEAL, GRAD_RED,
@@ -64,7 +65,7 @@ class DashboardScreen(ctk.CTkFrame):
     # ── Builder ────────────────────────────────────────────────────────────────
 
     def _build_ui(self):
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
         # ── Header (fixný — mimo scrollu) ─────────────────────────────────
@@ -88,9 +89,12 @@ class DashboardScreen(ctk.CTkFrame):
             text_color=TEXT_SECONDARY,
         ).grid(row=0, column=1, sticky="e")
 
+        # ── Notifikácie — deadline banner ────────────────────────────────
+        self._build_deadline_notifications(row=1)
+
         # ── Scrollovateľné telo ───────────────────────────────────────────
         scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        scroll.grid(row=1, column=0, sticky="nsew")
+        scroll.grid(row=2, column=0, sticky="nsew")
         scroll.grid_columnconfigure(0, weight=1)
 
         # ── Stat karty ──────────────────────────────────────────────────────
@@ -111,6 +115,101 @@ class DashboardScreen(ctk.CTkFrame):
 
         self._build_donut_section(bottom)
         self._build_activity_section(bottom)
+
+    # ── Deadline notifikácie ───────────────────────────────────────────────────
+
+    def _build_deadline_notifications(self, row: int):
+        """Build a compact notification banner for tasks due in the next 3 days.
+
+        Shows nothing if there are no upcoming deadlines or all tasks are completed.
+        """
+        today = datetime.date.today()
+        try:
+            all_tasks = get_tasks_with_due_dates(self.user_id)
+        except Exception:
+            return
+
+        alerts = []
+        for t in all_tasks:
+            if t.get("status") == "completed":
+                continue
+            raw = t.get("due_date")
+            if not raw:
+                continue
+            try:
+                due = datetime.date.fromisoformat(str(raw)[:10])
+            except ValueError:
+                continue
+            days_left = (due - today).days
+            if days_left < 0:
+                alerts.append(("overdue", t, days_left))
+            elif days_left <= 3:
+                alerts.append(("soon", t, days_left))
+
+        if not alerts:
+            return
+
+        # Banner frame
+        banner = ctk.CTkFrame(
+            self, fg_color=BG_CARD,
+            corner_radius=RADIUS_SM,
+            border_width=1, border_color=BORDER,
+        )
+        banner.grid(row=row, column=0, sticky="ew", padx=SPACE_XL, pady=(0, SPACE_SM))
+        banner.grid_columnconfigure(1, weight=1)
+
+        # Icon column
+        ctk.CTkLabel(
+            banner, text="🔔",
+            font=get_font(FONT_SIZE_LG),
+            text_color=WARNING,
+        ).grid(row=0, column=0, rowspan=max(1, len(alerts)), padx=(SPACE_MD, SPACE_SM), pady=SPACE_SM, sticky="n")
+
+        # Alert rows
+        for i, (kind, task, days_left) in enumerate(alerts[:5]):  # max 5 shown
+            task_name = task.get("name", "Úloha")
+            project_name = task.get("project_name", "")
+
+            if kind == "overdue":
+                label_text = f"⚠️  {task_name}"
+                sub_text = f"{project_name}  •  Po termíne o {abs(days_left)} {'deň' if abs(days_left) == 1 else 'dní'}"
+                color = DANGER
+            elif days_left == 0:
+                label_text = f"🔴  {task_name}"
+                sub_text = f"{project_name}  •  Dnes!"
+                color = DANGER
+            elif days_left == 1:
+                label_text = f"🟠  {task_name}"
+                sub_text = f"{project_name}  •  Zajtra"
+                color = WARNING
+            else:
+                label_text = f"🟡  {task_name}"
+                sub_text = f"{project_name}  •  Za {days_left} dni"
+                color = WARNING
+
+            row_frame = ctk.CTkFrame(banner, fg_color="transparent")
+            row_frame.grid(row=i, column=1, sticky="ew", padx=(0, SPACE_MD), pady=(SPACE_SM if i == 0 else 2, 2))
+
+            ctk.CTkLabel(
+                row_frame, text=label_text,
+                font=get_font(FONT_SIZE_BASE, "bold"),
+                text_color=color, anchor="w",
+            ).pack(anchor="w")
+
+            ctk.CTkLabel(
+                row_frame, text=sub_text,
+                font=get_font(FONT_SIZE_SM),
+                text_color=TEXT_SECONDARY, anchor="w",
+            ).pack(anchor="w")
+
+        # "... a X ďalších" ak ich je viac
+        if len(alerts) > 5:
+            ctk.CTkLabel(
+                banner,
+                text=f"  ... a {len(alerts) - 5} ďalších úloh s blížiacim sa termínom",
+                font=get_font(FONT_SIZE_SM),
+                text_color=TEXT_SECONDARY,
+            ).grid(row=5, column=1, sticky="w", pady=(0, SPACE_SM))
 
     # ── Stat karta s gradientom ────────────────────────────────────────────────
 
