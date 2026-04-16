@@ -85,6 +85,17 @@ def username_exists(username):
         conn.close()
 
 
+def get_all_users() -> list[dict]:
+    """Return all users (for admin views)."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, full_name, role, manager_id, created_at FROM users ORDER BY role, username")
+        return rows_to_dicts(cursor.fetchall())
+    finally:
+        conn.close()
+
+
 def update_password(user_id: int, hashed_password: str) -> None:
     """Update the hashed password for a user."""
     conn = get_connection()

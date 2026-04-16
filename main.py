@@ -28,8 +28,10 @@ class MainApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Management System v1.0")
-        self.geometry("1100x700")  # Zväčšíme okno
+        self.geometry("1200x750")
+        self.minsize(960, 600)      # Minimálna veľkosť — zabraňuje orezaniu UI
 
+        self.content_area = None
         self.current_user = None
         self.show_login()
 
@@ -61,7 +63,7 @@ class MainApp(ctk.CTk):
         # 3. Vytvorenie Hlavného obsahu (Vpravo)
         # Na začiatku tam vložíme Dashboard
         self.content_area = DashboardScreen(self, self.current_user)
-        self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.content_area.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
         self.sidebar.set_active("dashboard")
 
     def handle_navigation(self, kam_ist):
@@ -71,7 +73,7 @@ class MainApp(ctk.CTk):
             return
 
         # Zničíme starý obsah
-        if self.content_area:
+        if getattr(self, 'content_area', None):
             self.content_area.destroy()
             self.content_area = None
 
@@ -95,7 +97,7 @@ class MainApp(ctk.CTk):
         if self.content_area is None:
             return
 
-        self.content_area.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
+        self.content_area.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
         self.sidebar.set_active(kam_ist)
 
 

@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManagmentApp — Bakalárska práca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-w: 210mm;
+    --page-h: 297mm;
+    --margin: 25mm;
+    --margin-bind: 30mm;
+    --font-body: 'EB Garamond', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+    --font-ui: 'Inter', sans-serif;
+    --text: #1a1a1a;
+    --text-dim: #555;
+    --border: #ccc;
+    --accent: #1a3a6b;
+    --accent-light: #e8eef7;
+    --code-bg: #f5f7fa;
+    --warn: #7a2a2a;
+    --success-c: #1a5c35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    font-size: 12pt;
+    line-height: 1.75;
+    color: var(--text);
+    background: #e8e8e8;
+  }
+
+  /* ── Page simulation ── */
+  .page {
+    width: var(--page-w);
+    min-height: var(--page-h);
+    background: white;
+    margin: 12px auto;
+    padding: var(--margin) var(--margin) var(--margin) var(--margin-bind);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .page.cover { text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
+
+  /* ── Print ── */
+  @media print {
+    body { background: white; }
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      padding: var(--margin) var(--margin) var(--margin) var(--margin-bind);
+      box-shadow: none;
+      page-break-after: always;
+    }
+    .no-break { page-break-inside: avoid; }
+    .break-before { page-break-before: always; }
+    .nav-hint { display: none; }
+  }
+
+  /* ── Typography ── */
+  h1 { font-size: 22pt; font-weight: 700; color: var(--accent); line-height: 1.2; margin-bottom: 8pt; }
+  h2 { font-size: 16pt; font-weight: 600; color: var(--accent); margin: 24pt 0 10pt; line-height: 1.3;
+       border-bottom: 1.5px solid var(--accent); padding-bottom: 4pt; }
+  h3 { font-size: 13pt; font-weight: 600; color: #222; margin: 18pt 0 7pt; }
+  h4 { font-size: 12pt; font-weight: 600; color: #333; margin: 12pt 0 5pt; font-style: italic; }
+  p  { margin-bottom: 10pt; text-align: justify; }
+  ul, ol { margin: 8pt 0 10pt 22pt; }
+  li { margin-bottom: 4pt; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+
+  /* ── Chapter numbering ── */
+  .chapter-num {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4pt;
+  }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid #dde;
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 12pt 14pt;
+    font-family: var(--font-mono);
+    font-size: 9pt;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 10pt 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 9.5pt;
+    background: var(--code-bg);
+    border: 1px solid #dde;
+    border-radius: 2px;
+    padding: 1pt 4pt;
+  }
+  .c { color: #6a737d; } /* comment */
+  .k { color: #d73a49; } /* keyword */
+  .s { color: #005cc5; } /* string */
+  .f { color: #6f42c1; } /* function */
+  .n { color: #e36209; } /* number */
+  .v { color: #24292e; } /* variable */
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12pt 0;
+    font-size: 10.5pt;
+  }
+  th {
+    background: var(--accent);
+    color: white;
+    padding: 7pt 10pt;
+    text-align: left;
+    font-family: var(--font-ui);
+    font-size: 9.5pt;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  td { padding: 6pt 10pt; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8f9fc; }
+  tr:hover td { background: var(--accent-light); }
+  .table-caption {
+    font-family: var(--font-ui);
+    font-size: 9pt;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 4pt;
+    margin-bottom: 14pt;
+  }
+
+  /* ── Callout boxes ── */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-light);
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 11pt;
+  }
+  .note strong { color: var(--accent); }
+  .warn {
+    border-left: 3px solid var(--warn);
+    background: #fdf0f0;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 11pt;
+  }
+  .success-box {
+    border-left: 3px solid var(--success-c);
+    background: #f0faf4;
+    padding: 10pt 14pt;
+    margin: 12pt 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 11pt;
+  }
+
+  /* ── Figures ── */
+  .figure {
+    text-align: center;
+    margin: 16pt 0;
+    page-break-inside: avoid;
+  }
+  .figure-caption {
+    font-family: var(--font-ui);
+    font-size: 9.5pt;
+    color: var(--text-dim);
+    margin-top: 5pt;
+  }
+
+  /* ── Cover page ── */
+  .cover-uni { font-family: var(--font-ui); font-size: 11pt; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+  .cover-faculty { font-family: var(--font-ui); font-size: 10pt; color: var(--text-dim); margin-top: 4pt; }
+  .cover-type { font-family: var(--font-ui); font-size: 10pt; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin: 40pt 0 16pt; }
+  .cover-title { font-size: 22pt; font-weight: 700; color: var(--accent); line-height: 1.25; margin-bottom: 16pt; }
+  .cover-subtitle { font-size: 13pt; color: var(--text-dim); margin-bottom: 40pt; }
+  .cover-meta { font-family: var(--font-ui); font-size: 11pt; line-height: 2; }
+  .cover-meta .label { color: var(--text-dim); font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Abstract ── */
+  .abstract-block { border: 1px solid var(--border); padding: 16pt 18pt; margin-bottom: 16pt; border-radius: 2px; }
+  .abstract-lang { font-family: var(--font-ui); font-size: 9pt; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8pt; }
+
+  /* ── TOC ── */
+  .toc-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5pt;
+    border-bottom: 1px dotted #ccc;
+  }
+  .toc-line span:last-child { white-space: nowrap; margin-left: 8pt; font-family: var(--font-ui); font-size: 10pt; }
+  .toc-h1 { font-size: 12pt; font-weight: 600; margin-top: 8pt; }
+  .toc-h2 { font-size: 11pt; margin-left: 16pt; }
+  .toc-h3 { font-size: 10pt; color: var(--text-dim); margin-left: 32pt; }
+
+  /* ── Header/footer line ── */
+  .page-header {
+    font-family: var(--font-ui);
+    font-size: 8.5pt;
+    color: var(--text-dim);
+    border-bottom: 0.5px solid var(--border);
+    padding-bottom: 6pt;
+    margin-bottom: 18pt;
+  }
+  .page-footer {
+    position: absolute;
+    bottom: 16pt;
+    left: var(--margin-bind);
+    right: var(--margin);
+    font-family: var(--font-ui);
+    font-size: 8.5pt;
+    color: var(--text-dim);
+    border-top: 0.5px solid var(--border);
+    padding-top: 6pt;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Architecture diagram ── */
+  .arch-box {
+    border: 1.5px solid var(--accent);
+    border-radius: 6px;
+    padding: 8pt 14pt;
+    text-align: center;
+    font-family: var(--font-ui);
+    font-size: 10pt;
+    margin-bottom: -1px;
+    background: white;
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--accent);
+    font-size: 14pt;
+    line-height: 1.2;
+  }
+  .arch-wrap { width: 70%; margin: 12pt auto; }
+
+  /* ── CPM table highlight ── */
+  .crit { background: #fff3f3 !important; font-weight: 600; color: var(--warn); }
+  .crit td { border-bottom-color: #f5c0c0 !important; }
+
+  /* Bug log */
+  .bug-entry { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10pt 14pt; margin-bottom: 10pt; page-break-inside: avoid; }
+  .bug-title-row { display: flex; align-items: center; gap: 8pt; margin-bottom: 4pt; }
+  .bug-tag { font-family: var(--font-ui); font-size: 8pt; font-weight: 600; padding: 2pt 6pt; border-radius: 10px; }
+  .bug-tag.critical { background: #fde; color: var(--warn); }
+  .bug-tag.medium { background: #fff3cd; color: #7a5500; }
+  .bug-tag.low { background: #d4edda; color: #1a5c35; }
+  .bug-name { font-weight: 600; font-size: 11pt; }
+
+  /* Nav hint (screen only) */
+  .nav-hint {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent); color: white;
+    font-family: var(--font-ui); font-size: 11px;
+    padding: 10px 16px; border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* Schema diagram */
+  .schema-row { display: flex; gap: 20pt; margin: 10pt 0; flex-wrap: wrap; }
+  .schema-table {
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    min-width: 140pt;
+    flex: 1;
+    font-family: var(--font-ui);
+    font-size: 9pt;
+  }
+  .schema-header {
+    background: var(--accent);
+    color: white;
+    padding: 5pt 10pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .schema-row-item { padding: 4pt 10pt; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; gap: 8pt; }
+  .schema-row-item:last-child { border-bottom: none; }
+  .schema-pk { color: var(--accent); font-weight: 600; }
+  .schema-fk { color: #7a5500; }
+  .schema-type { color: var(--text-dim); font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     TITULNÁ STRANA
+═══════════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div>
+    <div class="cover-uni">Slovenská technická univerzita v Bratislave</div>
+    <div class="cover-faculty">Fakulta informatiky a informačných technológií</div>
+    <div style="margin-top:30pt;">
+      <div style="font-size:38pt;color:var(--accent);margin-bottom:4pt;">⬡</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="cover-type">Bakalárska práca</div>
+    <div class="cover-title">ManagmentApp — Desktopová aplikácia<br>pre projektový manažment<br>s metódou kritickej cesty</div>
+    <div class="cover-subtitle">Desktop Application for Project Management<br>Using Critical Path Method</div>
+  </div>
+
+  <div>
+    <div class="cover-meta">
+      <div><span class="label">Autor:</span><br><strong>Meno Priezvisko</strong></div>
+      <div style="margin-top:10pt;"><span class="label">Vedúci práce:</span><br><strong>doc. Ing. Meno Vedúceho, PhD.</strong></div>
+      <div style="margin-top:10pt;"><span class="label">Študijný program:</span><br>Informatika (bakalársky stupeň)</div>
+      <div style="margin-top:10pt;"><span class="label">Akademický rok:</span><br>2025/2026</div>
+      <div style="margin-top:10pt;"><span class="label">Evidenčné číslo:</span><br>FIIT-XXXX-XXXXX</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ANOTÁCIA
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; FIIT STU Bratislava</div>
+  <span class="chapter-num">Anotácia</span>
+  <h1>Anotácia</h1>
+
+  <div class="abstract-block">
+    <div class="abstract-lang">Slovenský jazyk</div>
+    <p>Táto bakalárska práca sa zaoberá návrhom a implementáciou desktopovej aplikácie pre projektový manažment s názvom ManagmentApp. Aplikácia je vyvinutá v programovacom jazyku Python s využitím knižníc CustomTkinter pre grafické rozhranie, SQLite3 pre lokálnu databázu, matplotlib pre vizualizácie a reportlab pre export do PDF. Jadrom systému je implementácia metódy kritickej cesty (CPM — Critical Path Method), ktorá umožňuje výpočet ES, EF, LS, LF hodnôt, celkovej rezervy (float) a identifikáciu kritickej cesty projektu. Aplikácia ďalej obsahuje Gantt chart, sieťový diagram závislostí, správu tímu s trojúrovňovou hierarchiou, kalendárny pohľad, systém komentárov a príloh k úlohám. Osobitná pozornosť bola venovaná návrhu duálneho dizajnového systému, ktorý podporuje prepínanie medzi tmavým a svetlým režimom prostredníctvom dvojíc farebných tokenov (light, dark) natívne podporovaných v CustomTkinter.</p>
+    <p style="margin-bottom:0;"><strong>Kľúčové slová:</strong> projektový manažment, metóda kritickej cesty, CPM, Python, CustomTkinter, desktopová aplikácia, SQLite, Gantt chart, design systém</p>
+  </div>
+
+  <div class="abstract-block">
+    <div class="abstract-lang">English</div>
+    <p>This bachelor thesis presents the design and implementation of a desktop project management application called ManagmentApp. The application is developed in Python using the CustomTkinter library for the graphical user interface, SQLite3 for local data storage, matplotlib for visualizations, and reportlab for PDF export. The core of the system is an implementation of the Critical Path Method (CPM), which computes ES, EF, LS, LF values, total float, and identifies the critical path of a project. Additional features include a Gantt chart, CPM network diagram, team management with a three-level hierarchy, calendar view, and a comment and attachment system for tasks. Special attention was paid to the design of a dual-mode design system that supports toggling between dark and light themes using native CustomTkinter dual-value color tokens.</p>
+    <p style="margin-bottom:0;"><strong>Keywords:</strong> project management, critical path method, CPM, Python, CustomTkinter, desktop application, SQLite, Gantt chart, design system</p>
+  </div>
+
+  <div class="page-footer"><span>Anotácia</span><span>ii</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     OBSAH
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; FIIT STU Bratislava</div>
+  <span class="chapter-num">Obsah</span>
+  <h1>Obsah</h1>
+
+  <div style="margin-top:16pt;">
+    <div class="toc-line toc-h1"><span>1. Úvod</span><span>1</span></div>
+    <div class="toc-line toc-h2"><span>1.1 Motivácia a kontext problému</span><span>1</span></div>
+    <div class="toc-line toc-h2"><span>1.2 Ciele práce</span><span>2</span></div>
+    <div class="toc-line toc-h2"><span>1.3 Štruktúra práce</span><span>2</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>2. Analýza existujúcich riešení a teoretické základy</span><span>4</span></div>
+    <div class="toc-line toc-h2"><span>2.1 Metóda kritickej cesty (CPM)</span><span>4</span></div>
+    <div class="toc-line toc-h2"><span>2.2 Ganttov diagram</span><span>6</span></div>
+    <div class="toc-line toc-h2"><span>2.3 Prehľad existujúcich nástrojov na projektový manažment</span><span>7</span></div>
+    <div class="toc-line toc-h2"><span>2.4 Zvolené technológie</span><span>9</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>3. Analýza požiadaviek</span><span>12</span></div>
+    <div class="toc-line toc-h2"><span>3.1 Cieľové skupiny a používateľské roly</span><span>12</span></div>
+    <div class="toc-line toc-h2"><span>3.2 Funkčné požiadavky</span><span>13</span></div>
+    <div class="toc-line toc-h2"><span>3.3 Nefunkčné požiadavky</span><span>15</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>4. Návrh systému</span><span>17</span></div>
+    <div class="toc-line toc-h2"><span>4.1 Architektúra aplikácie</span><span>17</span></div>
+    <div class="toc-line toc-h2"><span>4.2 Schéma databázy</span><span>19</span></div>
+    <div class="toc-line toc-h2"><span>4.3 Návrh používateľského rozhrania</span><span>22</span></div>
+    <div class="toc-line toc-h2"><span>4.4 Duálny dizajnový systém</span><span>24</span></div>
+    <div class="toc-line toc-h2"><span>4.5 Návrh CPM modulu</span><span>26</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>5. Implementácia</span><span>28</span></div>
+    <div class="toc-line toc-h2"><span>5.1 Vývojové prostredie a nástroje</span><span>28</span></div>
+    <div class="toc-line toc-h2"><span>5.2 Štruktúra projektu</span><span>28</span></div>
+    <div class="toc-line toc-h2"><span>5.3 Databázová vrstva a Repository Pattern</span><span>29</span></div>
+    <div class="toc-line toc-h2"><span>5.4 Business logika — CPM Engine</span><span>31</span></div>
+    <div class="toc-line toc-h2"><span>5.5 Prezentačná vrstva</span><span>34</span></div>
+    <div class="toc-line toc-h2"><span>5.6 Vizualizácie (Gantt, CPM Network)</span><span>37</span></div>
+    <div class="toc-line toc-h2"><span>5.7 Export do PDF</span><span>40</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>6. Testovanie a hodnotenie</span><span>42</span></div>
+    <div class="toc-line toc-h2"><span>6.1 Testovacia stratégia</span><span>42</span></div>
+    <div class="toc-line toc-h2"><span>6.2 Dokumentácia chýb a ich opravy</span><span>43</span></div>
+    <div class="toc-line toc-h2"><span>6.3 Hodnotenie splnenia požiadaviek</span><span>47</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>7. Záver</span><span>49</span></div>
+    <div class="toc-line toc-h2"><span>7.1 Zhrnutie dosiahnutých výsledkov</span><span>49</span></div>
+    <div class="toc-line toc-h2"><span>7.2 Obmedzenia a budúca práca</span><span>50</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>Zoznam použitej literatúry</span><span>52</span></div>
+    <div class="toc-line toc-h1"><span>Príloha A — Štruktúra projektu</span><span>54</span></div>
+    <div class="toc-line toc-h1"><span>Príloha B — Inštalačný manuál</span><span>55</span></div>
+  </div>
+
+  <div class="page-footer"><span>Obsah</span><span>iii</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 1 — ÚVOD
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 1. Úvod</div>
+  <span class="chapter-num">Kapitola 1</span>
+  <h1>1. Úvod</h1>
+
+  <h2>1.1 Motivácia a kontext problému</h2>
+
+  <p>Projektový manažment patrí medzi kľúčové disciplíny moderného podnikania. Nezávisle od odvetvia — či ide o vývoj softvéru, stavebníctvo, konzultačné služby alebo freelancing — každý projekt pozostáva zo série vzájomne závislých úloh, ktoré musia byť splnené v stanovenom čase a v rámci dostupných zdrojov. Nesprávne plánovanie alebo ignorovanie kritických závislostí medzi úlohami vedie k oneskoreniam, prekročeniu rozpočtu a neúspešnému dokončeniu projektov.</p>
+
+  <p>Napriek existencii početných nástrojov na projektový manažment — od jednoduchých tabuliek v Exceli po komplexné SaaS platformy ako Asana, Jira alebo Monday.com — mnohé z nich nesplňujú potreby malých tímov a freelancerov z niekoľkých dôvodov: sú príliš komplexné pre každodenné použitie, vyžadujú trvalé internetové pripojenie, ukladajú citlivé dáta na vzdialených serveroch, alebo sú finančne nedostupné pre jednotlivcov a malé firmy.</p>
+
+  <p>Táto práca reaguje na potrebu <strong>jednoduchej, lokálnej a bezplatnej desktopovej aplikácie</strong> pre projektový manažment, ktorá pritom implementuje matematicky fundované metódy plánovania. Konkrétne ide o implementáciu <em>metódy kritickej cesty</em> (CPM — Critical Path Method), ktorá identifikuje najdlhšiu sekvenciu vzájomne závislých úloh v projekte — tzv. kritickú cestu. Akékoľvek oneskorenie na tejto ceste automaticky predĺži celý projekt.</p>
+
+  <p>Aplikácia ManagmentApp vznikla postupnou evolúciou: pôvodný prototyp bol navrhnutý ako webová aplikácia na platforme Lovable (PathFlow), následne prepísaný do Pythonu a dokončený ako plnohodnotná desktopová aplikácia s dôrazom na moderný dizajn, robustnosť a rozšíriteľnosť.</p>
+
+  <h2>1.2 Ciele práce</h2>
+
+  <p>Hlavným cieľom tejto bakalárskej práce je navrhnúť a implementovať funkčnú desktopovú aplikáciu pre projektový manažment, ktorá:</p>
+  <ol>
+    <li>Implementuje algoritmus CPM s výpočtom ES, EF, LS, LF hodnôt, celkovej rezervy a identifikáciou kritickej cesty,</li>
+    <li>Vizualizuje projektový plán prostredníctvom Ganttovho diagramu a sieťového CPM diagramu,</li>
+    <li>Podporuje správu tímu s trojúrovňovou hierarchiou (admin – manažér – zamestnanec),</li>
+    <li>Umožňuje export projektového reportu do PDF vrátane grafu a tabuľky úloh,</li>
+    <li>Implementuje moderný duálny dizajnový systém s podporou tmavého aj svetlého režimu,</li>
+    <li>Je navrhnutá s ohľadom na budúcu migráciu na cloudové riešenie (Repository Pattern).</li>
+  </ol>
+
+  <h2>1.3 Štruktúra práce</h2>
+
+  <p><strong>Kapitola 2</strong> predstavuje teoretické základy — metódu kritickej cesty, Ganttov diagram a prehľad existujúcich riešení. <strong>Kapitola 3</strong> analyzuje požiadavky na systém z pohľadu používateľských skupín a funkčných/nefunkčných kritérií. <strong>Kapitola 4</strong> popisuje návrh architektúry, databázy, používateľského rozhrania a CPM modulu. <strong>Kapitola 5</strong> sa venuje samotnej implementácii s dôrazom na kľúčové algoritmy a technické rozhodnutia. <strong>Kapitola 6</strong> hodnotí výsledky testovania a dokumentuje opravené chyby. <strong>Kapitola 7</strong> uzatvára prácu zhrnutím dosiahnutých výsledkov a plánmi budúceho rozvoja.</p>
+
+  <div class="page-footer"><span>Kapitola 1 — Úvod</span><span>1</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 2 — ANALÝZA EXISTUJÚCICH RIEŠENÍ
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 2. Analýza existujúcich riešení</div>
+  <span class="chapter-num">Kapitola 2</span>
+  <h1>2. Analýza existujúcich riešení a teoretické základy</h1>
+
+  <h2>2.1 Metóda kritickej cesty (CPM)</h2>
+
+  <p>Metóda kritickej cesty (Critical Path Method — CPM) je technika sieťovej analýzy vyvinutá v 50. rokoch 20. storočia spoločne firmami DuPont a Remington Rand pre plánovanie priemyselných projektov [1]. Metóda pracuje s orientovaným acyklickým grafom (DAG), kde uzly reprezentujú úlohy a hrany závislosti medzi nimi.</p>
+
+  <h3>2.1.1 Základné pojmy</h3>
+
+  <table class="no-break">
+    <thead><tr><th>Symbol</th><th>Anglický názov</th><th>Slovenský preklad</th><th>Definícia</th></tr></thead>
+    <tbody>
+      <tr><td><code>ES</code></td><td>Earliest Start</td><td>Najskorší začiatok</td><td>Najskorší čas, kedy môže úloha začať</td></tr>
+      <tr><td><code>EF</code></td><td>Earliest Finish</td><td>Najskorší koniec</td><td>ES + trvanie úlohy</td></tr>
+      <tr><td><code>LS</code></td><td>Latest Start</td><td>Najneskorší začiatok</td><td>Najneskorší čas začatia bez predĺženia projektu</td></tr>
+      <tr><td><code>LF</code></td><td>Latest Finish</td><td>Najneskorší koniec</td><td>Najneskorší čas ukončenia bez predĺženia projektu</td></tr>
+      <tr><td><code>TF</code></td><td>Total Float</td><td>Celková rezerva</td><td>LS − ES (koľko sa dá oneskoriť bez dopadu)</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.1 — Základné CPM parametre</div>
+
+  <p>Algoritmus prebieha v dvoch prechodoch cez sieť. <strong>Dopredný prechod</strong> (Forward Pass) počíta ES a EF pre každú úlohu postupom od začiatku siete ku koncu. <strong>Spätný prechod</strong> (Backward Pass) počíta LF a LS smerom od konca ku začiatku. Úlohy s nulovou celkovou rezervou (TF = 0) ležia na <em>kritickej ceste</em> — akékoľvek ich oneskorenie predĺži celý projekt.</p>
+
+  <h3>2.1.2 Ilustratívny príklad</h3>
+
+  <p>Uvažujme jednoduchý projekt so štyrmi úlohami a nasledovnými závislosťami: A(3d) → B(2d), A(3d) → C(4d), B a C → D(1d). Algoritmus CPM vypočíta nasledovné hodnoty:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Úloha</th><th>Trvanie</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>TF</th><th>Kritická</th></tr></thead>
+    <tbody>
+      <tr class="crit"><td>A</td><td>3</td><td>0</td><td>3</td><td>0</td><td>3</td><td>0</td><td>✓</td></tr>
+      <tr><td>B</td><td>2</td><td>3</td><td>5</td><td>5</td><td>7</td><td>2</td><td>—</td></tr>
+      <tr class="crit"><td>C</td><td>4</td><td>3</td><td>7</td><td>3</td><td>7</td><td>0</td><td>✓</td></tr>
+      <tr class="crit"><td>D</td><td>1</td><td>7</td><td>8</td><td>7</td><td>8</td><td>0</td><td>✓</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.2 — Výsledky CPM pre ilustratívny príklad. Kritická cesta: A → C → D = 8 dní.</div>
+
+  <p>Úloha B má celkovú rezervu 2 dni — môže sa začať o 2 dni neskôr bez dopadu na celkové trvanie projektu. Úlohy A, C, D ležia na kritickej ceste a majú nulovú rezervu.</p>
+
+  <h2>2.2 Ganttov diagram</h2>
+
+  <p>Ganttov diagram je horizontálny pruhový graf, ktorý vizualizuje projektový harmonogram. Každá úloha je reprezentovaná pruhom, ktorého ľavý okraj zodpovedá ES a dĺžka trvania úlohy. Henry Gantt navrhol túto vizualizáciu okolo roku 1910 [2], pričom dnes patrí k najrozšírenejším nástrojom projektového manažmentu.</p>
+
+  <p>V kombinácii s CPM algoritmus Ganttov diagram obohacuje o ďalší rozmer: svetlomodrý polotransparentný pruh za každou úlohou zobrazuje <em>celkovú rezervu</em> (TF), čo okamžite vizuálne komunikuje, ktoré úlohy majú časový priestor a ktoré nie.</p>
+
+  <h2>2.3 Prehľad existujúcich nástrojov</h2>
+
+  <table>
+    <thead><tr><th>Nástroj</th><th>Typ</th><th>CPM</th><th>Offline</th><th>Cena</th><th>Limitácie</th></tr></thead>
+    <tbody>
+      <tr><td>Microsoft Project</td><td>Desktop</td><td>✓</td><td>✓</td><td>Platená (€€€)</td><td>Vysoká komplexita, vysoká cena</td></tr>
+      <tr><td>Asana</td><td>Web SaaS</td><td>Čiastočne</td><td>✗</td><td>Freemium</td><td>Vyžaduje internet, dáta na serveri</td></tr>
+      <tr><td>Jira</td><td>Web SaaS</td><td>✗</td><td>✗</td><td>Platená</td><td>Primárne pre vývoj SW, nie CPM</td></tr>
+      <tr><td>GanttProject</td><td>Desktop</td><td>Základné</td><td>✓</td><td>Zadarmo</td><td>Zastaralé UI, obmedzená funkcionalita</td></tr>
+      <tr><td>LibreOffice Calc</td><td>Tabuľka</td><td>Manuálne</td><td>✓</td><td>Zadarmo</td><td>Žiadna automatizácia, náchylné na chyby</td></tr>
+      <tr><td><strong>ManagmentApp</strong></td><td>Desktop</td><td>✓ Plné</td><td>✓</td><td>Zadarmo</td><td>Lokálne, plný CPM, Gantt, tím, PDF</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.3 — Porovnanie existujúcich nástrojov projektového manažmentu</div>
+
+  <p>Z analýzy vyplýva, že existujúce bezplatné desktopové riešenia buď neimplementujú CPM vôbec (LibreOffice), alebo ho implementujú len čiastočne (GanttProject). Platené riešenia (MS Project) sú funkčne bohaté, no cenovo nedostupné pre individuálnych používateľov. ManagmentApp zaplňuje túto medzeru — plný CPM algoritmus v bezplatnej, lokálnej desktopovej aplikácii.</p>
+
+  <h2>2.4 Zvolené technológie</h2>
+
+  <table>
+    <thead><tr><th>Komponent</th><th>Technológia</th><th>Verzia</th><th>Odôvodnenie</th></tr></thead>
+    <tbody>
+      <tr><td>Programovací jazyk</td><td>Python</td><td>3.14+</td><td>Rozsiahly ekosystém, rýchly vývoj, multiplatformový</td></tr>
+      <tr><td>GUI framework</td><td>CustomTkinter</td><td>5.2+</td><td>Moderný vzhľad nad Tk, natívna podpora dual-mode</td></tr>
+      <tr><td>Databáza</td><td>SQLite3</td><td>vstavaná</td><td>Lokálna, bezserverová, vhodná pre desktop</td></tr>
+      <tr><td>Grafy</td><td>matplotlib</td><td>3.7+</td><td>FigureCanvasTkAgg integrácia, Gantt + network</td></tr>
+      <tr><td>PDF Export</td><td>reportlab</td><td>4.x</td><td>Programatická tvorba PDF s vlastným layoutom</td></tr>
+      <tr><td>Obrázky</td><td>Pillow</td><td>10+</td><td>Podpora obrázkov v GUI</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.4 — Technologický stack ManagmentApp</div>
+
+  <p>Voľba Pythonu s CustomTkinter poskytuje niekoľko kľúčových výhod. Na rozdiel od PyQt5 alebo wxPython, CustomTkinter natívne podporuje systém farebných tokenov vo formáte <code>(light_value, dark_value)</code>, čo umožňuje transparentné prepínanie tém bez nutnosti manuálnej aktualizácie jednotlivých widgetov.</p>
+
+  <div class="page-footer"><span>Kapitola 2 — Analýza existujúcich riešení</span><span>4</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 3 — ANALÝZA POŽIADAVIEK
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 3. Analýza požiadaviek</div>
+  <span class="chapter-num">Kapitola 3</span>
+  <h1>3. Analýza požiadaviek</h1>
+
+  <h2>3.1 Cieľové skupiny a používateľské roly</h2>
+
+  <p>Aplikácia je primárne určená pre tri cieľové skupiny: <strong>freelancerov a solopodnikateľov</strong>, ktorí spravujú viacero projektov súčasne a potrebujú prehľadný nástroj bez zbytočnej komplexity; <strong>malé tímy</strong> (5–20 ľudí) kde je hierarchia plochá a komunikácia priama; a <strong>manažérov s podriadenými</strong>, ktorí potrebujú priraďovať úlohy a sledovať vyťaženie tímu.</p>
+
+  <p>Systém implementuje trojúrovňovú hierarchiu rolí:</p>
+
+  <ul>
+    <li><strong>Admin</strong> — má prístup ku všetkým funkciám, vidí všetkých používateľov, môže pridávať nových členov tímu,</li>
+    <li><strong>Manager</strong> — spravuje projekty a priraďuje úlohy členom svojho tímu (priamym podriadeným),</li>
+    <li><strong>Employee</strong> — zobrazuje priradené úlohy, aktualizuje ich stav, pridáva komentáre a prílohy.</li>
+  </ul>
+
+  <h2>3.2 Funkčné požiadavky</h2>
+
+  <table>
+    <thead><tr><th>ID</th><th>Požiadavka</th><th>Priorita</th><th>Stav</th></tr></thead>
+    <tbody>
+      <tr><td>FR-01</td><td>Autentifikácia — prihlásenie a odhlásenie s SHA-256 hašovaním hesiel</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-02</td><td>Správa projektov — vytvorenie, editácia, zmena stavu, archivácia</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-03</td><td>Správa úloh — CRUD s CPM poľami (trvanie, oneskorenie, závislosti)</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-04</td><td>CPM výpočet — automatický prepočet po každej zmene úlohy</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-05</td><td>Ganttov diagram — vizualizácia harmonogramu s Float zobrazením</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-06</td><td>CPM sieťový diagram — uzly so 4 kvadrantmi (ES/EF/LS/LF)</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-07</td><td>Správa tímu — pridanie členov, zobrazenie vyťaženia, expand/collapse</td><td>Should</td><td>✅</td></tr>
+      <tr><td>FR-08</td><td>Kalendárny pohľad — mesačný prehľad s úlohami podľa termínu</td><td>Should</td><td>✅</td></tr>
+      <tr><td>FR-09</td><td>Export do PDF — report projektu s Gantt chartom a tabuľkou úloh</td><td>Should</td><td>✅</td></tr>
+      <tr><td>FR-10</td><td>Komentáre a prílohy k úlohám</td><td>Should</td><td>✅</td></tr>
+      <tr><td>FR-11</td><td>Šablóny projektov — uložiť a znovu použiť štruktúru projektu</td><td>Could</td><td>✅</td></tr>
+      <tr><td>FR-12</td><td>Health Score — automatické hodnotenie zdravia projektu</td><td>Could</td><td>✅</td></tr>
+      <tr><td>FR-13</td><td>Prepínanie tmavého a svetlého režimu s perzistenciou</td><td>Must</td><td>✅</td></tr>
+      <tr><td>FR-14</td><td>Vyhľadávanie a filtrovanie projektov</td><td>Should</td><td>✅</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 3.1 — Funkčné požiadavky (MoSCoW prioritizácia)</div>
+
+  <h2>3.3 Nefunkčné požiadavky</h2>
+
+  <table>
+    <thead><tr><th>ID</th><th>Kategória</th><th>Požiadavka</th></tr></thead>
+    <tbody>
+      <tr><td>NFR-01</td><td>Výkon</td><td>CPM prepočet pre 50 úloh do 200 ms</td></tr>
+      <tr><td>NFR-02</td><td>Použiteľnosť</td><td>Aplikácia musí byť plne použiteľná bez internetového pripojenia</td></tr>
+      <tr><td>NFR-03</td><td>Prenosnosť</td><td>Spustiteľná na Windows 10/11 s Pythonom 3.11+</td></tr>
+      <tr><td>NFR-04</td><td>Bezpečnosť</td><td>Heslá uložené výhradne ako SHA-256 haše</td></tr>
+      <tr><td>NFR-05</td><td>Rozšíriteľnosť</td><td>Repository Pattern pre jednoduchú migráciu na PostgreSQL/Supabase</td></tr>
+      <tr><td>NFR-06</td><td>Responsivita</td><td>Minimálna veľkosť okna 960×600 px, scroll pri menšom okne</td></tr>
+      <tr><td>NFR-07</td><td>Dizajn</td><td>Plná podpora tmavého aj svetlého režimu bez hardkódovaných farieb</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 3.2 — Nefunkčné požiadavky</div>
+
+  <div class="page-footer"><span>Kapitola 3 — Analýza požiadaviek</span><span>12</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 4 — NÁVRH SYSTÉMU
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 4. Návrh systému</div>
+  <span class="chapter-num">Kapitola 4</span>
+  <h1>4. Návrh systému</h1>
+
+  <h2>4.1 Architektúra aplikácie</h2>
+
+  <p>Aplikácia je navrhnutá ako <strong>trojvrstvová architekúra</strong> (Three-tier architecture) so striktnou separáciou zodpovedností. Každá vrstva komunikuje výhradne s susednými vrstvami — prezentačná vrstva nikdy neposiela SQL priamo do databázy.</p>
+
+  <div class="arch-wrap">
+    <div class="arch-box" style="background:#e8eef7;border-color:#1a3a6b;">
+      <strong>Prezentačná vrstva (UI)</strong><br>
+      <small>ui/screens/*.py, ui/components/*.py</small><br>
+      <small>CustomTkinter widgety, matplotlib canvasy</small>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box">
+      <strong>Business logika</strong><br>
+      <small>logic/cpm_engine.py, logic/cpm_manager.py</small><br>
+      <small>logic/task_manager.py, logic/export_manager.py</small>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box">
+      <strong>Repository vrstva</strong><br>
+      <small>repositories/task_repo.py, user_repo.py</small><br>
+      <small>repositories/project_repo.py, activity_repo.py</small>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box" style="background:#f5f7fa;">
+      <strong>Databáza</strong><br>
+      <small>SQLite3 — my_project_app.db</small>
+    </div>
+  </div>
+
+  <p>Kľúčovým architektonickým rozhodnutím je implementácia <strong>Repository Pattern</strong>. Celá databázová logika je zapuzdrená v module <code>repositories/</code> — UI nikdy nevykonáva SQL priamo. Toto rozhodnutie bolo prijaté s výhľadom na budúcu migráciu na cloudovú databázu (PostgreSQL/Supabase), kde stačí vymeniť repozitárnu vrstvu bez akejkoľvek zmeny v UI alebo business logike.</p>
+
+  <pre><span class="c"># Príklad toku dát od UI po databázu</span>
+UI → logic.task_manager.add_task(project_id, name, user_id)
+        → task_repo.create_task(project_id, name, assigned_to, created_by)
+              → SQLite: INSERT INTO tasks (...) VALUES (?)</pre>
+
+  <h2>4.2 Schéma databázy</h2>
+
+  <p>Databáza obsahuje 7 tabuliek. Kľúčové vzťahy medzi nimi sú znázornené nižšie.</p>
+
+  <div class="schema-row">
+    <div class="schema-table">
+      <div class="schema-header">users</div>
+      <div class="schema-row-item"><span class="schema-pk">id</span><span class="schema-type">INTEGER PK</span></div>
+      <div class="schema-row-item"><span>username</span><span class="schema-type">TEXT UNIQUE</span></div>
+      <div class="schema-row-item"><span>password</span><span class="schema-type">TEXT (SHA-256)</span></div>
+      <div class="schema-row-item"><span>full_name</span><span class="schema-type">TEXT</span></div>
+      <div class="schema-row-item"><span>role</span><span class="schema-type">TEXT</span></div>
+      <div class="schema-row-item"><span class="schema-fk">manager_id</span><span class="schema-type">FK → users</span></div>
+    </div>
+    <div class="schema-table">
+      <div class="schema-header">projects</div>
+      <div class="schema-row-item"><span class="schema-pk">id</span><span class="schema-type">INTEGER PK</span></div>
+      <div class="schema-row-item"><span class="schema-fk">user_id</span><span class="schema-type">FK → users</span></div>
+      <div class="schema-row-item"><span>name</span><span class="schema-type">TEXT</span></div>
+      <div class="schema-row-item"><span>status</span><span class="schema-type">TEXT</span></div>
+      <div class="schema-row-item"><span>is_template</span><span class="schema-type">BOOLEAN</span></div>
+    </div>
+    <div class="schema-table">
+      <div class="schema-header">tasks</div>
+      <div class="schema-row-item"><span class="schema-pk">id</span><span class="schema-type">INTEGER PK</span></div>
+      <div class="schema-row-item"><span class="schema-fk">project_id</span><span class="schema-type">FK → projects</span></div>
+      <div class="schema-row-item"><span>name, status</span><span class="schema-type">TEXT</span></div>
+      <div class="schema-row-item"><span>duration, delay_days</span><span class="schema-type">INTEGER</span></div>
+      <div class="schema-row-item"><span>es, ef, ls, lf</span><span class="schema-type">INTEGER (CPM)</span></div>
+      <div class="schema-row-item"><span>total_float, is_critical</span><span class="schema-type">INT/BOOL</span></div>
+    </div>
+    <div class="schema-table">
+      <div class="schema-header">task_dependencies</div>
+      <div class="schema-row-item"><span class="schema-pk">id</span><span class="schema-type">INTEGER PK</span></div>
+      <div class="schema-row-item"><span class="schema-fk">task_id</span><span class="schema-type">FK → tasks</span></div>
+      <div class="schema-row-item"><span class="schema-fk">depends_on_task_id</span><span class="schema-type">FK → tasks</span></div>
+      <div class="schema-row-item"><span>type</span><span class="schema-type">TEXT (FS)</span></div>
+    </div>
+  </div>
+
+  <p>CPM polia v tabuľke <code>tasks</code> (es, ef, ls, lf, total_float, is_critical) boli pridané pomocou bezpečnej migrácie — každý <code>ALTER TABLE ADD COLUMN</code> príkaz je obalený v <code>try/except</code> bloku, pretože SQLite nepodporuje syntax <code>ADD COLUMN IF NOT EXISTS</code>. Tento prístup zaručuje spätú kompatibilitu s existujúcimi databázovými súbormi.</p>
+
+  <h2>4.3 Návrh používateľského rozhrania</h2>
+
+  <p>Aplikácia sa skladá z prihlasovacieho okna a hlavného rozhrania s postranným panelom a obsahovou oblasťou. Hierarchia obrazoviek je nasledovná:</p>
+
+  <pre>MainApp (CTk okno)
+├── LoginScreen
+└── MainLayout
+    ├── Sidebar (220 px, fixná)
+    └── Content Area (rastie s oknom)
+        ├── DashboardScreen
+        ├── ProjectsView → ProjectDetailView
+        │       ├── Tab: Dashboard
+        │       ├── Tab: Tasks → TaskEditorDialog
+        │       ├── Tab: Gantt (GanttChartView)
+        │       └── Tab: CPM Network (NetworkDiagramView)
+        ├── TeamView → AddMemberDialog
+        ├── CalendarView
+        └── SettingsScreen</pre>
+
+  <p>Navigácia je implementovaná v triede <code>MainApp</code> metódou <code>handle_navigation(key)</code>, ktorá pri každej zmene obrazovky zničí predchádzajúci widget (<code>destroy()</code>) a vytvorí nový. Toto jednoduché riešenie zaručuje aktuálnosť dát bez nutnosti implementácie komplexného systému invalidácie cache.</p>
+
+  <h2>4.4 Duálny dizajnový systém</h2>
+
+  <p>CustomTkinter natívne podporuje dvojice farebných hodnôt vo formáte <code>(light_value, dark_value)</code>. Pri volaní <code>ctk.set_appearance_mode("light")</code> alebo <code>("dark")</code> sa automaticky prepne na príslušnú hodnotu v každom widgete. Táto vlastnosť bola využitá pri návrhu centralizovaného dizajnového systému v module <code>ui/theme.py</code>.</p>
+
+  <pre><span class="c"># Ukážka duálnych farebných tokenov v ui/theme.py</span>
+BG_MAIN    = (<span class="s">"#F5F7FF"</span>, <span class="s">"#0A0E1A"</span>)   <span class="c"># pozadie stránky</span>
+BG_CARD    = (<span class="s">"#FFFFFF"</span>,  <span class="s">"#101629"</span>)   <span class="c"># karty / elevované plochy</span>
+PRIMARY    = (<span class="s">"#4B7FFF"</span>, <span class="s">"#5A8FFF"</span>)   <span class="c"># primárna brand farba</span>
+BORDER     = (<span class="s">"#E8E8ED"</span>, <span class="s">"#1E263A"</span>)   <span class="c"># orámovanie kariet</span>
+SUCCESS    = (<span class="s">"#1DB86D"</span>, <span class="s">"#1DB86D"</span>)   <span class="c"># rovnaká v oboch módoch</span>
+
+<span class="c"># Font factory — lazy init (CTkFont musí čakať na CTk inicializáciu)</span>
+_font_cache: dict = {}
+
+<span class="k">def</span> <span class="f">get_font</span>(size: int = FONT_SIZE_BASE, weight: str = <span class="s">"normal"</span>) -> ctk.CTkFont:
+    key = (size, weight)
+    <span class="k">if</span> key <span class="k">not in</span> _font_cache:
+        _font_cache[key] = ctk.CTkFont(family=<span class="s">"Segoe UI"</span>, size=size, weight=weight)
+    <span class="k">return</span> _font_cache[key]</pre>
+
+  <p>Pre matplotlib grafy, ktoré nepoužívajú CTk systém, bola implementovaná pomocná funkcia <code>mode_color(token)</code>, ktorá číta aktuálny mód pri čase renderovania:</p>
+
+  <pre><span class="k">def</span> <span class="f">mode_color</span>(token: tuple[str, str]) -> str:
+    <span class="s">"""Vráti správnu farbu podľa aktuálneho appearance mode."""</span>
+    <span class="k">return</span> token[<span class="n">1</span>] <span class="k">if</span> ctk.get_appearance_mode() == <span class="s">"Dark"</span> <span class="k">else</span> token[<span class="n">0</span>]</pre>
+
+  <h2>4.5 Návrh CPM modulu</h2>
+
+  <p>CPM modul je zámerné navrhnutý ako <strong>čistá knižnica bez závislostí na GUI alebo databáze</strong>. Vstupom sú dátové triedy, výstupom je vypočítaný výsledok. Toto rozhodnutie umožňuje:</p>
+  <ul>
+    <li>nezávislé unit testovanie algoritmu,</li>
+    <li>opätovné použitie na backende pri prípadnej migrácii na webové riešenie,</li>
+    <li>čisté oddelenie výpočtu od prezentácie (výsledky sa uložia do DB samostatne).</li>
+  </ul>
+
+  <p>Modul <code>cpm_manager.py</code> slúži ako mostík — načíta úlohy z databázy, prevedie ich na <code>CPMTask</code> dátové triedy, spustí engine a výsledky uloží späť.</p>
+
+  <div class="page-footer"><span>Kapitola 4 — Návrh systému</span><span>17</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 5 — IMPLEMENTÁCIA
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+  <span class="chapter-num">Kapitola 5</span>
+  <h1>5. Implementácia</h1>
+
+  <h2>5.1 Vývojové prostredie a nástroje</h2>
+
+  <table class="no-break">
+    <thead><tr><th>Nástroj</th><th>Účel</th></tr></thead>
+    <tbody>
+      <tr><td>PyCharm Community</td><td>Primárne IDE, debugger, refaktoring</td></tr>
+      <tr><td>Claude Code (Anthropic)</td><td>AI-asistovaný vývoj, code review, dokumentácia</td></tr>
+      <tr><td>Git / GitHub</td><td>Verzionovanie zdrojového kódu</td></tr>
+      <tr><td>Obsidian</td><td>Technická dokumentácia v Markdown (knowledge base)</td></tr>
+      <tr><td>DB Browser for SQLite</td><td>Prezeranie a ladenie databázy</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.1 — Vývojové prostredie</div>
+
+  <h2>5.2 Štruktúra projektu</h2>
+
+  <pre>ManagmentApp/
+├── main.py                    <span class="c"># Entry point, MainApp trieda, navigácia</span>
+├── config.json                <span class="c"># Perzistentné nastavenia (theme)</span>
+├── database/
+│   └── setup.py               <span class="c"># create_database(), bezpečné migrácie</span>
+├── repositories/              <span class="c"># Repository Pattern — len SQL logika</span>
+│   ├── base_repo.py           <span class="c"># get_connection(), rows_to_dicts()</span>
+│   ├── task_repo.py
+│   ├── user_repo.py
+│   ├── project_repo.py
+│   └── activity_repo.py
+├── logic/                     <span class="c"># Business logika — žiadny SQL, žiadne UI</span>
+│   ├── cpm_engine.py          <span class="c"># Čistý CPM algoritmus</span>
+│   ├── cpm_manager.py         <span class="c"># DB ↔ CPM bridge</span>
+│   ├── auth.py
+│   ├── task_manager.py
+│   ├── export_manager.py      <span class="c"># PDF generovanie cez reportlab</span>
+│   └── hierarchy.py           <span class="c"># Tímová hierarchia</span>
+├── ui/
+│   ├── theme.py               <span class="c"># Duálny dizajnový systém</span>
+│   ├── components/
+│   │   └── sidebar.py
+│   └── screens/               <span class="c"># Jedna trieda = jedna obrazovka</span>
+│       ├── login_screen.py
+│       ├── dashboard.py
+│       ├── project_view.py
+│       ├── project_detail.py
+│       ├── team_view.py
+│       ├── calendar_view.py
+│       ├── settings.py
+│       ├── gantt_chart.py
+│       └── network_diagram.py
+└── attachments/               <span class="c"># Lokálne kopie príloh k úlohám</span></pre>
+
+  <h2>5.3 Databázová vrstva a Repository Pattern</h2>
+
+  <h3>5.3.1 Inicializácia databázy</h3>
+
+  <p>Funkcia <code>create_database()</code> v module <code>database/setup.py</code> sa spúšťa pri každom štarte aplikácie. Zaručuje, že všetky tabuľky existujú a databáza je v konzistentnom stave. Obsahuje aj automatickú migráciu hesiel z plaintext formátu na SHA-256 haše — pre prípad upgradu zo staršej verzie aplikácie.</p>
+
+  <h3>5.3.2 base_repo.py</h3>
+
+  <p>Základ celej repozitárnej vrstvy tvorí konfigurácia <code>sqlite3.Row</code> factory. Táto konfigurácia umožňuje prístup k stĺpcom podľa mena (nie len podľa indexu), čo eliminuje celú triedu chýb, kde UI pristupovalo k dátam cez numerické indexy (<code>row[0]</code>, <code>row[4]</code>) namiesto sémanticky pomenovaných kľúčov.</p>
+
+  <pre><span class="k">def</span> <span class="f">get_connection</span>():
+    conn = sqlite3.<span class="f">connect</span>(DB_PATH)
+    conn.row_factory = sqlite3.Row  <span class="c"># prístup: row["id"] nie row[0]</span>
+    <span class="k">return</span> conn
+
+<span class="k">def</span> <span class="f">rows_to_dicts</span>(rows) -> list[dict]:
+    <span class="k">return</span> [dict(r) <span class="k">for</span> r <span class="k">in</span> rows]  <span class="c"># vždy plain dict do UI</span></pre>
+
+  <h3>5.3.3 Kľúčové funkcie task_repo.py</h3>
+
+  <p>Najkomplexnejšia repozitárna funkcia je <code>get_tasks_for_project_with_cpm(project_id)</code>, ktorá vracia zoznam úloh obohateným o CPM polia, meno prideleného používateľa (JOIN s tabuľkou users) a informáciu o kritickosti. Táto funkcia je volaná vždy po prepočte CPM a po každej zmene filtrov v Tasks tab.</p>
+
+  <h2>5.4 Business logika — CPM Engine</h2>
+
+  <h3>5.4.1 Dátové štruktúry</h3>
+
+  <p>CPM engine používa dve dátové triedy implementované ako Python dataclasses:</p>
+
+  <pre><span class="k">from</span> dataclasses <span class="k">import</span> dataclass, field
+
+@dataclass
+<span class="k">class</span> <span class="f">CPMTask</span>:
+    id: int;  name: str;  duration: int
+    dependencies: list[int] = field(default_factory=list)
+    delay_days: int = <span class="n">0</span>;  status: str = <span class="s">"pending"</span>
+    <span class="c"># Vypočítané polia (Forward + Backward Pass):</span>
+    es: int = <span class="n">0</span>;  ef: int = <span class="n">0</span>;  ls: int = <span class="n">0</span>;  lf: int = <span class="n">0</span>
+    total_float: int = <span class="n">0</span>;  is_critical: bool = False
+
+@dataclass
+<span class="k">class</span> <span class="f">CPMResult</span>:
+    tasks: list[CPMTask]
+    critical_path: list[int]              <span class="c"># IDs kritických úloh</span>
+    project_duration: int                 <span class="c"># celkové trvanie</span>
+    project_duration_without_delays: int  <span class="c"># bez oneskorení</span>
+    total_project_delay: int
+    is_valid: bool;  errors: list[str]</pre>
+
+  <h3>5.4.2 Implementácia algoritmu</h3>
+
+  <p>Algoritmus prebieha v šiestich krokoch. Prvým krokom je <strong>detekcia cyklov</strong> pomocou DFS (hĺbkového prehľadávania). Každý uzol má jeden z troch stavov: BIELE (nenavštívený), SIVÉ (v aktuálnej ceste), ČIERNE (spracovaný). Ak DFS narazí na sivý uzol, existuje cyklus a CPM nie je možné vypočítať — algoritmus vráti <code>CPMResult(is_valid=False)</code>.</p>
+
+  <pre><span class="k">def</span> <span class="f">detect_cycle</span>(tasks: list[CPMTask]) -> bool:
+    task_map = {t.id: t <span class="k">for</span> t <span class="k">in</span> tasks}
+    WHITE, GRAY, BLACK = <span class="n">0</span>, <span class="n">1</span>, <span class="n">2</span>
+    color = {t.id: WHITE <span class="k">for</span> t <span class="k">in</span> tasks}
+
+    <span class="k">def</span> <span class="f">dfs</span>(node_id):
+        color[node_id] = GRAY
+        <span class="k">for</span> dep <span class="k">in</span> task_map[node_id].dependencies:
+            <span class="k">if</span> dep <span class="k">not in</span> task_map: <span class="k">continue</span>
+            <span class="k">if</span> color[dep] == GRAY: <span class="k">return</span> True  <span class="c"># cyklus!</span>
+            <span class="k">if</span> color[dep] == WHITE <span class="k">and</span> <span class="f">dfs</span>(dep): <span class="k">return</span> True
+        color[node_id] = BLACK
+        <span class="k">return</span> False
+
+    <span class="k">return</span> <span class="f">any</span>(<span class="f">dfs</span>(t.id) <span class="k">for</span> t <span class="k">in</span> tasks <span class="k">if</span> color[t.id] == WHITE)</pre>
+
+  <p>Druhým krokom je <strong>topologické triedenie</strong> algoritmom Kahn. Výsledné poradie garantuje, že pred spracovaním každej úlohy sú spracované všetky jej závislosti.</p>
+
+  <p>Tretím krokom je <strong>Forward Pass</strong> — iterácia cez topologicky usporiadané úlohy. ES každej úlohy je maximum EF všetkých predchodcov plus <code>delay_days</code>:</p>
+
+  <pre>es = max(ef[dep] <span class="k">for</span> dep <span class="k">in</span> dependencies) + delay_days  <span class="c"># (alebo 0 + delay)</span>
+ef = es + duration</pre>
+
+  <p>Štvrtým krokom je <strong>Backward Pass</strong> — iterácia v obrátenom topologickom poradí. LF poslednej úlohy je rovné celkovému trvaniu projektu. Pre ostatné úlohy je LF minimum LS všetkých nasledovníkov:</p>
+
+  <pre>lf = min(ls[succ] <span class="k">for</span> succ <span class="k">in</span> successors)
+ls = lf - duration</pre>
+
+  <p>Piatym krokom je výpočet celkovej rezervy a označenie kritickosti: <code>total_float = ls - es</code>. Úlohy s <code>total_float == 0</code> sú kritické.</p>
+
+  <p>Šiestym krokom je <strong>baseline porovnanie</strong> — algoritmus sa spustí dvakrát (raz s <code>delay_days</code>, raz bez), čo umožňuje vypočítať celkové oneskorenie projektu spôsobené ručne zadanými oneskoreniami.</p>
+
+  <h3>5.4.3 Health Score</h3>
+
+  <p>Funkcia <code>calculate_health_score()</code> vyhodnocuje aktuálny stav projektu na stupnici 0–100 aplikovaním penalizácií:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Podmienka</th><th>Penalizácia</th></tr></thead>
+    <tbody>
+      <tr><td>Každá zablokovaná úloha (<em>blocked</em>)</td><td>−10 bodov</td></tr>
+      <tr><td>Každá kritická úloha po termíne</td><td>−15 bodov</td></tr>
+      <tr><td>Každý deň sklzu projektu</td><td>−2 body</td></tr>
+      <tr><td>Každý deň ručného oneskorenia (<em>delay_days</em>)</td><td>−3 body</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.2 — Penalizačná schéma Health Score</div>
+
+  <h2>5.5 Prezentačná vrstva</h2>
+
+  <h3>5.5.1 Prihlasovacia obrazovka (LoginScreen)</h3>
+
+  <p>Prihlasovacia obrazovka je prvým dotykom používateľa s aplikáciou. Implementuje centrovanú kartu s logom, dvomi vstupnými poľami (username, password) a primárnym tlačidlom. Prihlásenie funguje stlačením Enter z ľubovoľného poľa vďaka bindingom <code>&lt;Return&gt;</code>. Po úspešnom prihlásení sa zavolá <code>on_login_success</code> callback s 200 ms oneskorením (aby Tkinter stihol uzavrieť dialog pred otvorením hlavného okna).</p>
+
+  <h3>5.5.2 Dashboard</h3>
+
+  <p>Dashboard zobrazuje tri gradient štatistické karty (aktívne projekty, moje úlohy, po termíne) a matplotlib donut chart so stavom úloh. Pri riešení pamäťového úniku bol implementovaný <code>_on_destroy</code> hook, ktorý zavolá <code>plt.close("all")</code> pri každom zničení widget stromčeka. Celé telo dashboardu (okrem hlavičky s pozdravom a dátumom) je zabalené v <code>CTkScrollableFrame</code> pre responsivitu pri menšom okne.</p>
+
+  <h3>5.5.3 Project Detail — záložková navigácia</h3>
+
+  <p>Project Detail implementuje záložkový systém bez natívneho <code>CTkTabview</code> widgetu. Dôvodom je potreba jemnej vizualizácie aktívnej záložky s <code>PRIMARY_MUTED</code> pozadím a <code>PRIMARY</code> textom (namiesto plného fill efektu). Pri každom prepnutí záložky sa obsah oblasti <code>_content</code> zničí (<code>destroy()</code>) a nanovo vytvorí príslušná sekcia.</p>
+
+  <h3>5.5.4 Správa tímu (TeamView)</h3>
+
+  <p>TeamView zobrazuje pre každého člena tímu kartu s farebnými avatarmi (iniciálky + farba podľa roly), progress barom dokončenia, agregovanými štatistikami a expandovateľným zoznamom úloh. Expand/collapse je implementovaný cez toggle premennej a podmienečné zobrazenie vnoreného CTkFrame.</p>
+
+  <h2>5.6 Vizualizácie — Gantt Chart a CPM Network</h2>
+
+  <h3>5.6.1 Integrácia matplotlib do CustomTkinter</h3>
+
+  <p>Oba grafy používajú <code>FigureCanvasTkAgg</code> backend pre vloženie matplotlib figúry priamo do CTkFrame. Kľúčovým technickým problémom bol <strong>konflikt s interným atribútom CTkFrame</strong>: trieda <code>CTkFrame</code> interne používa atribút <code>self._canvas</code> pre vlastné Tkinter plátno. Pri pomenovaní matplotlib canvasu rovnakým menom dochádzalo k prepísaniu interného atribútu a pádu aplikácie.</p>
+
+  <p>Riešením je použitie názvu <code>self._mpl_canvas</code> a explicitný <code>destroy()</code> override namiesto <code>bind("&lt;Destroy&gt;")</code>:</p>
+
+  <pre><span class="k">def</span> <span class="f">destroy</span>(self):
+    <span class="s">"""Override — uvoľní matplotlib zdroje pred zničením widgetu."""</span>
+    <span class="k">if</span> self._mpl_canvas:
+        <span class="k">try</span>:
+            self._mpl_canvas.<span class="f">get_tk_widget</span>().<span class="f">destroy</span>()
+        <span class="k">except</span> Exception:
+            <span class="k">pass</span>
+    <span class="k">if</span> self._fig:
+        plt.<span class="f">close</span>(self._fig)
+    <span class="k">super</span>().<span class="f">destroy</span>()</pre>
+
+  <h3>5.6.2 Ganttov diagram — implementačné detaily</h3>
+
+  <p>Ganttov diagram je horizontálny pruhový chart (<code>ax.barh()</code>). Úlohy sú zoradené podľa ES hodnoty (najskôr začínajúce hore). Pre každú úlohu sa vykreslí hlavný pruh (farba podľa kritickosti/stavu) a za ním polotransparentný pruh zobrazujúci total float. Závislosti sú vizualizované pomocou <code>FancyArrowPatch</code> šípkami.</p>
+
+  <p>Pre správne zobrazenie v oboch farebných módoch sú všetky farby pozadia, textu a mriežky určené pri čase renderovania pomocou <code>mode_color()</code> — nie pri načítaní modulu:</p>
+
+  <pre><span class="c"># Správne — resolve pri renderovaní</span>
+color_bg   = <span class="f">mode_color</span>(BG_MAIN)
+color_text = <span class="f">mode_color</span>(TEXT_PRIMARY)
+fig.patch.<span class="f">set_facecolor</span>(color_bg)
+ax.<span class="f">set_facecolor</span>(color_bg)</pre>
+
+  <h3>5.6.3 CPM sieťový diagram — topologické rozloženie</h3>
+
+  <p>Uzly v sieťovom diagrame sú rozmiestňované na základe topologickej úrovne každej úlohy. Topologická úroveň sa vypočíta rekurzívne: úlohy bez závislostí sú na úrovni 0, každá ďalšia úloha je na úrovni max(úroveň predchodcov) + 1. Uzol je vykreslený ako <code>FancyBboxPatch</code> so štyrmi kvadrantmi zobrazujúcimi ES, EF, LS, LF hodnoty.</p>
+
+  <h2>5.7 Export do PDF</h2>
+
+  <p>Export generuje komplexný report projektu pomocou knižnice reportlab. Kľúčovým problémom bola podpora slovenských znakov — štandardné Helvetica Type1 fonty v reportlab nepodporujú Latin Extended-A znaky (š, č, ž, ľ, ď, etc.). Riešením je registrácia TrueType fontu DejaVu, ktorý je distribučne pribalený s matplotlib:</p>
+
+  <pre><span class="k">import</span> matplotlib
+_FONT_DIR = os.path.<span class="f">join</span>(
+    os.path.<span class="f">dirname</span>(matplotlib.__file__), <span class="s">"mpl-data"</span>, <span class="s">"fonts"</span>, <span class="s">"ttf"</span>
+)
+pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu"</span>,
+    os.path.<span class="f">join</span>(_FONT_DIR, <span class="s">"DejaVuSans.ttf"</span>)))
+pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bold"</span>,
+    os.path.<span class="f">join</span>(_FONT_DIR, <span class="s">"DejaVuSans-Bold.ttf"</span>)))</pre>
+
+  <p>Ganttov diagram je vložený do PDF vygenerovaním matplotlib figúry priamo do pamäte (<code>io.BytesIO</code>) bez zápisu na disk, čo zabraňuje problémom s oprávneniami súborového systému a zrýchľuje generovanie.</p>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>28</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 6 — TESTOVANIE
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 6. Testovanie a hodnotenie</div>
+  <span class="chapter-num">Kapitola 6</span>
+  <h1>6. Testovanie a hodnotenie</h1>
+
+  <h2>6.1 Testovacia stratégia</h2>
+
+  <p>Testovanie aplikácie prebehlo na troch úrovniach: manuálne overenie CPM algoritmu na referenčnom príklade s ručne vypočítanými hodnotami; integračné testovanie celého toku dát (UI → logic → repo → DB → UI); a exploračné testovanie používateľského rozhrania v tmavom aj svetlom režime na rôznych veľkostiach okna.</p>
+
+  <div class="note">
+    <strong>Poznámka:</strong> Automatizované unit testy (pytest) neboli implementované v rámci tejto bakalárskej práce a sú plánované ako priorita pre verziu 2.0. CPM algoritmus bol overený manuálne na základe referenčného príkladu z kapitoly 2.1.2.
+  </div>
+
+  <h2>6.2 Dokumentácia chýb a ich opravy</h2>
+
+  <p>Počas vývoja bolo identifikovaných a opravených 8 signifikantných chýb. Každá bola zdokumentovaná v Obsidian knowledge base s popisom príčiny, dopadom a implementovaným riešením.</p>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag critical">Kritická</span>
+      <span class="bug-name">BUG-01: matplotlib canvas konflikt s CTkFrame._canvas</span>
+    </div>
+    <p><strong>Symptóm:</strong> <code>AttributeError: 'FigureCanvasTkAgg' object has no attribute 'bind'</code> pri otvorení záložky Gantt alebo CPM Network.</p>
+    <p><strong>Príčina:</strong> <code>CTkFrame</code> interne používa atribút <code>self._canvas</code> pre vlastné Tkinter plátno. Priradenie <code>self._canvas = FigureCanvasTkAgg(...)</code> prepísalo tento interný atribút, čo spôsobilo pád pri volaní metódy <code>bind()</code> na CTkFrame.</p>
+    <p><strong>Riešenie:</strong> Premenovanie na <code>self._mpl_canvas</code> vo všetkých výskytoch. Nahradenie <code>bind("&lt;Destroy&gt;")</code> za <code>destroy()</code> override, ktorý explicitne uvoľní matplotlib zdroje.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag critical">Kritická</span>
+      <span class="bug-name">BUG-02: Slovenské znaky ako čierne štvorce v PDF</span>
+    </div>
+    <p><strong>Symptóm:</strong> Znaky š, č, ž, ľ, á, é, ú sa v exportovanom PDF zobrazujú ako čierne obdĺžniky.</p>
+    <p><strong>Príčina:</strong> Reportlab predvolene používa Helvetica (Type1 PostScript font), ktorá nepodporuje znaky Latin Extended-A (kódová stránka nad U+00FF).</p>
+    <p><strong>Riešenie:</strong> Registrácia TrueType fontu DejaVuSans z matplotlib bundle, ktorý kompletne pokrýva latinku vrátane slovenských diakritík.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag critical">Kritická</span>
+      <span class="bug-name">BUG-03: Názov projektu vertikálne orezaný v PDF banneri</span>
+    </div>
+    <p><strong>Symptóm:</strong> Dlhý názov projektu je v PDF banneri orezaný na polovicu výšky.</p>
+    <p><strong>Príčina:</strong> Reportlab Table s <code>VALIGN=MIDDLE</code> a automaticky vypočítanou výškou riadku orezáva text pri väčšom font size.</p>
+    <p><strong>Riešenie:</strong> Reorganizácia bannera na 2-riadkový layout s použitím <code>SPAN</code> a <code>VALIGN=TOP</code>, odstránenie <code>splitLongWords</code> a <code>wordWrap</code> z titulného štýlu.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag critical">Kritická</span>
+      <span class="bug-name">BUG-04: color_blend() zlyhá keď BG_CARD je tuple</span>
+    </div>
+    <p><strong>Symptóm:</strong> <code>TypeError</code> pri volaní <code>color_blend(color, bg=BG_CARD)</code> po migrácii na duálny dizajnový systém.</p>
+    <p><strong>Príčina:</strong> Funkcia <code>color_blend()</code> očakávala parameter <code>bg</code> ako jednoduchý hex string, ale po zavedení dual-mode tokenov je <code>BG_CARD</code> tuple <code>(light, dark)</code>.</p>
+    <p><strong>Riešenie:</strong> Pridanie parametra <code>dark: bool</code> do signatúry <code>color_blend()</code> a implementácia pomocníka <code>color_blend_dual(hex_tuple, alpha)</code>, ktorý generuje blend pre oba módy naraz.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag medium">Stredná</span>
+      <span class="bug-name">BUG-05: TclError — pack vs grid geometry manager konflikt</span>
+    </div>
+    <p><strong>Symptóm:</strong> <code>_tkinter.TclError: cannot use geometry manager pack inside ... which already has slaves managed by grid</code> pri otvorení dashboardu.</p>
+    <p><strong>Príčina:</strong> Po refaktoringu pri zavedení scrollovateľného kontajnera bol matplotlib canvas vložený pomocou <code>.pack()</code> do rámca, ktorý pre ostatné widgety používal <code>.grid()</code>. Tkinter nepovoľuje miešanie geometry managerov.</p>
+    <p><strong>Riešenie:</strong> Zmena <code>.pack()</code> na <code>.grid(row=1, column=0, sticky="nsew")</code> s explicitnou konfiguráciou <code>grid_rowconfigure(1, weight=1)</code>.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag critical">Kritická</span>
+      <span class="bug-name">BUG-06: AttributeError: content_area pri navigácii po páde</span>
+    </div>
+    <p><strong>Symptóm:</strong> Po páde pri inicializácii Dashboardu (BUG-05) každý klik na sidebar generuje <code>AttributeError: '_tkinter.tkapp' object has no attribute 'content_area'</code>.</p>
+    <p><strong>Príčina:</strong> Atribút <code>self.content_area</code> bol inicializovaný až v metóde <code>show_main_layout()</code>, nie v konštruktore <code>__init__</code>. Keď <code>show_main_layout()</code> padlo pred priradením atribútu, sidebar callbacks ho nemohli nájsť.</p>
+    <p><strong>Riešenie:</strong> Pridanie <code>self.content_area = None</code> do <code>__init__</code> a použitie <code>getattr(self, 'content_area', None)</code> v <code>handle_navigation()</code> ako defensive check.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag medium">Stredná</span>
+      <span class="bug-name">BUG-07: KeyError 0 po zavedení Repository Pattern</span>
+    </div>
+    <p><strong>Symptóm:</strong> <code>KeyError: 0</code> pri otvorení ProjectView, TeamView, ProjectDetail.</p>
+    <p><strong>Príčina:</strong> UI kód pristupoval k dátam cez numerické indexy (<code>user_data[0]</code>) po tom, čo repozitárna vrstva začala vracať slovníky namiesto tuples.</p>
+    <p><strong>Riešenie:</strong> Náhrada všetkých numerických prístupov za pomenované kľúče (<code>user_data["id"]</code>) s defensive pattern pre spätú kompatibilitu: <code>isinstance(data, dict)</code> check.</p>
+  </div>
+
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag low">Nízka</span>
+      <span class="bug-name">BUG-08: border_color="transparent" v CTkFrame</span>
+    </div>
+    <p><strong>Symptóm:</strong> <code>ValueError: transparency not allowed</code> v CalendarView.</p>
+    <p><strong>Príčina:</strong> CustomTkinter akceptuje <code>"transparent"</code> ako <code>fg_color</code>, ale nie ako <code>border_color</code>.</p>
+    <p><strong>Riešenie:</strong> Podmienečné nastavenie border parametrov iba keď je bunka vybraná, pomocou <code>**kwargs</code> rozbalenia slovníka.</p>
+  </div>
+
+  <h2>6.3 Hodnotenie splnenia požiadaviek</h2>
+
+  <table>
+    <thead><tr><th>ID</th><th>Požiadavka</th><th>Splnenie</th></tr></thead>
+    <tbody>
+      <tr><td>FR-01 až FR-14</td><td>Všetky funkčné požiadavky</td><td>✅ Splnené</td></tr>
+      <tr><td>NFR-01</td><td>CPM prepočet &lt; 200 ms pre 50 úloh</td><td>✅ ~15 ms (meraný)</td></tr>
+      <tr><td>NFR-02</td><td>Plná offline funkcionalita</td><td>✅ Splnené</td></tr>
+      <tr><td>NFR-03</td><td>Windows 10/11, Python 3.11+</td><td>✅ Otestované na 3.14</td></tr>
+      <tr><td>NFR-04</td><td>SHA-256 heslá</td><td>✅ Vrátane automatickej migrácie</td></tr>
+      <tr><td>NFR-05</td><td>Repository Pattern</td><td>✅ Implementované</td></tr>
+      <tr><td>NFR-06</td><td>minsize 960×600, scroll</td><td>✅ Splnené</td></tr>
+      <tr><td>NFR-07</td><td>Plný dark + light mode</td><td>✅ Bez hardkódovaných farieb</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 6.1 — Hodnotenie splnenia nefunkčných požiadaviek</div>
+
+  <div class="page-footer"><span>Kapitola 6 — Testovanie a hodnotenie</span><span>42</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 7 — ZÁVER
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Záver</div>
+  <span class="chapter-num">Kapitola 7</span>
+  <h1>7. Záver</h1>
+
+  <h2>7.1 Zhrnutie dosiahnutých výsledkov</h2>
+
+  <p>Táto bakalárska práca predstavila návrh a implementáciu desktopovej aplikácie ManagmentApp pre projektový manažment s metódou kritickej cesty. Všetky stanovené ciele práce boli úspešne splnené.</p>
+
+  <p>Ústredným prínosom práce je implementácia <strong>kompletného CPM algoritmu</strong> zahŕňajúceho detekciu cyklov (DFS), topologické triedenie (Kahn), dopredný a spätný prechod, výpočet celkovej rezervy a identifikáciu kritickej cesty. Algoritmus bol navrhnutý ako čistá knižnica bez akýchkoľvek GUI alebo databázových závislostí, čo zaručuje jeho ľahkú testovateľnosť a prenositeľnosť.</p>
+
+  <p>Ďalším podstatným prínosom je <strong>duálny dizajnový systém</strong> postavený na natívnych schopnostiach CustomTkinter — dvojice farebných tokenov <code>(light, dark)</code> umožňujú plnohodnotné prepínanie tém bez duplikovania logiky alebo manuálnej aktualizácie jednotlivých widgetov. Tento prístup môže slúžiť ako vzorové riešenie pre iné projekty postavené na tejto technológii.</p>
+
+  <p>Architektonické rozhodnutie implementovať <strong>Repository Pattern</strong> separujúci databázovú logiku od business logiky a UI je investíciou do budúcnosti projektu. Migrácia na cloudové riešenie (PostgreSQL/Supabase) si vyžiada minimálne zmeny — stačí vymeniť implementácie repozitárov bez dotyku na zvyšku kódu.</p>
+
+  <p>Aplikácia bola vydaná ako verzia <strong>v1.0 MVP</strong> s nasledovnými hlavnými funkciami: správa projektov a úloh, plný CPM algoritmus, Gantt diagram, CPM sieťový diagram, správa tímu s trojúrovňovou hierarchiou, kalendárny pohľad, komentáre a prílohy k úlohám, šablóny projektov a export do PDF.</p>
+
+  <h2>7.2 Obmedzenia a budúca práca</h2>
+
+  <p>Aktuálna verzia má niekoľko identifikovaných obmedzení, ktoré sú plánované na riešenie v rámci verzie 2.0:</p>
+
+  <table>
+    <thead><tr><th>Obmedzenie</th><th>Plánované riešenie</th><th>Priorita</th></tr></thead>
+    <tbody>
+      <tr><td>Žiadne automatizované unit testy</td><td>pytest test suite pre CPM engine a repo vrstvu</td><td>Vysoká</td></tr>
+      <tr><td>Admin vidí len priamych podriadených</td><td>Rekurzívny SQL dotaz pre celý strom hierarchie</td><td>Stredná</td></tr>
+      <tr><td>Gantt nepodporuje scroll pre veľké projekty</td><td>matplotlib interactive scroll alebo virtualizácia</td><td>Stredná</td></tr>
+      <tr><td>matplotlib grafy nie sú interaktívne</td><td>Hover tooltips, click-to-edit prepojenia</td><td>Nízka</td></tr>
+      <tr><td>Import/Export cez CSV</td><td>csv modul, štandardizovaný formát</td><td>Nízka</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.1 — Identifikované obmedzenia a plánované riešenia</div>
+
+  <p>Víziou pre <strong>verziu 2.0</strong> je transformácia na cloud/SaaS platformu s FastAPI backendom, PostgreSQL databázou cez Supabase, React/Next.js webovým frontendom a systémom notifikácií. Implementácia Repository Pattern v súčasnej verzii je presne týmto smerom orientovaná — kladie solid základ pre túto migráciu.</p>
+
+  <p>Aplikácia ManagmentApp demonštruje, že moderné desktopové aplikácie v Pythone môžu konkurovať webovým riešeniam nielen funkčnosťou, ale aj vizuálnou kvalitou a používateľskou skúsenosťou — za predpokladu dôsledného použitia dizajnových systémov a architektonických vzorov.</p>
+
+  <div class="success-box">
+    <strong>Záverečné zhodnotenie:</strong> Všetkých 14 funkčných požiadaviek (FR-01 až FR-14) a všetkých 7 nefunkčných požiadaviek (NFR-01 až NFR-07) bolo splnených. Aplikácia ManagmentApp v1.0 MVP je plne funkčná a pripravená na nasadenie.
+  </div>
+
+  <div class="page-footer"><span>Kapitola 7 — Záver</span><span>49</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LITERATÚRA
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; Literatúra</div>
+  <span class="chapter-num">Zoznam použitej literatúry</span>
+  <h1>Zoznam použitej literatúry</h1>
+
+  <p style="font-size:10.5pt;color:var(--text-dim);margin-bottom:16pt;font-style:italic;">Zoznam je zostavený podľa normy STN ISO 690.</p>
+
+  <ol style="font-size:11pt;line-height:1.8;">
+    <li style="margin-bottom:10pt;">KELLEY, James E.; WALKER, Morgan R. <em>Critical-Path Planning and Scheduling</em>. In: Proceedings of the Eastern Joint Computer Conference. 1959, s. 160–173.</li>
+
+    <li style="margin-bottom:10pt;">GANTT, Henry L. <em>Work, Wages and Profits</em>. New York: Engineering Magazine Co., 1910.</li>
+
+    <li style="margin-bottom:10pt;">PROJECT MANAGEMENT INSTITUTE. <em>A Guide to the Project Management Body of Knowledge (PMBOK Guide)</em>. 7. vyd. Newtown Square: PMI, 2021. ISBN 978-1-62825-664-2.</li>
+
+    <li style="margin-bottom:10pt;">MEREDITH, Jack R.; MANTEL, Samuel J. <em>Project Management: A Managerial Approach</em>. 9. vyd. Hoboken: Wiley, 2015. ISBN 978-1-118-94007-7.</li>
+
+    <li style="margin-bottom:10pt;">REITZ, Jasper et al. <em>CustomTkinter Documentation</em> [online]. 2023. Dostupné na: &lt;https://customtkinter.tomschimansky.com/&gt; [cit. 2025-04-10].</li>
+
+    <li style="margin-bottom:10pt;">HUNTER, John D. <em>Matplotlib: A 2D Graphics Environment</em>. In: Computing in Science &amp; Engineering. 2007, roč. 9, č. 3, s. 90–95. ISSN 1521-9615.</li>
+
+    <li style="margin-bottom:10pt;">SQLITE CONSORTIUM. <em>SQLite Documentation</em> [online]. 2024. Dostupné na: &lt;https://www.sqlite.org/docs.html&gt; [cit. 2025-04-10].</li>
+
+    <li style="margin-bottom:10pt;">REPORTLAB GROUP. <em>ReportLab PDF Library User Guide</em> [online]. 2024. Dostupné na: &lt;https://docs.reportlab.com/&gt; [cit. 2025-04-10].</li>
+
+    <li style="margin-bottom:10pt;">FOWLER, Martin. <em>Patterns of Enterprise Application Architecture</em>. Boston: Addison-Wesley, 2002. ISBN 0-321-12521-5. (Repository Pattern)</li>
+
+    <li style="margin-bottom:10pt;">VAN ROSSUM, Guido; WARSAW, Barry; COGHLAN, Nick. <em>PEP 8 — Style Guide for Python Code</em> [online]. 2001. Dostupné na: &lt;https://peps.python.org/pep-0008/&gt; [cit. 2025-04-10].</li>
+
+    <li style="margin-bottom:10pt;">CORMEN, Thomas H. et al. <em>Introduction to Algorithms</em>. 4. vyd. Cambridge: MIT Press, 2022. ISBN 978-0-262-04630-5. (Topological Sort, DFS)</li>
+
+    <li style="margin-bottom:10pt;">KAHN, Arthur B. <em>Topological Sorting of Large Networks</em>. In: Communications of the ACM. 1962, roč. 5, č. 11, s. 558–562.</li>
+  </ol>
+
+  <div class="page-footer"><span>Zoznam použitej literatúry</span><span>52</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PRÍLOHA A — ŠTRUKTÚRA PROJEKTU
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; Prílohy</div>
+  <span class="chapter-num">Príloha A</span>
+  <h1>Príloha A — Štruktúra projektu</h1>
+
+  <p>Nasledujúci výpis zobrazuje kompletný strom súborov projektu ManagmentApp v1.0:</p>
+
+  <pre>ManagmentApp/
+│
+├── main.py                        <span class="c"># Entry point, MainApp(CTk)</span>
+├── config.json                    <span class="c"># Perzistentné nastavenia (theme: dark|light)</span>
+├── requirements.txt               <span class="c"># Python závislosti</span>
+├── my_project_app.db              <span class="c"># SQLite databáza (generovaná pri 1. štarte)</span>
+│
+├── database/
+│   └── setup.py                   <span class="c"># create_database(), migrácie, SHA-256 upgrade</span>
+│
+├── repositories/                  <span class="c"># Repository Pattern — čistý SQL, bez UI</span>
+│   ├── __init__.py
+│   ├── base_repo.py               <span class="c"># get_connection(), rows_to_dicts()</span>
+│   ├── task_repo.py               <span class="c"># CRUD úloh + CPM polia + závislosti</span>
+│   ├── user_repo.py               <span class="c"># Auth, tím, heslo update</span>
+│   ├── project_repo.py            <span class="c"># CRUD projektov + šablóny</span>
+│   ├── activity_repo.py           <span class="c"># Logy aktivít</span>
+│   └── file_repo.py               <span class="c"># Prílohy k úlohám</span>
+│
+├── logic/                         <span class="c"># Business logika — bez SQL, bez UI</span>
+│   ├── cpm_engine.py              <span class="c"># Čistý CPM algoritmus + dataclasses</span>
+│   ├── cpm_manager.py             <span class="c"># DB ↔ CPM bridge</span>
+│   ├── auth.py                    <span class="c"># Prihlásenie, SHA-256</span>
+│   ├── task_manager.py            <span class="c"># Správa úloh, komentárov</span>
+│   ├── project_manager.py         <span class="c"># Projekty, šablóny</span>
+│   ├── export_manager.py          <span class="c"># PDF generovanie cez reportlab</span>
+│   ├── file_manager.py            <span class="c"># Prílohy — upload, download, delete</span>
+│   ├── hierarchy.py               <span class="c"># Tímová hierarchia, get_my_team()</span>
+│   └── template_manager.py        <span class="c"># Projektové šablóny</span>
+│
+├── ui/
+│   ├── theme.py                   <span class="c"># Duálny dizajnový systém (light/dark tokeny)</span>
+│   ├── components/
+│   │   └── sidebar.py             <span class="c"># Sidebar s navigáciou</span>
+│   └── screens/
+│       ├── login_screen.py
+│       ├── dashboard.py
+│       ├── project_view.py        <span class="c"># Zoznam projektov + dialógy</span>
+│       ├── project_detail.py      <span class="c"># Detail projektu + TaskEditorDialog</span>
+│       ├── team_view.py           <span class="c"># Tím + AddMemberDialog</span>
+│       ├── calendar_view.py
+│       ├── settings.py
+│       ├── gantt_chart.py         <span class="c"># GanttChartView (matplotlib)</span>
+│       ├── network_diagram.py     <span class="c"># NetworkDiagramView (matplotlib)</span>
+│       └── task_edit_dialog.py    <span class="c"># Jednoduchý dialog pre zmenu stavu</span>
+│
+├── attachments/                   <span class="c"># Lokálne kopie príloh (gitignore)</span>
+└── obsidian_vault/                <span class="c"># Technická dokumentácia (Obsidian MD)</span>
+    ├── INDEX.md
+    ├── 00 - Prehľad projektu.md
+    ├── 01 - Architektúra.md
+    ├── 02 - CPM Engine.md
+    ├── 03 - Databáza & Repo.md
+    ├── 04 - UI Obrazovky.md
+    ├── 05 - Gantt & Network.md
+    ├── 06 - Team Management.md
+    ├── 07 - Bugy & Opravy.md
+    ├── 08 - Roadmap v2.0.md
+    └── 09 - PDF Export.md</pre>
+
+  <span class="chapter-num" style="margin-top:24pt;display:block;">Príloha B</span>
+  <h1>Príloha B — Inštalačný manuál</h1>
+
+  <h3>Systémové požiadavky</h3>
+  <ul>
+    <li>Windows 10 alebo Windows 11 (64-bit)</li>
+    <li>Python 3.11 alebo novší (odporúčaný Python 3.14)</li>
+    <li>Minimálne rozlíšenie obrazovky: 1024 × 768 px</li>
+    <li>Diskový priestor: ~50 MB (vrátane Python závislostí)</li>
+  </ul>
+
+  <h3>Postup inštalácie</h3>
+  <pre><span class="c"># 1. Klonovanie repozitára</span>
+git clone https://github.com/[username]/ManagmentApp.git
+cd ManagmentApp
+
+<span class="c"># 2. Vytvorenie virtuálneho prostredia (odporúčané)</span>
+python -m venv .venv
+.venv\Scripts\activate
+
+<span class="c"># 3. Inštalácia závislostí</span>
+pip install -r requirements.txt
+
+<span class="c"># 4. Spustenie aplikácie</span>
+py -X utf8 main.py</pre>
+
+  <h3>requirements.txt</h3>
+  <pre>customtkinter>=5.2.0
+matplotlib>=3.7.0
+Pillow>=10.0.0
+reportlab>=4.0.0</pre>
+
+  <h3>Predvolené prihlasovacie údaje</h3>
+  <table style="width:auto;">
+    <thead><tr><th>Rola</th><th>Username</th><th>Heslo</th></tr></thead>
+    <tbody>
+      <tr><td>Admin</td><td>admin</td><td>admin123</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:10pt;color:var(--text-dim);">Heslo je odporúčané zmeniť po prvom prihlásení cez Nastavenia → Zmena hesla.</p>
+
+  <div class="page-footer"><span>Prílohy</span><span>54</span></div>
+</div>
+
+<!-- Screen-only nav hint -->
+<div class="nav-hint">
+  Ctrl + P = tlačiť / uložiť ako PDF
+</div>
+
+</body>
+</html>

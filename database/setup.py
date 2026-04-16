@@ -120,6 +120,18 @@ def create_database():
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
         "ALTER TABLE tasks ADD COLUMN estimated_hours REAL",
+        # CPM columns
+        "ALTER TABLE tasks ADD COLUMN duration INTEGER DEFAULT 1",
+        "ALTER TABLE tasks ADD COLUMN delay_days INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN es INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN ef INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN ls INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN lf INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN total_float INTEGER DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN is_critical BOOLEAN DEFAULT 0",
+        "ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT 'Other'",
+        "ALTER TABLE tasks ADD COLUMN notes TEXT",
+        "ALTER TABLE tasks ADD COLUMN sort_order INTEGER DEFAULT 0",
     ]:
         try:
             cursor.execute(column_sql)
@@ -136,6 +148,14 @@ def create_database():
         print("✅ Vytvorený užívateľ: admin / heslo: admin123")
     except sqlite3.IntegrityError:
         print("ℹ️ Admin už existuje, preskakujem vytváranie.")
+
+    # --- Migrácia: zahashuj plaintext heslá (dlzka != 64 = nie je SHA-256 hash) ---
+    plain_users = cursor.execute(
+        "SELECT id, password FROM users WHERE length(password) != 64"
+    ).fetchall()
+    for uid, pwd in plain_users:
+        hashed = hashlib.sha256(pwd.encode()).hexdigest()
+        cursor.execute("UPDATE users SET password = ? WHERE id = ?", (hashed, uid))
 
     conn.commit()
     conn.close()

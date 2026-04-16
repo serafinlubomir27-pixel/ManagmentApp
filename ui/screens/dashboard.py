@@ -1,3 +1,7 @@
+"""
+Dashboard Screen — štatistiky, donut chart, activity feed.
+Gradient stat karty, matplotlib dual-mode, Segoe UI font.
+"""
 import datetime
 
 import customtkinter as ctk
@@ -8,197 +12,223 @@ import matplotlib.pyplot as plt
 
 from logic.stats import get_dashboard_stats, get_task_status_breakdown
 from ui.theme import (
-    PRIMARY, ACCENT, DANGER, BG_CARD, BG_MAIN, BG_ROW,
+    PRIMARY, ACCENT, DANGER,
+    BG_CARD, BG_MAIN, BG_ROW, BORDER,
     TEXT_PRIMARY, TEXT_SECONDARY,
+    GRAD_BLUE, GRAD_TEAL, GRAD_RED,
+    get_font, mode_color,
+    FONT_SIZE_SM, FONT_SIZE_BASE, FONT_SIZE_MD, FONT_SIZE_LG, FONT_SIZE_2XL, FONT_SIZE_3XL,
+    RADIUS_MD, RADIUS_SM,
+    SPACE_SM, SPACE_MD, SPACE_LG, SPACE_XL,
 )
+
+# Konfigurácia stat kariet: (ikona, kľúč, label, gradient, akcentová farba)
+_STAT_CONFIGS = [
+    ("📁", "projects_count", "Aktívne projekty", GRAD_BLUE, PRIMARY),
+    ("✅", "tasks_count",    "Moje úlohy",        GRAD_TEAL, ACCENT),
+    ("⚠️", "critical_count", "Po termíne",        GRAD_RED,  DANGER),
+]
+
+# Farby donut chartu
+_DONUT_COLORS = ["#7EB3FF", "#20CFC8", "#1DB86D", "#EF5350"]
 
 
 class DashboardScreen(ctk.CTkFrame):
     def __init__(self, master, user):
         super().__init__(master, fg_color="transparent")
 
-        # Support both dict and legacy tuple user_data
         if isinstance(user, dict):
-            self.user_id = user.get("id")
+            self.user_id   = user.get("id")
             self.user_name = user.get("full_name") or user.get("username", "Používateľ")
         else:
-            self.user_id = user[0]
+            self.user_id   = user[0]
             self.user_name = user[3] if len(user) > 3 else "Používateľ"
 
-        self.stats = get_dashboard_stats(self.user_id)
+        self.stats     = get_dashboard_stats(self.user_id)
         self.breakdown = get_task_status_breakdown(self.user_id)
+        self._chart_canvas = None
 
         self._build_ui()
         self.bind("<Destroy>", self._on_destroy)
 
-    # ------------------------------------------------------------------
-    # Destroy hook
-    # ------------------------------------------------------------------
+    # ── Cleanup ────────────────────────────────────────────────────────────────
 
     def _on_destroy(self, event):
-        if event.widget is self and hasattr(self, "_chart_canvas"):
+        if event.widget is self and self._chart_canvas:
             try:
                 self._chart_canvas.get_tk_widget().destroy()
             except Exception:
                 pass
             plt.close("all")
 
-    # ------------------------------------------------------------------
-    # UI construction
-    # ------------------------------------------------------------------
+    # ── Builder ────────────────────────────────────────────────────────────────
 
     def _build_ui(self):
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # ── Header ──────────────────────────────────────────────────────
+        # ── Header (fixný — mimo scrollu) ─────────────────────────────────
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=20, pady=(16, 8))
+        header.grid(row=0, column=0, sticky="ew", padx=SPACE_XL, pady=(SPACE_LG, SPACE_SM))
         header.grid_columnconfigure(0, weight=1)
 
         today = datetime.date.today().strftime("%d. %m. %Y")
+
         ctk.CTkLabel(
             header,
             text=f"Vitaj, {self.user_name}!",
-            font=("Arial", 26, "bold"),
+            font=get_font(FONT_SIZE_2XL, "bold"),
             text_color=TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w")
 
         ctk.CTkLabel(
             header,
             text=today,
-            font=("Arial", 13),
+            font=get_font(FONT_SIZE_BASE),
             text_color=TEXT_SECONDARY,
         ).grid(row=0, column=1, sticky="e")
 
-        # ── Stat cards ──────────────────────────────────────────────────
-        cards_frame = ctk.CTkFrame(self, fg_color="transparent")
-        cards_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 12))
+        # ── Scrollovateľné telo ───────────────────────────────────────────
+        scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        scroll.grid(row=1, column=0, sticky="nsew")
+        scroll.grid_columnconfigure(0, weight=1)
+
+        # ── Stat karty ──────────────────────────────────────────────────────
+        cards_frame = ctk.CTkFrame(scroll, fg_color="transparent")
+        cards_frame.grid(row=0, column=0, sticky="ew", padx=SPACE_XL, pady=(SPACE_SM, SPACE_MD))
         for col in range(3):
             cards_frame.grid_columnconfigure(col, weight=1)
 
-        card_data = [
-            ("📁", str(self.stats["projects_count"]), "Aktívne projekty", PRIMARY),
-            ("✅", str(self.stats["tasks_count"]),    "Moje úlohy",       ACCENT),
-            ("⚠️", str(self.stats["critical_count"]), "Po termíne",       DANGER),
-        ]
-        for col, (icon, value, label, color) in enumerate(card_data):
-            self._create_stat_card(cards_frame, icon, value, label, color, col)
+        for col, (icon, key, label, grad, accent) in enumerate(_STAT_CONFIGS):
+            value = str(self.stats.get(key, 0))
+            self._create_stat_card(cards_frame, icon, value, label, grad, accent, col)
 
-        # ── Bottom section ───────────────────────────────────────────────
-        bottom = ctk.CTkFrame(self, fg_color="transparent")
-        bottom.grid(row=2, column=0, sticky="nsew", padx=20, pady=(0, 16))
+        # ── Spodná sekcia ────────────────────────────────────────────────────
+        bottom = ctk.CTkFrame(scroll, fg_color="transparent")
+        bottom.grid(row=1, column=0, sticky="ew", padx=SPACE_XL, pady=(0, SPACE_LG))
         bottom.grid_columnconfigure(0, weight=3)
         bottom.grid_columnconfigure(1, weight=2)
-        bottom.grid_rowconfigure(0, weight=1)
 
         self._build_donut_section(bottom)
         self._build_activity_section(bottom)
 
-    # ------------------------------------------------------------------
-    # Stat card
-    # ------------------------------------------------------------------
+    # ── Stat karta s gradientom ────────────────────────────────────────────────
 
-    def _create_stat_card(self, parent, icon, value, label, accent_color, col):
-        """Card with a colored left-border accent strip."""
-        outer = ctk.CTkFrame(parent, fg_color=BG_CARD, corner_radius=10)
-        outer.grid(row=0, column=col, sticky="ew", padx=(0 if col == 0 else 8, 0))
+    def _create_stat_card(self, parent, icon, value, label, grad, accent_color, col):
+        """Gradient-tinted karta s farebným ľavým stripom."""
+        # Gradient — použijeme start farbu ako bg a border na zvýraznenie
+        is_dark = ctk.get_appearance_mode() == "Dark"
+        grad_colors = grad[1] if is_dark else grad[0]   # (start, end)
+
+        outer = ctk.CTkFrame(
+            parent,
+            fg_color=grad_colors[0],      # gradient start
+            corner_radius=RADIUS_MD,
+            border_width=1,
+            border_color=accent_color,
+        )
+        outer.grid(
+            row=0, column=col, sticky="ew",
+            padx=(0 if col == 0 else SPACE_SM, 0)
+        )
         outer.grid_columnconfigure(1, weight=1)
         outer.grid_rowconfigure(0, weight=1)
 
-        # Left-border accent strip
-        ctk.CTkFrame(outer, fg_color=accent_color, width=6, corner_radius=0).grid(
-            row=0, column=0, sticky="ns", padx=0, pady=0
-        )
+        # Ľavý farebný strip
+        ctk.CTkFrame(
+            outer,
+            fg_color=accent_color,
+            width=4,
+            corner_radius=0,
+        ).grid(row=0, column=0, sticky="ns")
 
-        # Content area
+        # Obsah
         content = ctk.CTkFrame(outer, fg_color="transparent")
-        content.grid(row=0, column=1, sticky="nsew", padx=14, pady=16)
+        content.grid(row=0, column=1, sticky="nsew", padx=SPACE_LG, pady=SPACE_LG)
 
-        # Top row: icon + number
+        # Ikona + číslo
         top_row = ctk.CTkFrame(content, fg_color="transparent")
         top_row.pack(fill="x")
 
         ctk.CTkLabel(
             top_row,
             text=icon,
-            font=("Segoe UI Emoji", 28),
+            font=ctk.CTkFont(family="Segoe UI Emoji", size=24),
             text_color=accent_color,
         ).pack(side="left")
 
         ctk.CTkLabel(
             top_row,
             text=value,
-            font=("Arial", 32, "bold"),
+            font=get_font(FONT_SIZE_3XL, "bold"),
             text_color=TEXT_PRIMARY,
         ).pack(side="right")
 
-        # Label below
+        # Popis
         ctk.CTkLabel(
             content,
             text=label,
-            font=("Arial", 13),
+            font=get_font(FONT_SIZE_SM),
             text_color=TEXT_SECONDARY,
-        ).pack(anchor="w", pady=(4, 0))
+        ).pack(anchor="w", pady=(SPACE_SM, 0))
 
-    # ------------------------------------------------------------------
-    # Donut chart
-    # ------------------------------------------------------------------
+    # ── Donut chart ────────────────────────────────────────────────────────────
 
     def _build_donut_section(self, parent):
-        chart_frame = ctk.CTkFrame(parent, fg_color=BG_CARD, corner_radius=10)
-        chart_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        chart_frame.grid_rowconfigure(1, weight=1)
+        chart_frame = ctk.CTkFrame(
+            parent, fg_color=BG_CARD, corner_radius=RADIUS_MD,
+            border_width=1, border_color=BORDER,
+        )
+        chart_frame.grid(row=0, column=0, sticky="nsew", padx=(0, SPACE_SM))
         chart_frame.grid_columnconfigure(0, weight=1)
+        chart_frame.grid_rowconfigure(1, weight=1)
 
         ctk.CTkLabel(
             chart_frame,
             text="Stav úloh",
-            font=("Arial", 15, "bold"),
+            font=get_font(FONT_SIZE_MD, "bold"),
             text_color=TEXT_PRIMARY,
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        ).grid(row=0, column=0, sticky="w", padx=SPACE_LG, pady=(SPACE_MD, SPACE_SM))
 
-        bd = self.breakdown
+        bd     = self.breakdown
         values = [bd["pending"], bd["in_progress"], bd["completed"], bd["blocked"]]
-        total = sum(values)
+        total  = sum(values)
 
         if total == 0:
             ctk.CTkLabel(
                 chart_frame,
                 text="Žiadne úlohy",
-                font=("Arial", 14),
+                font=get_font(FONT_SIZE_BASE),
                 text_color=TEXT_SECONDARY,
-            ).grid(row=1, column=0, sticky="nsew", padx=16, pady=16)
+            ).grid(row=1, column=0, sticky="nsew", padx=SPACE_LG, pady=SPACE_LG)
             return
 
         labels = ["Čakajúce", "Prebieha", "Dokončené", "Blokované"]
-        colors = ["#90CAF9", "#4DB6AC", "#81C784", "#EF9A9A"]
+
+        # Dual-mode farby pre matplotlib
+        bg_col   = mode_color(BG_MAIN)
+        text_col = mode_color(TEXT_PRIMARY)
+        sec_col  = mode_color(TEXT_SECONDARY)
 
         fig, ax = plt.subplots(figsize=(4, 3.2), dpi=96)
-        fig.patch.set_facecolor(BG_MAIN)
-        ax.set_facecolor(BG_MAIN)
+        fig.patch.set_facecolor(bg_col)
+        ax.set_facecolor(bg_col)
 
         wedges, _ = ax.pie(
             values,
             labels=None,
-            colors=colors,
+            colors=_DONUT_COLORS,
             startangle=90,
-            wedgeprops={"width": 0.55, "edgecolor": BG_MAIN, "linewidth": 2},
+            wedgeprops={"width": 0.55, "edgecolor": bg_col, "linewidth": 2},
         )
 
-        # Center total label
-        ax.text(
-            0, 0, str(total),
-            ha="center", va="center",
-            fontsize=22, fontweight="bold", color=TEXT_PRIMARY,
-        )
-        ax.text(
-            0, -0.22, "úloh",
-            ha="center", va="center",
-            fontsize=10, color=TEXT_SECONDARY,
-        )
+        ax.text(0, 0, str(total),
+                ha="center", va="center",
+                fontsize=20, fontweight="bold", color=text_col)
+        ax.text(0, -0.25, "úloh",
+                ha="center", va="center",
+                fontsize=9, color=sec_col)
 
-        # Legend
         ax.legend(
             wedges,
             [f"{lbl}  {v}" for lbl, v in zip(labels, values)],
@@ -206,7 +236,7 @@ class DashboardScreen(ctk.CTkFrame):
             bbox_to_anchor=(0.5, -0.22),
             ncol=2,
             frameon=False,
-            labelcolor=TEXT_SECONDARY,
+            labelcolor=sec_col,
             fontsize=9,
         )
 
@@ -214,32 +244,30 @@ class DashboardScreen(ctk.CTkFrame):
 
         self._chart_canvas = FigureCanvasTkAgg(fig, master=chart_frame)
         self._chart_canvas.draw()
-        self._chart_canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        self._chart_canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=SPACE_SM, pady=(0, SPACE_SM))
         plt.close(fig)
 
-    # ------------------------------------------------------------------
-    # Recent activity
-    # ------------------------------------------------------------------
+    # ── Activity feed ──────────────────────────────────────────────────────────
 
     def _build_activity_section(self, parent):
-        activity_frame = ctk.CTkFrame(parent, fg_color=BG_CARD, corner_radius=10)
+        activity_frame = ctk.CTkFrame(
+            parent, fg_color=BG_CARD, corner_radius=RADIUS_MD,
+            border_width=1, border_color=BORDER,
+        )
         activity_frame.grid(row=0, column=1, sticky="nsew")
-        activity_frame.grid_rowconfigure(1, weight=1)
         activity_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             activity_frame,
             text="Nedávna aktivita",
-            font=("Arial", 15, "bold"),
+            font=get_font(FONT_SIZE_MD, "bold"),
             text_color=TEXT_PRIMARY,
-        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
+        ).grid(row=0, column=0, sticky="w", padx=SPACE_LG, pady=(SPACE_MD, SPACE_SM))
 
         scroll = ctk.CTkScrollableFrame(
-            activity_frame,
-            fg_color="transparent",
-            corner_radius=0,
+            activity_frame, fg_color="transparent", corner_radius=0,
         )
-        scroll.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        scroll.grid(row=1, column=0, sticky="nsew", padx=SPACE_SM, pady=(0, SPACE_SM))
         scroll.grid_columnconfigure(0, weight=1)
 
         logs = self.stats.get("recent_activity", [])
@@ -248,52 +276,50 @@ class DashboardScreen(ctk.CTkFrame):
             ctk.CTkLabel(
                 scroll,
                 text="Žiadna nedávna aktivita.",
-                font=("Arial", 13),
+                font=get_font(FONT_SIZE_BASE),
                 text_color=TEXT_SECONDARY,
-            ).pack(pady=20)
+            ).pack(pady=SPACE_XL)
             return
 
         for entry in logs:
-            # entry is a dict: user_name, action, new_value, created_at
             if isinstance(entry, dict):
                 user_name = entry.get("user_name", "")
-                action = entry.get("action", "")
-                detail = entry.get("new_value") or ""
+                action    = entry.get("action", "")
+                detail    = entry.get("new_value") or ""
                 timestamp = str(entry.get("created_at", ""))[:16]
             else:
-                user_name, action, detail, timestamp = entry[0], entry[1], entry[2], str(entry[3])[:16]
+                user_name, action, detail, timestamp = (
+                    entry[0], entry[1], entry[2], str(entry[3])[:16]
+                )
 
-            row = ctk.CTkFrame(scroll, fg_color=BG_ROW, corner_radius=8)
+            row = ctk.CTkFrame(
+                scroll, fg_color=BG_ROW, corner_radius=RADIUS_SM,
+                border_width=1, border_color=BORDER,
+            )
             row.pack(fill="x", pady=3, padx=2)
             row.grid_columnconfigure(1, weight=1)
 
-            # Colored bullet
+            # Bullet
             ctk.CTkLabel(
-                row,
-                text="●",
-                font=("Arial", 14),
-                text_color=PRIMARY,
-                width=20,
-            ).grid(row=0, column=0, padx=(10, 4), pady=8, sticky="n")
+                row, text="●",
+                font=get_font(FONT_SIZE_BASE),
+                text_color=PRIMARY, width=20,
+            ).grid(row=0, column=0, padx=(SPACE_MD, SPACE_SM), pady=SPACE_SM, sticky="n")
 
-            # Action text
+            # Akcia
             action_text = f"{user_name} • {action}"
             if detail:
                 action_text += f": {detail}"
 
             ctk.CTkLabel(
-                row,
-                text=action_text,
-                font=("Arial", 12),
+                row, text=action_text,
+                font=get_font(FONT_SIZE_BASE),
                 text_color=TEXT_PRIMARY,
-                justify="left",
-                anchor="w",
-            ).grid(row=0, column=1, sticky="w", padx=(0, 8), pady=(8, 2))
+                justify="left", anchor="w",
+            ).grid(row=0, column=1, sticky="w", padx=(0, SPACE_SM), pady=(SPACE_SM, 2))
 
             ctk.CTkLabel(
-                row,
-                text=timestamp,
-                font=("Arial", 10),
-                text_color=TEXT_SECONDARY,
-                anchor="w",
-            ).grid(row=1, column=1, sticky="w", padx=(0, 8), pady=(0, 6))
+                row, text=timestamp,
+                font=get_font(FONT_SIZE_SM),
+                text_color=TEXT_SECONDARY, anchor="w",
+            ).grid(row=1, column=1, sticky="w", padx=(0, SPACE_SM), pady=(0, SPACE_SM))

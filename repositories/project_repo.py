@@ -75,6 +75,16 @@ def get_templates(user_id):
         conn.close()
 
 
+def update_project_status(project_id: int, new_status: str) -> None:
+    """Update the status of a project."""
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE projects SET status = ? WHERE id = ?", (new_status, project_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def get_project_by_id(project_id):
     """Return a single project dict or None."""
     conn = get_connection()
