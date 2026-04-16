@@ -60,6 +60,7 @@ class ProjectDetailView(ctk.CTkFrame):
         self.user_data = user_data
         self.back_callback = back_callback
         self.active_filter = "Všetky"
+        self._search_query: str = ""
         self._cpm_result: CPMResult | None = None
 
         self._build_ui()
@@ -343,6 +344,7 @@ class ProjectDetailView(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     def _build_tasks_tab(self):
+        self._search_query = ""
         container = ctk.CTkFrame(self._content, fg_color="transparent")
         container.grid(row=0, column=0, sticky="nsew")
         container.grid_rowconfigure(1, weight=1)
@@ -351,8 +353,9 @@ class ProjectDetailView(ctk.CTkFrame):
         # Filter bar
         filter_bar = ctk.CTkFrame(container, fg_color="transparent")
         filter_bar.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        filter_bar.grid_columnconfigure(2, weight=1)
 
-        ctk.CTkLabel(filter_bar, text="Filter:", font=get_font(FONT_SIZE_BASE), text_color=TEXT_SECONDARY).pack(side="left", padx=(0, SPACE_SM))
+        ctk.CTkLabel(filter_bar, text="Filter:", font=get_font(FONT_SIZE_BASE), text_color=TEXT_SECONDARY).grid(row=0, column=0, padx=(0, SPACE_SM))
         display_values = [FILTER_DISPLAY[k] for k in FILTER_OPTIONS]
         self._filter_combo = ctk.CTkOptionMenu(
             filter_bar, values=display_values,
@@ -361,7 +364,21 @@ class ProjectDetailView(ctk.CTkFrame):
             text_color=TEXT_PRIMARY, font=get_font(FONT_SIZE_BASE),
         )
         self._filter_combo.set("Všetky")
-        self._filter_combo.pack(side="left")
+        self._filter_combo.grid(row=0, column=1, padx=(0, SPACE_MD))
+
+        # Search box
+        self._search_var = ctk.StringVar()
+        self._search_var.trace_add("write", lambda *_: self._on_search_change())
+        search_entry = ctk.CTkEntry(
+            filter_bar,
+            textvariable=self._search_var,
+            placeholder_text="🔍  Hľadať úlohu...",
+            fg_color=BG_INPUT, border_color=BORDER,
+            text_color=TEXT_PRIMARY,
+            height=HEIGHT_BTN_SM, corner_radius=RADIUS_SM,
+            font=get_font(FONT_SIZE_BASE),
+        )
+        search_entry.grid(row=0, column=2, sticky="ew")
 
         # Task list scroll
         self._task_scroll = ctk.CTkScrollableFrame(container, fg_color="transparent")
@@ -375,6 +392,10 @@ class ProjectDetailView(ctk.CTkFrame):
         self.active_filter = reverse.get(display_value, "Všetky")
         self._refresh_task_list()
 
+    def _on_search_change(self):
+        self._search_query = self._search_var.get().strip().lower()
+        self._refresh_task_list()
+
     def _refresh_task_list(self):
         for w in self._task_scroll.winfo_children():
             w.destroy()
@@ -384,9 +405,19 @@ class ProjectDetailView(ctk.CTkFrame):
         if self.active_filter != "Všetky":
             tasks = [t for t in tasks if t.get("status") == self.active_filter]
 
+        if self._search_query:
+            q = self._search_query
+            tasks = [
+                t for t in tasks
+                if q in (t.get("name") or "").lower()
+                or q in (t.get("assigned_username") or "").lower()
+                or q in (t.get("category") or "").lower()
+            ]
+
         if not tasks:
+            empty_msg = "Žiadne výsledky pre daný filter/hľadanie." if (self.active_filter != "Všetky" or self._search_query) else "Žiadne úlohy."
             ctk.CTkLabel(
-                self._task_scroll, text="Žiadne úlohy.",
+                self._task_scroll, text=empty_msg,
                 text_color=TEXT_SECONDARY, font=get_font(FONT_SIZE_BASE),
             ).pack(pady=SPACE_XL)
             return
