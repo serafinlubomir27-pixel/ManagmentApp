@@ -1,0 +1,65 @@
+{
+  "collapse-filter": true,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "tag:#architektúra",
+      "color": {
+        "a": 1,
+        "rgb": 3355443
+      }
+    },
+    {
+      "query": "tag:#cpm",
+      "color": {
+        "a": 1,
+        "rgb": 14495300
+      }
+    },
+    {
+      "query": "tag:#ui",
+      "color": {
+        "a": 1,
+        "rgb": 1690751
+      }
+    },
+    {
+      "query": "tag:#databaza",
+      "color": {
+        "a": 1,
+        "rgb": 5066061
+      }
+    },
+    {
+      "query": "tag:#bugy",
+      "color": {
+        "a": 1,
+        "rgb": 13763584
+      }
+    },
+    {
+      "query": "tag:#roadmap",
+      "color": {
+        "a": 1,
+        "rgb": 8388736
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": true,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.2,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0.518,
+  "repelStrength": 14,
+  "linkStrength": 1,
+  "linkDistance": 300,
+  "scale": 0.36288736930121057,
+  "close": true
+}

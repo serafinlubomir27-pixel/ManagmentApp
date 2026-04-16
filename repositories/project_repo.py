@@ -33,7 +33,7 @@ def create_project(user_id, name, description, status="active", is_template=Fals
             INSERT INTO projects (user_id, name, description, status, is_template)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (user_id, name, description, status, 1 if is_template else 0),
+            (user_id, name, description, status, bool(is_template)),
         )
         conn.commit()
         return cursor.lastrowid
@@ -67,7 +67,7 @@ def get_templates(user_id):
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, name, description FROM projects WHERE user_id = ? AND is_template = 1",
+            "SELECT id, name, description FROM projects WHERE user_id = ? AND is_template = TRUE",
             (user_id,),
         )
         return rows_to_dicts(cursor.fetchall())
