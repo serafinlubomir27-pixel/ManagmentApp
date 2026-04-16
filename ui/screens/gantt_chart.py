@@ -1,9 +1,11 @@
 """
 Gantt Chart View — matplotlib horizontal bar chart embedded in CTk.
 Shows tasks positioned by ES/EF, float bars, critical path highlighting.
+Supports scroll for large projects (many tasks or long duration).
 """
 from __future__ import annotations
 
+import tkinter as tk
 import customtkinter as ctk
 import matplotlib
 
@@ -27,13 +29,20 @@ COLOR_FLOAT     = "#90CAF9"   # light blue for float bar
 
 
 class GanttChartView(ctk.CTkFrame):
-    """Embeds a matplotlib Gantt chart inside a CTk frame."""
+    """Embeds a matplotlib Gantt chart inside a CTk frame.
+
+    For large projects (n > SCROLL_THRESHOLD tasks or wide charts) the figure
+    is placed inside a scrollable tk.Canvas viewport so it is not squished.
+    """
+
+    SCROLL_THRESHOLD = 12  # tasks — below this, no scroll needed
 
     def __init__(self, parent, cpm_result: CPMResult):
         super().__init__(parent, fg_color="transparent")
         self.cpm_result = cpm_result
         self._mpl_canvas = None
         self._fig = None
+        self._tk_viewport = None  # tk.Canvas used as scroll viewport
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -222,8 +231,70 @@ class GanttChartView(ctk.CTkFrame):
 
         fig.tight_layout()
 
-        # Embed into CTk
-        self._mpl_canvas = FigureCanvasTkAgg(fig, master=self)
-        widget = self._mpl_canvas.get_tk_widget()
-        widget.grid(row=0, column=0, sticky="nsew")
+        # Embed — scrollable viewport for large charts, direct embed for small ones
+        needs_scroll = n > self.SCROLL_THRESHOLD or fig_width >= 18
+
+        if needs_scroll:
+            self._embed_scrollable(fig, color_bg)
+        else:
+            self._mpl_canvas = FigureCanvasTkAgg(fig, master=self)
+            widget = self._mpl_canvas.get_tk_widget()
+            widget.grid(row=0, column=0, sticky="nsew")
+            self._mpl_canvas.draw()
+
+    # ------------------------------------------------------------------
+    # Scrollable embed (large projects)
+    # ------------------------------------------------------------------
+
+    def _embed_scrollable(self, fig, color_bg: str):
+        """Embed matplotlib figure in a tk.Canvas viewport with scrollbars."""
+        # Outer grid: viewport | v-scrollbar
+        #             h-scrollbar
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+
+        v_scroll = ctk.CTkScrollbar(self, orientation="vertical")
+        h_scroll = ctk.CTkScrollbar(self, orientation="horizontal")
+
+        viewport = tk.Canvas(
+            self, bg=color_bg, highlightthickness=0,
+            yscrollcommand=v_scroll.set,
+            xscrollcommand=h_scroll.set,
+        )
+        self._tk_viewport = viewport
+
+        v_scroll.configure(command=viewport.yview)
+        h_scroll.configure(command=viewport.xview)
+
+        viewport.grid(row=0, column=0, sticky="nsew")
+        v_scroll.grid(row=0, column=1, sticky="ns")
+        h_scroll.grid(row=1, column=0, sticky="ew")
+
+        # Inner frame holds the matplotlib canvas
+        inner = tk.Frame(viewport, bg=color_bg)
+        viewport_window = viewport.create_window((0, 0), window=inner, anchor="nw")
+
+        self._mpl_canvas = FigureCanvasTkAgg(fig, master=inner)
+        mpl_widget = self._mpl_canvas.get_tk_widget()
+        mpl_widget.pack(fill="both", expand=True)
         self._mpl_canvas.draw()
+
+        # Update scroll region when inner frame resizes
+        def _on_inner_configure(event):
+            viewport.configure(scrollregion=viewport.bbox("all"))
+
+        def _on_viewport_configure(event):
+            viewport.itemconfig(viewport_window, width=event.width)
+
+        inner.bind("<Configure>", _on_inner_configure)
+        viewport.bind("<Configure>", _on_viewport_configure)
+
+        # Mouse wheel scroll (Windows)
+        def _on_mousewheel(event):
+            viewport.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        viewport.bind("<MouseWheel>", _on_mousewheel)
+        inner.bind("<MouseWheel>", _on_mousewheel)
+        mpl_widget.bind("<MouseWheel>", _on_mousewheel)
