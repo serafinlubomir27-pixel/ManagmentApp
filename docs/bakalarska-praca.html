@@ -340,14 +340,14 @@
 
   <div class="abstract-block">
     <div class="abstract-lang">Slovenský jazyk</div>
-    <p>Táto bakalárska práca sa zaoberá návrhom a implementáciou desktopovej aplikácie pre projektový manažment s názvom ManagmentApp. Aplikácia je vyvinutá v programovacom jazyku Python s využitím knižníc CustomTkinter pre grafické rozhranie, SQLite3 pre lokálnu databázu, matplotlib pre vizualizácie a reportlab pre export do PDF. Jadrom systému je implementácia metódy kritickej cesty (CPM — Critical Path Method), ktorá umožňuje výpočet ES, EF, LS, LF hodnôt, celkovej rezervy (float) a identifikáciu kritickej cesty projektu. Aplikácia ďalej obsahuje Gantt chart, sieťový diagram závislostí, správu tímu s trojúrovňovou hierarchiou, kalendárny pohľad, systém komentárov a príloh k úlohám. Osobitná pozornosť bola venovaná návrhu duálneho dizajnového systému, ktorý podporuje prepínanie medzi tmavým a svetlým režimom prostredníctvom dvojíc farebných tokenov (light, dark) natívne podporovaných v CustomTkinter.</p>
-    <p style="margin-bottom:0;"><strong>Kľúčové slová:</strong> projektový manažment, metóda kritickej cesty, CPM, Python, CustomTkinter, desktopová aplikácia, SQLite, Gantt chart, design systém</p>
+    <p>Táto bakalárska práca sa zaoberá návrhom a implementáciou desktopovej aplikácie pre projektový manažment s názvom ManagmentApp. Aplikácia je vyvinutá v programovacom jazyku Python s využitím knižníc CustomTkinter pre grafické rozhranie, SQLite3 pre lokálnu databázu, matplotlib pre vizualizácie a reportlab pre export do PDF. Jadrom systému je implementácia metódy kritickej cesty (CPM — Critical Path Method), ktorá umožňuje výpočet ES, EF, LS, LF hodnôt, celkovej rezervy (float) a identifikáciu kritickej cesty projektu. Aplikácia ďalej obsahuje Gantt chart, sieťový diagram závislostí, správu tímu s trojúrovňovou hierarchiou, kalendárny pohľad, systém komentárov a príloh k úlohám. Osobitná pozornosť bola venovaná návrhu duálneho dizajnového systému, ktorý podporuje prepínanie medzi tmavým a svetlým režimom prostredníctvom dvojíc farebných tokenov (light, dark) natívne podporovaných v CustomTkinter. V nadväznosti na vydanie verzie 1.0 bola realizovaná séria rozšírení (v1.1): automatizovaná sada 64 unit testov (pytest), live vyhľadávanie úloh, scrollovateľný Gantt chart, notifikácie blížiacich sa termínov, rekurzívne zobrazenie hierarchie tímu a CSV import/export. Verzia 1.2 zaviedla duálny databázový backend umožňujúci transparentné prepínanie medzi lokálnym SQLite a cloudovým PostgreSQL (Supabase) bez akejkoľvek zmeny repozitárnej alebo prezentačnej vrstvy.</p>
+    <p style="margin-bottom:0;"><strong>Kľúčové slová:</strong> projektový manažment, metóda kritickej cesty, CPM, Python, CustomTkinter, desktopová aplikácia, SQLite, PostgreSQL, Supabase, Gantt chart, unit testovanie, design systém</p>
   </div>
 
   <div class="abstract-block">
     <div class="abstract-lang">English</div>
-    <p>This bachelor thesis presents the design and implementation of a desktop project management application called ManagmentApp. The application is developed in Python using the CustomTkinter library for the graphical user interface, SQLite3 for local data storage, matplotlib for visualizations, and reportlab for PDF export. The core of the system is an implementation of the Critical Path Method (CPM), which computes ES, EF, LS, LF values, total float, and identifies the critical path of a project. Additional features include a Gantt chart, CPM network diagram, team management with a three-level hierarchy, calendar view, and a comment and attachment system for tasks. Special attention was paid to the design of a dual-mode design system that supports toggling between dark and light themes using native CustomTkinter dual-value color tokens.</p>
-    <p style="margin-bottom:0;"><strong>Keywords:</strong> project management, critical path method, CPM, Python, CustomTkinter, desktop application, SQLite, Gantt chart, design system</p>
+    <p>This bachelor thesis presents the design and implementation of a desktop project management application called ManagmentApp. The application is developed in Python using the CustomTkinter library for the graphical user interface, SQLite3 for local data storage, matplotlib for visualizations, and reportlab for PDF export. The core of the system is an implementation of the Critical Path Method (CPM), which computes ES, EF, LS, LF values, total float, and identifies the critical path of a project. Additional features include a Gantt chart, CPM network diagram, team management with a three-level hierarchy, calendar view, and a comment and attachment system for tasks. Special attention was paid to the design of a dual-mode design system that supports toggling between dark and light themes using native CustomTkinter dual-value color tokens. Following the v1.0 release, a series of enhancements were delivered in v1.1: an automated suite of 64 unit tests (pytest), live task search, a scrollable Gantt chart, deadline notifications, recursive team hierarchy tree, and CSV import/export. Version 1.2 introduced a dual database backend enabling transparent switching between local SQLite and cloud PostgreSQL (Supabase) without any changes to the repository or presentation layers.</p>
+    <p style="margin-bottom:0;"><strong>Keywords:</strong> project management, critical path method, CPM, Python, CustomTkinter, desktop application, SQLite, PostgreSQL, Supabase, Gantt chart, unit testing, design system</p>
   </div>
 
   <div class="page-footer"><span>Anotácia</span><span>ii</span></div>
@@ -393,19 +393,28 @@
     <div class="toc-line toc-h2"><span>5.5 Prezentačná vrstva</span><span>34</span></div>
     <div class="toc-line toc-h2"><span>5.6 Vizualizácie (Gantt, CPM Network)</span><span>37</span></div>
     <div class="toc-line toc-h2"><span>5.7 Export do PDF</span><span>40</span></div>
+    <div class="toc-line toc-h2"><span>5.8 Rozšírenia v1.1 — technické dlhy a nové funkcie</span><span>41</span></div>
+    <div class="toc-line toc-h3"><span>5.8.1 Unit testovanie (pytest)</span><span>41</span></div>
+    <div class="toc-line toc-h3"><span>5.8.2 Live vyhľadávanie úloh</span><span>42</span></div>
+    <div class="toc-line toc-h3"><span>5.8.3 Scrollovateľný Gantt chart</span><span>42</span></div>
+    <div class="toc-line toc-h3"><span>5.8.4 Notifikácie termínov a rekurzívna hierarchia</span><span>43</span></div>
+    <div class="toc-line toc-h3"><span>5.8.5 CSV import/export</span><span>43</span></div>
+    <div class="toc-line toc-h2"><span>5.9 Migrácia na cloudový backend (v1.2)</span><span>44</span></div>
+    <div class="toc-line toc-h3"><span>5.9.1 Duálny backend — base_repo.py</span><span>44</span></div>
+    <div class="toc-line toc-h3"><span>5.9.2 PostgreSQL schema a migrácia dát</span><span>45</span></div>
 
-    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>6. Testovanie a hodnotenie</span><span>42</span></div>
-    <div class="toc-line toc-h2"><span>6.1 Testovacia stratégia</span><span>42</span></div>
-    <div class="toc-line toc-h2"><span>6.2 Dokumentácia chýb a ich opravy</span><span>43</span></div>
-    <div class="toc-line toc-h2"><span>6.3 Hodnotenie splnenia požiadaviek</span><span>47</span></div>
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>6. Testovanie a hodnotenie</span><span>47</span></div>
+    <div class="toc-line toc-h2"><span>6.1 Testovacia stratégia a pokrytie</span><span>47</span></div>
+    <div class="toc-line toc-h2"><span>6.2 Dokumentácia chýb a ich opravy</span><span>48</span></div>
+    <div class="toc-line toc-h2"><span>6.3 Hodnotenie splnenia požiadaviek</span><span>52</span></div>
 
-    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>7. Záver</span><span>49</span></div>
-    <div class="toc-line toc-h2"><span>7.1 Zhrnutie dosiahnutých výsledkov</span><span>49</span></div>
-    <div class="toc-line toc-h2"><span>7.2 Obmedzenia a budúca práca</span><span>50</span></div>
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>7. Záver</span><span>54</span></div>
+    <div class="toc-line toc-h2"><span>7.1 Zhrnutie dosiahnutých výsledkov</span><span>54</span></div>
+    <div class="toc-line toc-h2"><span>7.2 Obmedzenia a budúca práca</span><span>55</span></div>
 
-    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>Zoznam použitej literatúry</span><span>52</span></div>
-    <div class="toc-line toc-h1"><span>Príloha A — Štruktúra projektu</span><span>54</span></div>
-    <div class="toc-line toc-h1"><span>Príloha B — Inštalačný manuál</span><span>55</span></div>
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>Zoznam použitej literatúry</span><span>57</span></div>
+    <div class="toc-line toc-h1"><span>Príloha A — Štruktúra projektu</span><span>59</span></div>
+    <div class="toc-line toc-h1"><span>Príloha B — Inštalačný manuál</span><span>60</span></div>
   </div>
 
   <div class="page-footer"><span>Obsah</span><span>iii</span></div>
@@ -527,6 +536,9 @@
       <tr><td>Grafy</td><td>matplotlib</td><td>3.7+</td><td>FigureCanvasTkAgg integrácia, Gantt + network</td></tr>
       <tr><td>PDF Export</td><td>reportlab</td><td>4.x</td><td>Programatická tvorba PDF s vlastným layoutom</td></tr>
       <tr><td>Obrázky</td><td>Pillow</td><td>10+</td><td>Podpora obrázkov v GUI</td></tr>
+      <tr><td>Unit testy</td><td>pytest</td><td>7+</td><td>Automatizované testy CPM engine a repozitárov</td></tr>
+      <tr><td>PostgreSQL driver</td><td>psycopg2-binary</td><td>2.9+</td><td>Priame spojenie na Supabase / PostgreSQL</td></tr>
+      <tr><td>Env konfigurácia</td><td>python-dotenv</td><td>1.0+</td><td>Načítanie DB_BACKEND a DATABASE_URL z .env</td></tr>
     </tbody>
   </table>
   <div class="table-caption">Tabuľka 2.4 — Technologický stack ManagmentApp</div>
@@ -970,6 +982,109 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
 
   <p>Ganttov diagram je vložený do PDF vygenerovaním matplotlib figúry priamo do pamäte (<code>io.BytesIO</code>) bez zápisu na disk, čo zabraňuje problémom s oprávneniami súborového systému a zrýchľuje generovanie.</p>
 
+  <h2>5.8 Rozšírenia v1.1 — technické dlhy a nové funkcie</h2>
+
+  <p>Po vydaní verzie 1.0 MVP bola identifikovaná séria technických dlhov a chýbajúcich funkcií. Tieto boli systematicky riešené v rámci verzie 1.1 podľa MoSCoW prioritizácie.</p>
+
+  <h3>5.8.1 Unit testovanie (pytest)</h3>
+
+  <p>Absenciu automatizovaných testov bola najvyššia priorita. Bola implementovaná sada <strong>64 unit testov</strong> rozdelená do dvoch súborov:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Súbor</th><th>Triedy testov</th><th>Počet testov</th></tr></thead>
+    <tbody>
+      <tr><td><code>tests/test_cpm_engine.py</code></td><td>TestDetectCycle, TestTopologicalSort, TestForwardPass, TestBackwardPass, TestCalculateCPM, TestHealthScore, TestWouldCreateCycle, TestCalculateDates</td><td>34</td></tr>
+      <tr><td><code>tests/test_repositories.py</code></td><td>TestBaseRepo, TestUserRepo, TestProjectRepo, TestTaskRepo</td><td>30</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.3 — Rozdelenie unit testov v1.1</div>
+
+  <p>Testovanie repozitárov vyžadovalo riešenie dvoch netriviálnych problémov. Prvým bola <strong>izolácia testovej databázy</strong>: repozitáre volajú <code>conn.close()</code> v každom <code>finally</code> bloku, čo pri SQLite <code>:memory:</code> databáze zničí všetky dáta. Riešením bol wrapper <code>_NoCloseConn</code>, ktorý potlačí volanie <code>close()</code>:</p>
+
+  <pre><span class="k">class</span> <span class="f">_NoCloseConn</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(self, conn): self._conn = conn
+    <span class="k">def</span> <span class="f">close</span>(self): <span class="k">pass</span>   <span class="c"># blokuje zničenie :memory: databázy</span>
+    <span class="k">def</span> <span class="f">__getattr__</span>(self, name): <span class="k">return</span> <span class="f">getattr</span>(self._conn, name)</pre>
+
+  <p>Druhým problémom bolo <strong>patchovanie lokálnych referencií</strong>: každý repozitár importuje <code>get_connection</code> príkazom <code>from repositories.base_repo import get_connection</code>, čím vznikne lokálna kópia referencie v module. Patchovanie <code>base_repo.get_connection</code> by neovplyvnilo tieto lokálne kópie. Riešením je patchovanie každého modulu zvlášť:</p>
+
+  <pre>monkeypatch.<span class="f">setattr</span>(<span class="s">"repositories.user_repo.get_connection"</span>, make_conn)
+monkeypatch.<span class="f">setattr</span>(<span class="s">"repositories.project_repo.get_connection"</span>, make_conn)
+monkeypatch.<span class="f">setattr</span>(<span class="s">"repositories.task_repo.get_connection"</span>, make_conn)</pre>
+
+  <h3>5.8.2 Live vyhľadávanie úloh</h3>
+
+  <p>Do záložky Tasks v Project Detail bolo pridané live vyhľadávacie pole. Implementácia používa <code>tkinter.StringVar</code> s <code>trace_add("write", callback)</code>, čo zabezpečuje okamžitú reakciu na každý stlačený znak bez potreby potvrdenia Enterom. Filter pracuje súčasne podľa troch kritérií: <em>názov úlohy</em>, <em>meno prideleného používateľa</em> a <em>kategória</em> (OR logika v rámci každého kritéria, AND medzi kritériami).</p>
+
+  <h3>5.8.3 Scrollovateľný Gantt chart</h3>
+
+  <p>Pri projektoch s viac ako 12 úlohami alebo šírkou grafu nad 18 palcov sa automaticky aktivuje scrollovateľný viewport. Implementácia obaľuje <code>FigureCanvasTkAgg</code> do vnoreného <code>tk.Frame</code> umiestneného v <code>tk.Canvas</code> so scrollbarmi:</p>
+
+  <pre><span class="c"># Scrollovateľný viewport pre veľké Gantt charty</span>
+viewport = tk.<span class="f">Canvas</span>(self, bg=color_bg, highlightthickness=<span class="n">0</span>,
+                      yscrollcommand=v_scroll.<span class="f">set</span>,
+                      xscrollcommand=h_scroll.<span class="f">set</span>)
+inner   = tk.<span class="f">Frame</span>(viewport, bg=color_bg)
+viewport.<span class="f">create_window</span>((<span class="n">0</span>, <span class="n">0</span>), window=inner, anchor=<span class="s">"nw"</span>)
+self._mpl_canvas = <span class="f">FigureCanvasTkAgg</span>(fig, master=inner)</pre>
+
+  <h3>5.8.4 Notifikácie termínov a rekurzívna hierarchia</h3>
+
+  <p>Dashboard bol rozšírený o farebne kódovaný <strong>notifikačný panel</strong>, ktorý automaticky zobrazuje úlohy po termíne (červená), s termínom do 1 dňa (oranžová) a do 3 dní (žltá). Notifikácie sú načítané pri každom otvorení dashboardu cez novú funkciu <code>get_tasks_with_due_dates()</code>.</p>
+
+  <p>Pre administrátorov bolo pridané <strong>rekurzívne zobrazenie celého stromu hierarchie</strong> (BFS algoritmus v <code>logic/hierarchy.py</code>). Funkcia <code>get_full_tree(manager_id)</code> prechádza celú hierarchiu podriadenosti do hĺbky 10 úrovní a každému členovi priradí atribúty <code>depth</code> (vizuálne odsadenie) a <code>manager_name</code> (meno priameho nadriadeného).</p>
+
+  <h3>5.8.5 CSV import/export</h3>
+
+  <p>Modul <code>logic/export_manager.py</code> bol rozšírený o funkcie <code>export_tasks_csv()</code> a <code>import_tasks_csv()</code>. Formát používa UTF-8 BOM kódovanie (kompatibilné s Microsoft Excel), slovenské hlavičky stĺpcov a obojsmernú mapovú tabuľku medzi zobrazovanými hodnotami a internými konštantami. Pri importe každý riadok prechádza validáciou (povinné polia, povolené hodnoty statusu a priority) a chyby sú reportované po riadkoch bez prerušenia celého importu.</p>
+
+  <h2>5.9 Migrácia na cloudový backend (v1.2)</h2>
+
+  <h3>5.9.1 Duálny backend — base_repo.py</h3>
+
+  <p>Verzia 1.2 zaviedla <strong>duálny databázový backend</strong>, ktorý umožňuje rovnakému kódu repozitárov pracovať s lokálnym SQLite aj cloudovým PostgreSQL (Supabase). Prepínanie prebieha cez premennú prostredia <code>DB_BACKEND</code>:</p>
+
+  <pre><span class="c"># .env</span>
+DB_BACKEND=sqlite    <span class="c"># lokálny súbor (default)</span>
+DB_BACKEND=postgres  <span class="c"># Supabase / PostgreSQL</span>
+DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
+
+  <p>Implementácia obsahuje štyri wrapper triedy. Pre PostgreSQL backend je kľúčová trieda <code>_PgCursorWrapper</code>, ktorá rieši tri rozdiely oproti SQLite rozhraniu:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Problém</th><th>SQLite</th><th>PostgreSQL</th><th>Riešenie v _PgCursorWrapper</th></tr></thead>
+    <tbody>
+      <tr><td>Placeholder</td><td><code>?</code></td><td><code>%s</code></td><td>Automatický <code>replace("?", "%s")</code></td></tr>
+      <tr><td>Posledné ID po INSERT</td><td><code>cursor.lastrowid</code></td><td>nevzniká</td><td>Auto-append <code>RETURNING id</code>, uloženie výsledku</td></tr>
+      <tr><td>Row factory</td><td><code>sqlite3.Row</code> (dict-like)</td><td>tuple</td><td><code>fetchone()</code>/<code>fetchall()</code> vracajú <code>dict</code></td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.4 — Rozdiely SQLite vs PostgreSQL a ich riešenie</div>
+
+  <p>Automatické doplnenie <code>RETURNING id</code> pre INSERT príkazy je implementované priamo v metóde <code>execute()</code>, takže repozitáre nevyžadujú žiadnu úpravu:</p>
+
+  <pre><span class="k">def</span> <span class="f">execute</span>(self, sql: str, params=None):
+    pg_sql = sql.<span class="f">replace</span>(<span class="s">"?"</span>, <span class="s">"%s"</span>)
+    stripped = pg_sql.<span class="f">strip</span>().<span class="f">upper</span>()
+    <span class="k">if</span> stripped.<span class="f">startswith</span>(<span class="s">"INSERT"</span>) <span class="k">and</span> <span class="s">"RETURNING"</span> <span class="k">not in</span> stripped:
+        pg_sql = pg_sql.<span class="f">rstrip</span>(<span class="s">";"</span>) + <span class="s">" RETURNING id"</span>
+    self._cur.<span class="f">execute</span>(pg_sql, params)
+    <span class="k">if</span> self._cur.description:
+        self._columns = [d[<span class="n">0</span>] <span class="k">for</span> d <span class="k">in</span> self._cur.description]
+        <span class="k">if</span> self._columns == [<span class="s">"id"</span>]:  <span class="c"># uložíme lastrowid</span>
+            row = self._cur.<span class="f">fetchone</span>()
+            self._last_id = row[<span class="n">0</span>] <span class="k">if</span> row <span class="k">else</span> None</pre>
+
+  <h3>5.9.2 PostgreSQL schema a migrácia dát</h3>
+
+  <p>Súbor <code>database/supabase_schema.sql</code> obsahuje kompletné PostgreSQL schéma s ENUM typmi pre doménové hodnoty (<code>user_role</code>, <code>task_status</code>, <code>task_priority</code>, <code>dep_type</code>), 7 tabuliek so správnymi cudzími kľúčmi a <code>BIGSERIAL</code> primárnymi kľúčmi, 10 indexov pre najčastejšie dotazy a seed INSERT pre administrátorský účet.</p>
+
+  <p>Jednorazový migračný skript <code>database/migrate_to_supabase.py</code> skopíruje existujúce dáta zo SQLite do Supabase v správnom poradí závislostí (users → projects → tasks → závislosti a komentáre). Každá tabuľka je kopírovaná s <code>ON CONFLICT DO NOTHING</code>, čo umožňuje bezpečné opakované spustenie.</p>
+
+  <div class="note">
+    <strong>Architektúrny prínos:</strong> Vďaka Repository Pattern a duálnemu backendu zostala celá prezentačná vrstva (<code>ui/</code>) a business logika (<code>logic/</code>) bez akejkoľvek zmeny pri prechode na PostgreSQL. Toto potvrdzuje správnosť pôvodného architektonického rozhodnutia.
+  </div>
+
   <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>28</span></div>
 </div>
 
@@ -981,12 +1096,28 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
   <span class="chapter-num">Kapitola 6</span>
   <h1>6. Testovanie a hodnotenie</h1>
 
-  <h2>6.1 Testovacia stratégia</h2>
+  <h2>6.1 Testovacia stratégia a pokrytie</h2>
 
-  <p>Testovanie aplikácie prebehlo na troch úrovniach: manuálne overenie CPM algoritmu na referenčnom príklade s ručne vypočítanými hodnotami; integračné testovanie celého toku dát (UI → logic → repo → DB → UI); a exploračné testovanie používateľského rozhrania v tmavom aj svetlom režime na rôznych veľkostiach okna.</p>
+  <p>Testovanie aplikácie prebehlo na štyroch úrovniach:</p>
+  <ol>
+    <li><strong>Automatizované unit testy (pytest)</strong> — 64 testov pokrývajúcich CPM engine a repozitárnu vrstvu</li>
+    <li><strong>Manuálne overenie CPM algoritmu</strong> — na referenčnom príklade z kapitoly 2.1.2 s ručne vypočítanými hodnotami</li>
+    <li><strong>Integračné testovanie</strong> — celý tok dát UI → logic → repo → DB → UI</li>
+    <li><strong>Exploračné testovanie UI</strong> — tmavý aj svetlý režim, rôzne veľkosti okna, edge cases</li>
+  </ol>
 
-  <div class="note">
-    <strong>Poznámka:</strong> Automatizované unit testy (pytest) neboli implementované v rámci tejto bakalárskej práce a sú plánované ako priorita pre verziu 2.0. CPM algoritmus bol overený manuálne na základe referenčného príkladu z kapitoly 2.1.2.
+  <table class="no-break">
+    <thead><tr><th>Súbor testov</th><th>Pokryté moduly</th><th>Testov</th><th>Výsledok</th></tr></thead>
+    <tbody>
+      <tr><td><code>test_cpm_engine.py</code></td><td><code>logic/cpm_engine.py</code></td><td>34</td><td>✅ 34/34</td></tr>
+      <tr><td><code>test_repositories.py</code></td><td><code>user_repo, project_repo, task_repo</code></td><td>30</td><td>✅ 30/30</td></tr>
+      <tr><td colspan="2"><strong>Celkovo</strong></td><td><strong>64</strong></td><td><strong>✅ 64/64</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 6.1 — Prehľad automatizovaných unit testov</div>
+
+  <div class="success-box">
+    <strong>Výsledok:</strong> Celá sada 64 unit testov prebehla úspešne. Priemerný čas behu testovacej sady je 0,10 sekundy.
   </div>
 
   <h2>6.2 Dokumentácia chýb a ich opravy</h2>
@@ -1073,22 +1204,37 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
     <p><strong>Riešenie:</strong> Podmienečné nastavenie border parametrov iba keď je bunka vybraná, pomocou <code>**kwargs</code> rozbalenia slovníka.</p>
   </div>
 
+  <div class="bug-entry no-break">
+    <div class="bug-title-row">
+      <span class="bug-tag medium">Stredná</span>
+      <span class="bug-name">BUG-09: Unit testy — conn.close() zničí :memory: databázu</span>
+    </div>
+    <p><strong>Symptóm:</strong> Unit testy repozitárov zlyhajú s <code>OperationalError: no such table</code> hneď po prvom volaní repozitárnej funkcie.</p>
+    <p><strong>Príčina:</strong> Každý repozitár volá <code>conn.close()</code> v <code>finally</code> bloku. Pre SQLite databázu <code>:memory:</code> toto volanie nenávratne zničí všetky dáta vrátane tabuliek. Ďalší test teda dostane prázdnu databázu bez tabuliek.</p>
+    <p><strong>Riešenie:</strong> Wrapper trieda <code>_NoCloseConn</code>, ktorá potlačí volanie <code>close()</code> a prepustí všetky ostatné metódy cez <code>__getattr__</code>. Zároveň je nutné patchovať každý modul repozitára zvlášť (nie len <code>base_repo.get_connection</code>), pretože Python ukladá importované funkcie ako lokálne referencie v každom module.</p>
+  </div>
+
   <h2>6.3 Hodnotenie splnenia požiadaviek</h2>
 
   <table>
     <thead><tr><th>ID</th><th>Požiadavka</th><th>Splnenie</th></tr></thead>
     <tbody>
-      <tr><td>FR-01 až FR-14</td><td>Všetky funkčné požiadavky</td><td>✅ Splnené</td></tr>
+      <tr><td>FR-01 až FR-14</td><td>Všetky funkčné požiadavky (v1.0)</td><td>✅ Splnené</td></tr>
+      <tr><td>FR-15</td><td>Live vyhľadávanie úloh (v1.1)</td><td>✅ Splnené</td></tr>
+      <tr><td>FR-16</td><td>Notifikácie deadlinov na dashboarde (v1.1)</td><td>✅ Splnené</td></tr>
+      <tr><td>FR-17</td><td>CSV import/export úloh (v1.1)</td><td>✅ Splnené</td></tr>
+      <tr><td>FR-18</td><td>Rekurzívny strom hierarchie tímu (v1.1)</td><td>✅ Splnené</td></tr>
       <tr><td>NFR-01</td><td>CPM prepočet &lt; 200 ms pre 50 úloh</td><td>✅ ~15 ms (meraný)</td></tr>
       <tr><td>NFR-02</td><td>Plná offline funkcionalita</td><td>✅ Splnené</td></tr>
       <tr><td>NFR-03</td><td>Windows 10/11, Python 3.11+</td><td>✅ Otestované na 3.14</td></tr>
       <tr><td>NFR-04</td><td>SHA-256 heslá</td><td>✅ Vrátane automatickej migrácie</td></tr>
-      <tr><td>NFR-05</td><td>Repository Pattern</td><td>✅ Implementované</td></tr>
+      <tr><td>NFR-05</td><td>Repository Pattern + duálny backend (v1.2)</td><td>✅ SQLite + PostgreSQL</td></tr>
       <tr><td>NFR-06</td><td>minsize 960×600, scroll</td><td>✅ Splnené</td></tr>
       <tr><td>NFR-07</td><td>Plný dark + light mode</td><td>✅ Bez hardkódovaných farieb</td></tr>
+      <tr><td>NFR-08</td><td>Unit testy — automatizované (v1.1)</td><td>✅ 64 testov, 100 % pass rate</td></tr>
     </tbody>
   </table>
-  <div class="table-caption">Tabuľka 6.1 — Hodnotenie splnenia nefunkčných požiadaviek</div>
+  <div class="table-caption">Tabuľka 6.2 — Hodnotenie splnenia požiadaviek (v1.0 + v1.1 + v1.2)</div>
 
   <div class="page-footer"><span>Kapitola 6 — Testovanie a hodnotenie</span><span>42</span></div>
 </div>
@@ -1113,28 +1259,33 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
 
   <p>Aplikácia bola vydaná ako verzia <strong>v1.0 MVP</strong> s nasledovnými hlavnými funkciami: správa projektov a úloh, plný CPM algoritmus, Gantt diagram, CPM sieťový diagram, správa tímu s trojúrovňovou hierarchiou, kalendárny pohľad, komentáre a prílohy k úlohám, šablóny projektov a export do PDF.</p>
 
+  <p>V nadväznosti na MVP bola realizovaná verzia <strong>v1.1</strong>, ktorá adresovala identifikované technické dlhy: automatizovaná sada 64 unit testov (pytest), live vyhľadávanie úloh, scrollovateľný Gantt chart pre veľké projekty, farebne kódované notifikácie blížiacich sa termínov na dashboarde, rekurzívne BFS zobrazenie celého stromu hierarchie tímu a CSV import/export s validáciou.</p>
+
+  <p>Verzia <strong>v1.2</strong> zavŕšila pôvodnú architektonickú víziu Repository Pattern: implementáciou duálneho databázového backendu v module <code>base_repo.py</code> je aplikácia transparentne spustiteľná nad lokálnym SQLite aj cloudovým PostgreSQL (Supabase) bez zmeny repozitárov, business logiky ani UI.</p>
+
   <h2>7.2 Obmedzenia a budúca práca</h2>
 
-  <p>Aktuálna verzia má niekoľko identifikovaných obmedzení, ktoré sú plánované na riešenie v rámci verzie 2.0:</p>
+  <p>Po vydaní verzie 1.2 zostávajú nasledovné oblasti na zlepšenie:</p>
 
   <table>
-    <thead><tr><th>Obmedzenie</th><th>Plánované riešenie</th><th>Priorita</th></tr></thead>
+    <thead><tr><th>Obmedzenie</th><th>Plánované riešenie</th><th>Priorita</th><th>Verzia</th></tr></thead>
     <tbody>
-      <tr><td>Žiadne automatizované unit testy</td><td>pytest test suite pre CPM engine a repo vrstvu</td><td>Vysoká</td></tr>
-      <tr><td>Admin vidí len priamych podriadených</td><td>Rekurzívny SQL dotaz pre celý strom hierarchie</td><td>Stredná</td></tr>
-      <tr><td>Gantt nepodporuje scroll pre veľké projekty</td><td>matplotlib interactive scroll alebo virtualizácia</td><td>Stredná</td></tr>
-      <tr><td>matplotlib grafy nie sú interaktívne</td><td>Hover tooltips, click-to-edit prepojenia</td><td>Nízka</td></tr>
-      <tr><td>Import/Export cez CSV</td><td>csv modul, štandardizovaný formát</td><td>Nízka</td></tr>
+      <tr><td>matplotlib grafy nie sú interaktívne</td><td>Hover tooltips, click-to-detail</td><td>Nízka</td><td>v1.x</td></tr>
+      <tr><td>Len desktopový klient</td><td>FastAPI backend — REST API</td><td>Vysoká</td><td>v2.0</td></tr>
+      <tr><td>Žiadny webový frontend</td><td>React / Next.js webová aplikácia</td><td>Vysoká</td><td>v2.0</td></tr>
+      <tr><td>Žiadna real-time spolupráca</td><td>Supabase Real-time subscriptions</td><td>Stredná</td><td>v2.0</td></tr>
+      <tr><td>Žiadne e-mailové notifikácie</td><td>Supabase Edge Functions + SMTP</td><td>Stredná</td><td>v2.0</td></tr>
+      <tr><td>Row Level Security (RLS)</td><td>PostgreSQL RLS policy pre multi-tenant</td><td>Vysoká</td><td>v2.0</td></tr>
     </tbody>
   </table>
-  <div class="table-caption">Tabuľka 7.1 — Identifikované obmedzenia a plánované riešenia</div>
+  <div class="table-caption">Tabuľka 7.1 — Zostávajúce obmedzenia a plán verzie 2.0</div>
 
-  <p>Víziou pre <strong>verziu 2.0</strong> je transformácia na cloud/SaaS platformu s FastAPI backendom, PostgreSQL databázou cez Supabase, React/Next.js webovým frontendom a systémom notifikácií. Implementácia Repository Pattern v súčasnej verzii je presne týmto smerom orientovaná — kladie solid základ pre túto migráciu.</p>
+  <p>Víziou pre <strong>verziu 2.0</strong> je transformácia na plnohodnotnú cloud/SaaS platformu. Duálny backend implementovaný v rámci tejto práce kladie priamy základ: databáza je v cloude, repozitáre sú backend-agnostické. Zostáva doplniť FastAPI vrstvu ako REST API a React/Next.js frontend. <code>cpm_engine.py</code> ako čistá Python knižnica bez závislostí môže byť priamo použitá na FastAPI backende bez akejkoľvek úpravy.</p>
 
   <p>Aplikácia ManagmentApp demonštruje, že moderné desktopové aplikácie v Pythone môžu konkurovať webovým riešeniam nielen funkčnosťou, ale aj vizuálnou kvalitou a používateľskou skúsenosťou — za predpokladu dôsledného použitia dizajnových systémov a architektonických vzorov.</p>
 
   <div class="success-box">
-    <strong>Záverečné zhodnotenie:</strong> Všetkých 14 funkčných požiadaviek (FR-01 až FR-14) a všetkých 7 nefunkčných požiadaviek (NFR-01 až NFR-07) bolo splnených. Aplikácia ManagmentApp v1.0 MVP je plne funkčná a pripravená na nasadenie.
+    <strong>Záverečné zhodnotenie:</strong> Všetkých 18 funkčných požiadaviek (FR-01 až FR-18) a všetkých 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Aplikácia ManagmentApp v1.2 je plne funkčná, automatizovane testovaná (64 unit testov) a pripravená na cloudové nasadenie cez Supabase.
   </div>
 
   <div class="page-footer"><span>Kapitola 7 — Záver</span><span>49</span></div>
@@ -1187,21 +1338,24 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
   <span class="chapter-num">Príloha A</span>
   <h1>Príloha A — Štruktúra projektu</h1>
 
-  <p>Nasledujúci výpis zobrazuje kompletný strom súborov projektu ManagmentApp v1.0:</p>
+  <p>Nasledujúci výpis zobrazuje kompletný strom súborov projektu ManagmentApp v1.2:</p>
 
   <pre>ManagmentApp/
 │
 ├── main.py                        <span class="c"># Entry point, MainApp(CTk)</span>
 ├── config.json                    <span class="c"># Perzistentné nastavenia (theme: dark|light)</span>
-├── requirements.txt               <span class="c"># Python závislosti</span>
+├── requirements.txt               <span class="c"># Python závislosti (vrátane psycopg2-binary, python-dotenv)</span>
+├── .env.example                   <span class="c"># Šablóna konfigurácie DB_BACKEND / DATABASE_URL</span>
 ├── my_project_app.db              <span class="c"># SQLite databáza (generovaná pri 1. štarte)</span>
 │
 ├── database/
-│   └── setup.py                   <span class="c"># create_database(), migrácie, SHA-256 upgrade</span>
+│   ├── setup.py                   <span class="c"># create_database(), migrácie, SHA-256 upgrade</span>
+│   ├── supabase_schema.sql        <span class="c"># PostgreSQL schema — ENUM typy, 7 tabuliek, indexy</span>
+│   └── migrate_to_supabase.py     <span class="c"># Jednorazový skript: SQLite → Supabase migrácia dát</span>
 │
 ├── repositories/                  <span class="c"># Repository Pattern — čistý SQL, bez UI</span>
 │   ├── __init__.py
-│   ├── base_repo.py               <span class="c"># get_connection(), rows_to_dicts()</span>
+│   ├── base_repo.py               <span class="c"># Duálny backend: SQLite + PostgreSQL (DB_BACKEND env)</span>
 │   ├── task_repo.py               <span class="c"># CRUD úloh + CPM polia + závislosti</span>
 │   ├── user_repo.py               <span class="c"># Auth, tím, heslo update</span>
 │   ├── project_repo.py            <span class="c"># CRUD projektov + šablóny</span>
@@ -1214,10 +1368,14 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
 │   ├── auth.py                    <span class="c"># Prihlásenie, SHA-256</span>
 │   ├── task_manager.py            <span class="c"># Správa úloh, komentárov</span>
 │   ├── project_manager.py         <span class="c"># Projekty, šablóny</span>
-│   ├── export_manager.py          <span class="c"># PDF generovanie cez reportlab</span>
+│   ├── export_manager.py          <span class="c"># PDF + CSV import/export (v1.1)</span>
 │   ├── file_manager.py            <span class="c"># Prílohy — upload, download, delete</span>
-│   ├── hierarchy.py               <span class="c"># Tímová hierarchia, get_my_team()</span>
+│   ├── hierarchy.py               <span class="c"># Tímová hierarchia: get_my_team() + get_full_tree() (v1.1)</span>
 │   └── template_manager.py        <span class="c"># Projektové šablóny</span>
+│
+├── tests/                         <span class="c"># Automatizované unit testy (v1.1)</span>
+│   ├── test_cpm_engine.py         <span class="c"># 34 testov — CPM algoritmus</span>
+│   └── test_repositories.py       <span class="c"># 30 testov — repozitárna vrstva</span>
 │
 ├── ui/
 │   ├── theme.py                   <span class="c"># Duálny dizajnový systém (light/dark tokeny)</span>
@@ -1225,18 +1383,18 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
 │   │   └── sidebar.py             <span class="c"># Sidebar s navigáciou</span>
 │   └── screens/
 │       ├── login_screen.py
-│       ├── dashboard.py
+│       ├── dashboard.py           <span class="c"># + notifikácie termínov (v1.1)</span>
 │       ├── project_view.py        <span class="c"># Zoznam projektov + dialógy</span>
-│       ├── project_detail.py      <span class="c"># Detail projektu + TaskEditorDialog</span>
-│       ├── team_view.py           <span class="c"># Tím + AddMemberDialog</span>
+│       ├── project_detail.py      <span class="c"># Detail + live search + CSV tlačidlá (v1.1)</span>
+│       ├── team_view.py           <span class="c"># Tím + toggle celého stromu hierarchie (v1.1)</span>
 │       ├── calendar_view.py
 │       ├── settings.py
-│       ├── gantt_chart.py         <span class="c"># GanttChartView (matplotlib)</span>
+│       ├── gantt_chart.py         <span class="c"># GanttChartView + scrollovateľný viewport (v1.1)</span>
 │       ├── network_diagram.py     <span class="c"># NetworkDiagramView (matplotlib)</span>
 │       └── task_edit_dialog.py    <span class="c"># Jednoduchý dialog pre zmenu stavu</span>
 │
 ├── attachments/                   <span class="c"># Lokálne kopie príloh (gitignore)</span>
-└── obsidian_vault/                <span class="c"># Technická dokumentácia (Obsidian MD)</span>
+└── obsidian-vault/                <span class="c"># Technická dokumentácia (Obsidian MD)</span>
     ├── INDEX.md
     ├── 00 - Prehľad projektu.md
     ├── 01 - Architektúra.md
@@ -1247,6 +1405,9 @@ pdfmetrics.<span class="f">registerFont</span>(TTFont(<span class="s">"DejaVu-Bo
     ├── 06 - Team Management.md
     ├── 07 - Bugy & Opravy.md
     ├── 08 - Roadmap v2.0.md
+    ├── 09 - PDF Export.md
+    ├── 10 - v1.1 Featury.md
+    └── 11 - Supabase Migrácia.md
     └── 09 - PDF Export.md</pre>
 
   <span class="chapter-num" style="margin-top:24pt;display:block;">Príloha B</span>
