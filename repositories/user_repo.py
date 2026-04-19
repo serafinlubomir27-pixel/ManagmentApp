@@ -104,3 +104,23 @@ def update_password(user_id: int, hashed_password: str) -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def update_user_role(user_id: int, role: str) -> None:
+    """Update the role of a user (admin only operation)."""
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE users SET role = ? WHERE id = ?", (role, user_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def update_user_manager(user_id: int, manager_id: int | None) -> None:
+    """Assign or remove a manager for a user."""
+    conn = get_connection()
+    try:
+        conn.execute("UPDATE users SET manager_id = ? WHERE id = ?", (manager_id, user_id))
+        conn.commit()
+    finally:
+        conn.close()

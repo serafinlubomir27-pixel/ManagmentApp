@@ -411,3 +411,54 @@ def get_tasks_for_project_with_cpm(project_id: int) -> list[dict]:
         return rows_to_dicts(cursor.fetchall())
     finally:
         conn.close()
+
+
+def get_task_by_id(task_id: int) -> dict | None:
+    """Return full task row as dict, or None."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+        return row_to_dict(cursor.fetchone())
+    finally:
+        conn.close()
+
+
+def update_task_fields(task_id: int, fields: dict) -> None:
+    """Update arbitrary task fields. Keys must match column names."""
+    if not fields:
+        return
+    allowed = {
+        "name", "description", "status", "due_date", "priority",
+        "estimated_hours", "duration", "delay_days", "category",
+        "notes", "sort_order", "assigned_to",
+    }
+    safe = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not safe:
+        return
+    set_clause = ", ".join(f"{k} = ?" for k in safe)
+    conn = get_connection()
+    try:
+        conn.execute(
+            f"UPDATE tasks SET {set_clause} WHERE id = ?",
+            (*safe.values(), task_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_task(task_id: int) -> None:
+    """Delete a task and its dependencies."""
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM task_dependencies WHERE task_id = ? OR depends_on_task_id = ?", (task_id, task_id))
+        conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_dependencies(task_id: int) -> list[dict]:
+    """Return dependency list for a task (alias for get_task_dependencies)."""
+    return get_task_dependencies(task_id)

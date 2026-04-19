@@ -14,7 +14,7 @@ def create_database():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    print(f"🔄 Pracujem s databázou na ceste: {db_path}")
+    print(f"[DB] Pracujem s databazou na ceste: {db_path}")
 
     # --- 1. TABUĽKA UŽÍVATEĽOV (Hierarchia + Roly) ---
     cursor.execute('''
@@ -145,9 +145,9 @@ def create_database():
             "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)",
             ('admin', admin_password_hash, 'Hlavný Admin', 'admin'),
         )
-        print("✅ Vytvorený užívateľ: admin / heslo: admin123")
+        print("[DB] Vytvoreny pouzivatel: admin / heslo: admin123")
     except sqlite3.IntegrityError:
-        print("ℹ️ Admin už existuje, preskakujem vytváranie.")
+        print("[DB] Admin uz existuje, preskakujem vytvaranie.")
 
     # --- Migrácia: zahashuj plaintext heslá (dlzka != 64 = nie je SHA-256 hash) ---
     plain_users = cursor.execute(
@@ -159,7 +159,7 @@ def create_database():
 
     conn.commit()
     conn.close()
-    print("✅ Databáza úspešne skontrolovaná/vytvorená!")
+    print("[DB] Databaza uspesne skontrolovana/vytvorena!")
 
 # Toto umožňuje spustiť súbor aj samostatne pre test
 if __name__ == "__main__":
