@@ -1,0 +1,247 @@
+import { useState } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search } from 'lucide-react'
+import { projectsApi, tasksApi } from '../api/client'
+import { useAuth } from '../contexts/AuthContext'
+
+const STATUS_ICONS: Record<string, React.ReactNode> = {
+  pending:     <Circle size={15} className="text-gray-400" />,
+  in_progress: <Clock size={15} className="text-blue-500" />,
+  completed:   <CheckCircle2 size={15} className="text-green-500" />,
+  blocked:     <AlertCircle size={15} className="text-red-500" />,
+}
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Čaká', in_progress: 'Prebieha', completed: 'Hotová', blocked: 'Blokovaná',
+}
+const PRIORITY_COLOR: Record<string, string> = {
+  low:      'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  medium:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  high:     'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+}
+
+export default function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const projectId = Number(id)
+  const qc = useQueryClient()
+  const { isManager } = useAuth()
+
+  const [search, setSearch] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1 })
+  const [createErr, setCreateErr] = useState('')
+
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => projectsApi.get(projectId).then((r) => r.data),
+  })
+
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['tasks', projectId],
+    queryFn: () => tasksApi.list(projectId).then((r) => r.data),
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () => tasksApi.create(projectId, newTask),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      setShowCreate(false)
+      setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1 })
+    },
+    onError: (e: any) => setCreateErr(e.response?.data?.detail ?? 'Chyba'),
+  })
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: number; status: string }) =>
+      tasksApi.update(taskId, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: number) => tasksApi.delete(taskId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+  })
+
+  const filtered = tasks.filter((t: any) =>
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
+    (t.assigned_username ?? '').toLowerCase().includes(search.toLowerCase()),
+  )
+
+  const criticalCount = tasks.filter((t: any) => t.is_critical).length
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-5">
+      {/* Späť + názov */}
+      <div className="flex items-center gap-3">
+        <Link to="/projects" className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+          <ArrowLeft size={18} />
+        </Link>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{project?.name ?? '…'}</h1>
+          {project?.description && (
+            <p className="text-sm text-gray-400">{project.description}</p>
+          )}
+        </div>
+      </div>
+
+      {/* CPM info */}
+      {criticalCount > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 flex items-center gap-2">
+          <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+          <p className="text-sm text-red-700 dark:text-red-400">
+            <strong>{criticalCount} kritických úloh</strong> — oneskorenie predĺži celý projekt
+          </p>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            className="input pl-9 text-sm"
+            placeholder="Hľadaj úlohu…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        {isManager && (
+          <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 text-sm">
+            <Plus size={15} /> Nová úloha
+          </button>
+        )}
+      </div>
+
+      {/* Formulár */}
+      {showCreate && (
+        <div className="card p-4 space-y-3">
+          <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Nová úloha</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              className="input"
+              placeholder="Názov úlohy *"
+              value={newTask.name}
+              onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+            />
+            <input
+              type="date"
+              className="input"
+              value={newTask.due_date}
+              onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+            />
+            <select
+              className="input"
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+            >
+              <option value="low">Nízka priorita</option>
+              <option value="medium">Stredná priorita</option>
+              <option value="high">Vysoká priorita</option>
+              <option value="critical">Kritická</option>
+            </select>
+            <input
+              type="number"
+              className="input"
+              min={1}
+              placeholder="Trvanie (dni)"
+              value={newTask.duration}
+              onChange={(e) => setNewTask({ ...newTask, duration: Number(e.target.value) })}
+            />
+          </div>
+          {createErr && <p className="text-sm text-red-500">{createErr}</p>}
+          <div className="flex gap-2 justify-end">
+            <button className="btn-ghost text-sm" onClick={() => setShowCreate(false)}>Zrušiť</button>
+            <button
+              className="btn-primary text-sm"
+              onClick={() => createMutation.mutate()}
+              disabled={!newTask.name || createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Vytváram…' : 'Vytvoriť'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabuľka úloh */}
+      <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Úloha</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden sm:table-cell">Priradený</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">CPM</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {isLoading ? (
+              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Načítavam…</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Žiadne úlohy</td></tr>
+            ) : (
+              filtered.map((t: any) => (
+                <tr
+                  key={t.id}
+                  className={t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : ''}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {t.is_critical && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                      )}
+                      <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
+                    </div>
+                    <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
+                      {t.priority}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                    {t.assigned_username ?? '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {isManager ? (
+                      <select
+                        className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                        value={t.status}
+                        onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
+                      >
+                        {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                          <option key={v} value={v}>{l}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                        {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    {t.es != null ? (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        ES {t.es} — EF {t.ef} | Float {t.total_float}d
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {isManager && (
+                      <button
+                        onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
+                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
