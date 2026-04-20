@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
+import NetworkDiagram from '../components/NetworkDiagram'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending:     <Circle size={15} className="text-gray-400" />,
@@ -28,7 +29,7 @@ export default function ProjectDetailPage() {
   const qc = useQueryClient()
   const { isManager } = useAuth()
 
-  const [tab, setTab] = useState<'tasks' | 'gantt'>('tasks')
+  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
@@ -37,6 +38,11 @@ export default function ProjectDetailPage() {
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId).then((r) => r.data),
+  })
+
+  const { data: dependencies = [] } = useQuery({
+    queryKey: ['dependencies', projectId],
+    queryFn: () => tasksApi.getProjectDependencies(projectId).then((r) => r.data),
   })
 
   const { data: teamMembers = [] } = useQuery({
@@ -125,7 +131,17 @@ export default function ProjectDetailPage() {
               : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          <BarChart2 size={15} /> Gantt / CPM
+          <BarChart2 size={15} /> Gantt
+        </button>
+        <button
+          onClick={() => setTab('network')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'network'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <Network size={15} /> Sieťový diagram
         </button>
       </div>
 
@@ -152,6 +168,11 @@ export default function ProjectDetailPage() {
       {/* Gantt záložka */}
       {tab === 'gantt' && (
         <GanttChart tasks={tasks} />
+      )}
+
+      {/* Sieťový diagram */}
+      {tab === 'network' && (
+        <NetworkDiagram tasks={tasks} dependencies={dependencies} />
       )}
 
       {/* Formulár */}

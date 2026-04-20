@@ -60,6 +60,7 @@ export const tasksApi = {
   update: (taskId: number, data: object) => api.patch(`/tasks/${taskId}`, data),
   delete: (taskId: number) => api.delete(`/tasks/${taskId}`),
   getDependencies: (taskId: number) => api.get(`/tasks/${taskId}/dependencies`),
+  getProjectDependencies: (projectId: number) => api.get(`/projects/${projectId}/dependencies`),
   addDependency: (taskId: number, dependsOn: number) =>
     api.post(`/tasks/${taskId}/dependencies?depends_on=${dependsOn}`),
 }

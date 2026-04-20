@@ -136,6 +136,16 @@ def delete_task(
     task_repo.delete_task(task_id)
 
 
+@router.get("/projects/{project_id}/dependencies")
+def get_project_dependencies(
+    project_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Všetky závislosti úloh v projekte (pre sieťový diagram)."""
+    _project_or_404(project_id)
+    return task_repo.get_project_dependencies(project_id)
+
+
 @router.get("/tasks/{task_id}/dependencies")
 def get_dependencies(
     task_id: int,
