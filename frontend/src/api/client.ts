@@ -70,4 +70,6 @@ export const teamApi = {
   all: () => api.get('/team/all'),
   tree: () => api.get('/team/tree'),
   workload: (userId: number) => api.get(`/team/${userId}/workload`),
+  update: (userId: number, data: { role?: string; manager_id?: number | null }) =>
+    api.patch(`/team/${userId}`, data),
 }
