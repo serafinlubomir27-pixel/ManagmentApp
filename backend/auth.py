@@ -6,7 +6,11 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "change-me-in-production-use-32-chars!")
+SECRET_KEY = (
+    os.environ.get("APP_JWT_SECRET")
+    or os.environ.get("JWT_SECRET")
+    or "change-me-in-production-use-32-chars!"
+)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hodín
 
