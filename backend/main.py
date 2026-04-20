@@ -68,15 +68,3 @@ app.include_router(team_router.router)
 def root():
     return {"status": "ok", "version": "1.2.0", "docs": "/docs"}
 
-
-@app.get("/debug/login-test", tags=["health"])
-def debug_login_test():
-    """Debug endpoint — otestuje login logiku priamo."""
-    try:
-        from repositories import user_repo
-        user = user_repo.get_by_username_and_password("admin", "admin123")
-        if user:
-            return {"status": "ok", "user_id": user["id"], "role": user["role"]}
-        return {"status": "not_found"}
-    except Exception as e:
-        return {"status": "error", "detail": str(e)}
