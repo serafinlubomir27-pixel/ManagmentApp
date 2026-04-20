@@ -352,7 +352,7 @@ def update_task_cpm_fields(
             SET es = ?, ef = ?, ls = ?, lf = ?, total_float = ?, is_critical = ?
             WHERE id = ?
             """,
-            (es, ef, ls, lf, total_float, int(is_critical), task_id),
+            (es, ef, ls, lf, total_float, bool(is_critical), task_id),
         )
         conn.commit()
     finally:

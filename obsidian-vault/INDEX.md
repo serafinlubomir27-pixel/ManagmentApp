@@ -14,6 +14,9 @@ Vitaj v trezore. Toto je vstupný bod.
 - [[07 - Bugy & Opravy]] — každý bug + riešenie
 - [[08 - Roadmap v2.0]] — čo príde ďalej (cloud, SaaS)
 - [[09 - PDF Export]] — reportlab, Gantt ako PNG, tabuľka úloh
+- [[10 - v1.1 Featury]] — unit testy, pytest, 64 testov
+- [[11 - Supabase Migrácia]] — PostgreSQL cloud, migrate_to_supabase.py
+- [[12 - Spustenie projektu]] — **príkazy na spustenie backendu a frontendu**
 
 ## 🔍 Rýchle hľadanie podľa témy
 

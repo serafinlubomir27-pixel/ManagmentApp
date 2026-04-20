@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+// Dev: Vite proxy prepisuje /api → localhost:8000
+// Prod: VITE_API_URL = https://your-app.railway.app
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -33,6 +35,9 @@ export const authApi = {
     }),
   register: (data: { username: string; password: string; full_name: string; role?: string }) =>
     api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
+  changePassword: (current_password: string, new_password: string) =>
+    api.patch('/auth/me/password', { current_password, new_password }),
 }
 
 // ── Projects ─────────────────────────────────────────────────────────────────

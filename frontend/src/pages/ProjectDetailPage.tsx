@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search } from 'lucide-react'
-import { projectsApi, tasksApi } from '../api/client'
+import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -29,12 +29,17 @@ export default function ProjectDetailPage() {
 
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
-  const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1 })
+  const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
   const [createErr, setCreateErr] = useState('')
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId).then((r) => r.data),
+  })
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['team-all'],
+    queryFn: () => teamApi.all().then((r) => r.data).catch(() => teamApi.myTeam().then((r) => r.data)),
   })
 
   const { data: tasks = [], isLoading } = useQuery({
@@ -43,11 +48,14 @@ export default function ProjectDetailPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: () => tasksApi.create(projectId, newTask),
+    mutationFn: () => tasksApi.create(projectId, {
+      ...newTask,
+      assigned_to: newTask.assigned_to ? Number(newTask.assigned_to) : null,
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks', projectId] })
       setShowCreate(false)
-      setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1 })
+      setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
     },
     onError: (e: any) => setCreateErr(e.response?.data?.detail ?? 'Chyba'),
   })
@@ -148,6 +156,16 @@ export default function ProjectDetailPage() {
               value={newTask.duration}
               onChange={(e) => setNewTask({ ...newTask, duration: Number(e.target.value) })}
             />
+            <select
+              className="input"
+              value={newTask.assigned_to}
+              onChange={(e) => setNewTask({ ...newTask, assigned_to: e.target.value })}
+            >
+              <option value="">— Nepriradené —</option>
+              {teamMembers.map((m: any) => (
+                <option key={m.id} value={m.id}>{m.full_name} (@{m.username})</option>
+              ))}
+            </select>
           </div>
           {createErr && <p className="text-sm text-red-500">{createErr}</p>}
           <div className="flex gap-2 justify-end">

@@ -9,6 +9,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from backend.auth import create_access_token
+from backend.deps import get_current_user
 from repositories import user_repo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -70,3 +71,43 @@ def register(req: RegisterRequest):
     if not ok:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
     return {"detail": "Používateľ vytvorený"}
+
+
+class MeResponse(BaseModel):
+    id: int
+    username: str
+    full_name: str
+    role: str
+
+
+@router.get("/me", response_model=MeResponse)
+def get_me(current_user: dict = Depends(get_current_user)):
+    """Vráti info o prihlásenom používateľovi."""
+    user = user_repo.get_by_username(current_user["username"])
+    if not user:
+        raise HTTPException(status_code=404, detail="Používateľ nenájdený")
+    return MeResponse(**{k: user[k] for k in ("id", "username", "full_name", "role")})
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.patch("/me/password")
+def change_password(
+    body: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Zmena vlastného hesla. Vyžaduje zadanie starého hesla."""
+    user = user_repo.get_by_username_and_password(
+        current_user["username"], body.current_password
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nesprávne aktuálne heslo",
+        )
+    new_hashed = hashlib.sha256(body.new_password.encode()).hexdigest()
+    user_repo.update_password(current_user["id"], new_hashed)
+    return {"detail": "Heslo bolo zmenené"}

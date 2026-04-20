@@ -22,3 +22,11 @@ env/
 # App
 config.json
 *.db-journal
+
+# Secrets & local DB
+.env
+*.db
+
+# Frontend build
+frontend/node_modules/
+frontend/dist/

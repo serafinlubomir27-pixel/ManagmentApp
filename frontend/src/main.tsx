@@ -5,6 +5,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
 
+// Inicializuj dark mode ihneď — zabraňuje blikaniu pri načítaní stránky
+;(function () {
+  const stored = localStorage.getItem('theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  if (stored === 'dark' || (!stored && prefersDark)) {
+    document.documentElement.classList.add('dark')
+  }
+})()
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

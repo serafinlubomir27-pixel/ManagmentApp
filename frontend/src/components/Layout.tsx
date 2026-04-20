@@ -1,19 +1,22 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, Settings, Sun, Moon } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useDarkMode } from '../hooks/useDarkMode'
 import clsx from 'clsx'
 
 const nav = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/projects',  label: 'Projekty',  icon: FolderKanban },
-  { to: '/team',      label: 'Tím',        icon: Users },
+  { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
+  { to: '/projects',  label: 'Projekty',   icon: FolderKanban },
+  { to: '/team',      label: 'Tím',         icon: Users },
+  { to: '/settings',  label: 'Nastavenia', icon: Settings },
 ]
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const { dark, toggle } = useDarkMode()
 
   const handleLogout = () => {
     logout()
@@ -57,10 +60,11 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* User + Logout */}
-        <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-3 px-3 py-2 mb-1">
-            <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
+        {/* User + Dark toggle + Logout */}
+        <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-1">
+          {/* User info */}
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
               {user?.full_name?.[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
@@ -68,6 +72,17 @@ export default function Layout() {
               <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</p>
             </div>
           </div>
+
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggle}
+            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            {dark ? <Sun size={16} /> : <Moon size={16} />}
+            {dark ? 'Svetlý mód' : 'Tmavý mód'}
+          </button>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -86,11 +101,16 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col md:ml-56 min-h-0">
         {/* Mobile topbar */}
-        <header className="md:hidden flex items-center h-14 px-4 bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-gray-800">
-          <button onClick={() => setOpen(true)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-            <Menu size={20} />
+        <header className="md:hidden flex items-center justify-between h-14 px-4 bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setOpen(true)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+              <Menu size={20} />
+            </button>
+            <span className="font-semibold text-sm">ManagmentApp</span>
+          </div>
+          <button onClick={toggle} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <span className="ml-3 font-semibold text-sm">ManagmentApp</span>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">

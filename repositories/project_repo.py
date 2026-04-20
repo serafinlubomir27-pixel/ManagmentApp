@@ -9,7 +9,7 @@ def get_user_projects(user_id):
         cursor = conn.cursor()
         cursor.execute(
             """
-            SELECT DISTINCT p.id, p.name, p.description, p.status
+            SELECT DISTINCT p.id, p.name, p.description, p.status, p.created_at
             FROM projects p
             LEFT JOIN tasks t ON p.id = t.project_id
             WHERE p.user_id = ?

@@ -22,10 +22,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import auth_router, projects_router, tasks_router, team_router
-from database.setup import create_database
+from repositories.base_repo import get_backend
 
 # ── Inicializácia databázy ───────────────────────────────────────────────────
-create_database()
+# SQLite: automaticky vytvor tabuľky pri štarte
+# PostgreSQL: schema je už vytvorená cez supabase_schema.sql
+if get_backend() == "sqlite":
+    from database.setup import create_database
+    create_database()
+else:
+    print("[DB] PostgreSQL backend — Supabase schema sa používa")
 
 # ── FastAPI app ──────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -34,14 +40,17 @@ app = FastAPI(
     version="1.2.0",
 )
 
-# CORS — povolí React frontend (v dev móde na localhost:3000)
+# CORS — dev + produkčná Vercel URL cez env premenné
+_extra_origins = os.environ.get("CORS_ORIGINS", "")
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+] + [o.strip() for o in _extra_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

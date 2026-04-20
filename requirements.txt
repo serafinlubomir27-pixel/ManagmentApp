@@ -1,10 +1,13 @@
-customtkinter>=5.2.0
-matplotlib>=3.7.0
-Pillow>=10.0.0
-reportlab>=4.0.0
-psycopg2-binary>=2.9.0
-python-dotenv>=1.0.0
+# Web backend (Railway deploy)
 fastapi>=0.100.0
 uvicorn[standard]>=0.23.0
 python-jose[cryptography]>=3.3.0
 python-multipart>=0.0.6
+psycopg2-binary>=2.9.0
+python-dotenv>=1.0.0
+
+# Desktop app (len lokálne — zakomentované pre Railway)
+# customtkinter>=5.2.0
+# matplotlib>=3.7.0
+# Pillow>=10.0.0
+# reportlab>=4.0.0
