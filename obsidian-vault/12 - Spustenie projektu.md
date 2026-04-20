@@ -1,5 +1,16 @@
 # Spustenie projektu — ManagmentApp
 
+## 🌐 Produkčné URL (live)
+
+| Služba | URL |
+|--------|-----|
+| **Frontend** | https://managmentapps.netlify.app |
+| **Backend API** | https://web-production-b865.up.railway.app |
+| **Swagger UI** | https://web-production-b865.up.railway.app/docs |
+| **Supabase DB** | https://supabase.com/dashboard/project/nphqwfgglmiaqacdxwne/editor |
+
+---
+
 ## Predpoklady
 - Python 3.12+
 - Node.js 22 LTS
