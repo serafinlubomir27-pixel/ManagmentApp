@@ -7,8 +7,7 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
 SECRET_KEY = (
-    os.environ.get("APP_JWT_SECRET")
-    or os.environ.get("JWT_SECRET")
+    os.environ.get("APP_AUTH_KEY")
     or "change-me-in-production-use-32-chars!"
 )
 ALGORITHM = "HS256"
