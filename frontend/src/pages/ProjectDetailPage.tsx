@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import GanttChart from '../components/GanttChart'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending:     <Circle size={15} className="text-gray-400" />,
@@ -27,6 +28,7 @@ export default function ProjectDetailPage() {
   const qc = useQueryClient()
   const { isManager } = useAuth()
 
+  const [tab, setTab] = useState<'tasks' | 'gantt'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
@@ -103,7 +105,32 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* Toolbar */}
+      {/* Záložky */}
+      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setTab('tasks')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'tasks'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <List size={15} /> Úlohy
+        </button>
+        <button
+          onClick={() => setTab('gantt')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'gantt'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <BarChart2 size={15} /> Gantt / CPM
+        </button>
+      </div>
+
+      {/* Toolbar (len pre záložku Úlohy) */}
+      {tab === 'tasks' && (
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -120,9 +147,15 @@ export default function ProjectDetailPage() {
           </button>
         )}
       </div>
+      )}
+
+      {/* Gantt záložka */}
+      {tab === 'gantt' && (
+        <GanttChart tasks={tasks} />
+      )}
 
       {/* Formulár */}
-      {showCreate && (
+      {tab === 'tasks' && showCreate && (
         <div className="card p-4 space-y-3">
           <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Nová úloha</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -182,7 +215,7 @@ export default function ProjectDetailPage() {
       )}
 
       {/* Tabuľka úloh */}
-      <div className="card overflow-hidden">
+      {tab === 'tasks' && <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
@@ -259,7 +292,7 @@ export default function ProjectDetailPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </div>}
     </div>
   )
 }
