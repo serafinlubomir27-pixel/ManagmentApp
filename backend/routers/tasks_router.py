@@ -143,7 +143,7 @@ def get_project_dependencies(
 ):
     """Všetky závislosti úloh v projekte (pre sieťový diagram)."""
     _project_or_404(project_id)
-    return task_repo.get_project_dependencies(project_id)
+    return task_repo.get_all_dependencies_for_project(project_id)
 
 
 @router.get("/tasks/{task_id}/dependencies")
