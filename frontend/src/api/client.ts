@@ -65,6 +65,22 @@ export const tasksApi = {
     api.post(`/tasks/${taskId}/dependencies?depends_on=${dependsOn}`),
 }
 
+// ── Comments ──────────────────────────────────────────────────────────────────
+export const commentsApi = {
+  list: (taskId: number) => api.get(`/tasks/${taskId}/comments`),
+  create: (taskId: number, content: string) =>
+    api.post(`/tasks/${taskId}/comments`, { content }),
+  delete: (commentId: number) => api.delete(`/comments/${commentId}`),
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+export const notificationsApi = {
+  list: () => api.get('/notifications'),
+  markRead: (id: number) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/read-all'),
+  checkDeadlines: () => api.post('/notifications/check-deadlines'),
+}
+
 // ── Team ──────────────────────────────────────────────────────────────────────
 export const teamApi = {
   myTeam: () => api.get('/team/'),

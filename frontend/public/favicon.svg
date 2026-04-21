@@ -1,0 +1,16 @@
+<!-- 64x64 Nodus icon -->
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="16" fill="#0D1B4B"/>
+  <circle cx="10" cy="32" r="5" fill="#4B7FFF"/>
+  <circle cx="27" cy="18" r="5" fill="white"/>
+  <circle cx="44" cy="18" r="5" fill="white"/>
+  <circle cx="27" cy="46" r="5" fill="#4B7FFF" fill-opacity="0.5"/>
+  <circle cx="54" cy="32" r="5" fill="#4B7FFF"/>
+  <line x1="15" y1="29" x2="22" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="32" y1="18" x2="39" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="49" y1="21" x2="51" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="15" y1="35" x2="22" y2="43" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+  <line x1="32" y1="46" x2="49" y2="37" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="10" cy="32" r="8" fill="#4B7FFF" fill-opacity="0.2"/>
+  <circle cx="54" cy="32" r="8" fill="#4B7FFF" fill-opacity="0.2"/>
+</svg>

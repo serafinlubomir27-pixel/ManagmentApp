@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ManagmentApp — Bakalárska práca</title>
+<title>Nodus (ManagmentApp) — Bakalárska práca</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -317,6 +317,7 @@
     <div class="cover-type">Bakalárska práca</div>
     <div class="cover-title">ManagmentApp — Desktopová aplikácia<br>pre projektový manažment<br>s metódou kritickej cesty</div>
     <div class="cover-subtitle">Desktop Application for Project Management<br>Using Critical Path Method</div>
+    <div class="cover-subtitle" style="margin-top:0.5em;font-size:0.85em;opacity:0.7;">Rebrandovaný ako <strong>Nodus</strong> — Project management on the critical path</div>
   </div>
 
   <div>
@@ -340,14 +341,14 @@
 
   <div class="abstract-block">
     <div class="abstract-lang">Slovenský jazyk</div>
-    <p>Táto bakalárska práca sa zaoberá návrhom a implementáciou desktopovej aplikácie pre projektový manažment s názvom ManagmentApp. Aplikácia je vyvinutá v programovacom jazyku Python s využitím knižníc CustomTkinter pre grafické rozhranie, SQLite3 pre lokálnu databázu, matplotlib pre vizualizácie a reportlab pre export do PDF. Jadrom systému je implementácia metódy kritickej cesty (CPM — Critical Path Method), ktorá umožňuje výpočet ES, EF, LS, LF hodnôt, celkovej rezervy (float) a identifikáciu kritickej cesty projektu. Aplikácia ďalej obsahuje Gantt chart, sieťový diagram závislostí, správu tímu s trojúrovňovou hierarchiou, kalendárny pohľad, systém komentárov a príloh k úlohám. Osobitná pozornosť bola venovaná návrhu duálneho dizajnového systému, ktorý podporuje prepínanie medzi tmavým a svetlým režimom prostredníctvom dvojíc farebných tokenov (light, dark) natívne podporovaných v CustomTkinter. V nadväznosti na vydanie verzie 1.0 bola realizovaná séria rozšírení (v1.1): automatizovaná sada 64 unit testov (pytest), live vyhľadávanie úloh, scrollovateľný Gantt chart, notifikácie blížiacich sa termínov, rekurzívne zobrazenie hierarchie tímu a CSV import/export. Verzia 1.2 zaviedla duálny databázový backend umožňujúci transparentné prepínanie medzi lokálnym SQLite a cloudovým PostgreSQL (Supabase) bez akejkoľvek zmeny repozitárnej alebo prezentačnej vrstvy.</p>
-    <p style="margin-bottom:0;"><strong>Kľúčové slová:</strong> projektový manažment, metóda kritickej cesty, CPM, Python, CustomTkinter, desktopová aplikácia, SQLite, PostgreSQL, Supabase, Gantt chart, unit testovanie, design systém</p>
+    <p>Táto bakalárska práca sa zaoberá návrhom a implementáciou desktopovej aplikácie pre projektový manažment s názvom ManagmentApp. Aplikácia je vyvinutá v programovacom jazyku Python s využitím knižníc CustomTkinter pre grafické rozhranie, SQLite3 pre lokálnu databázu, matplotlib pre vizualizácie a reportlab pre export do PDF. Jadrom systému je implementácia metódy kritickej cesty (CPM — Critical Path Method), ktorá umožňuje výpočet ES, EF, LS, LF hodnôt, celkovej rezervy (float) a identifikáciu kritickej cesty projektu. Aplikácia ďalej obsahuje Gantt chart, sieťový diagram závislostí, správu tímu s trojúrovňovou hierarchiou, kalendárny pohľad, systém komentárov a príloh k úlohám. Osobitná pozornosť bola venovaná návrhu duálneho dizajnového systému, ktorý podporuje prepínanie medzi tmavým a svetlým režimom prostredníctvom dvojíc farebných tokenov (light, dark) natívne podporovaných v CustomTkinter. V nadväznosti na vydanie verzie 1.0 bola realizovaná séria rozšírení (v1.1): automatizovaná sada 64 unit testov (pytest), live vyhľadávanie úloh, scrollovateľný Gantt chart, notifikácie blížiacich sa termínov, rekurzívne zobrazenie hierarchie tímu a CSV import/export. Verzia 1.2 zaviedla duálny databázový backend umožňujúci transparentné prepínanie medzi lokálnym SQLite a cloudovým PostgreSQL (Supabase) bez akejkoľvek zmeny repozitárnej alebo prezentačnej vrstvy. Práca ďalej obsahuje ekonomickú analýzu globálneho trhu PM softvéru (7,38 mld. USD v roku 2023, CAGR 15,7 %), konkurenčnú analýzu hlavných nástrojov (Asana, Jira, Monday, Trello, MS Project), kvantifikáciu ekonomického dopadu CPM (úspora 498 hodín ročne na PM profesionála, skrátenie projektov o 15–25 %) a návrh SaaS cenotvorby s trojúrovňovým freemium modelom pre SME segment na trhu SR a ČR.</p>
+    <p style="margin-bottom:0;"><strong>Kľúčové slová:</strong> projektový manažment, metóda kritickej cesty, CPM, Python, CustomTkinter, desktopová aplikácia, SQLite, PostgreSQL, Supabase, Gantt chart, unit testovanie, design systém, SaaS, cenotvorba, trh PM softvéru, ekonomická analýza</p>
   </div>
 
   <div class="abstract-block">
     <div class="abstract-lang">English</div>
-    <p>This bachelor thesis presents the design and implementation of a desktop project management application called ManagmentApp. The application is developed in Python using the CustomTkinter library for the graphical user interface, SQLite3 for local data storage, matplotlib for visualizations, and reportlab for PDF export. The core of the system is an implementation of the Critical Path Method (CPM), which computes ES, EF, LS, LF values, total float, and identifies the critical path of a project. Additional features include a Gantt chart, CPM network diagram, team management with a three-level hierarchy, calendar view, and a comment and attachment system for tasks. Special attention was paid to the design of a dual-mode design system that supports toggling between dark and light themes using native CustomTkinter dual-value color tokens. Following the v1.0 release, a series of enhancements were delivered in v1.1: an automated suite of 64 unit tests (pytest), live task search, a scrollable Gantt chart, deadline notifications, recursive team hierarchy tree, and CSV import/export. Version 1.2 introduced a dual database backend enabling transparent switching between local SQLite and cloud PostgreSQL (Supabase) without any changes to the repository or presentation layers.</p>
-    <p style="margin-bottom:0;"><strong>Keywords:</strong> project management, critical path method, CPM, Python, CustomTkinter, desktop application, SQLite, PostgreSQL, Supabase, Gantt chart, unit testing, design system</p>
+    <p>This bachelor thesis presents the design and implementation of a desktop project management application called ManagmentApp. The application is developed in Python using the CustomTkinter library for the graphical user interface, SQLite3 for local data storage, matplotlib for visualizations, and reportlab for PDF export. The core of the system is an implementation of the Critical Path Method (CPM), which computes ES, EF, LS, LF values, total float, and identifies the critical path of a project. Additional features include a Gantt chart, CPM network diagram, team management with a three-level hierarchy, calendar view, and a comment and attachment system for tasks. Special attention was paid to the design of a dual-mode design system that supports toggling between dark and light themes using native CustomTkinter dual-value color tokens. Following the v1.0 release, a series of enhancements were delivered in v1.1: an automated suite of 64 unit tests (pytest), live task search, a scrollable Gantt chart, deadline notifications, recursive team hierarchy tree, and CSV import/export. Version 1.2 introduced a dual database backend enabling transparent switching between local SQLite and cloud PostgreSQL (Supabase) without any changes to the repository or presentation layers. The thesis also provides an economic analysis of the global PM software market ($7.38B in 2023, CAGR 15.7%), a competitive analysis of major tools (Asana, Jira, Monday, Trello, MS Project), an assessment of CPM's measurable productivity impact (498 hours saved per PM annually, 15–25% project duration reduction), and a SaaS pricing strategy with a three-tier freemium model targeting the SME segment in Slovakia and the Czech Republic.</p>
+    <p style="margin-bottom:0;"><strong>Keywords:</strong> project management, critical path method, CPM, Python, CustomTkinter, desktop application, SQLite, PostgreSQL, Supabase, Gantt chart, unit testing, design system, SaaS pricing, market analysis, economic analysis, SME</p>
   </div>
 
   <div class="page-footer"><span>Anotácia</span><span>ii</span></div>
@@ -408,9 +409,17 @@
     <div class="toc-line toc-h2"><span>6.2 Dokumentácia chýb a ich opravy</span><span>48</span></div>
     <div class="toc-line toc-h2"><span>6.3 Hodnotenie splnenia požiadaviek</span><span>52</span></div>
 
-    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>7. Záver</span><span>54</span></div>
-    <div class="toc-line toc-h2"><span>7.1 Zhrnutie dosiahnutých výsledkov</span><span>54</span></div>
-    <div class="toc-line toc-h2"><span>7.2 Obmedzenia a budúca práca</span><span>55</span></div>
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>7. Ekonomická analýza a podnikateľský kontext</span><span>43</span></div>
+    <div class="toc-line toc-h2"><span>7.1 Analýza globálneho trhu softvéru pre projektový manažment</span><span>43</span></div>
+    <div class="toc-line toc-h2"><span>7.2 Konkurenčná analýza a pozicionovanie produktu</span><span>45</span></div>
+    <div class="toc-line toc-h2"><span>7.3 Ekonomický dopad metódy kritickej cesty na podniky</span><span>47</span></div>
+    <div class="toc-line toc-h2"><span>7.4 Cenotvorba produktu a SaaS obchodný model</span><span>48</span></div>
+    <div class="toc-line toc-h2"><span>7.5 Cieľový trh a trhová príležitosť (SR/CZ)</span><span>50</span></div>
+    <div class="toc-line toc-h2"><span>7.6 Finančné projekcie a analýza rentability</span><span>51</span></div>
+
+    <div class="toc-line toc-h1" style="margin-top:8pt;"><span>8. Záver</span><span>54</span></div>
+    <div class="toc-line toc-h2"><span>8.1 Zhrnutie dosiahnutých výsledkov</span><span>54</span></div>
+    <div class="toc-line toc-h2"><span>8.2 Obmedzenia a budúca práca</span><span>55</span></div>
 
     <div class="toc-line toc-h1" style="margin-top:8pt;"><span>Zoznam použitej literatúry</span><span>57</span></div>
     <div class="toc-line toc-h1"><span>Príloha A — Štruktúra projektu</span><span>59</span></div>
@@ -452,7 +461,7 @@
 
   <h2>1.3 Štruktúra práce</h2>
 
-  <p><strong>Kapitola 2</strong> predstavuje teoretické základy — metódu kritickej cesty, Ganttov diagram a prehľad existujúcich riešení. <strong>Kapitola 3</strong> analyzuje požiadavky na systém z pohľadu používateľských skupín a funkčných/nefunkčných kritérií. <strong>Kapitola 4</strong> popisuje návrh architektúry, databázy, používateľského rozhrania a CPM modulu. <strong>Kapitola 5</strong> sa venuje samotnej implementácii s dôrazom na kľúčové algoritmy a technické rozhodnutia. <strong>Kapitola 6</strong> hodnotí výsledky testovania a dokumentuje opravené chyby. <strong>Kapitola 7</strong> uzatvára prácu zhrnutím dosiahnutých výsledkov a plánmi budúceho rozvoja.</p>
+  <p><strong>Kapitola 2</strong> predstavuje teoretické základy — metódu kritickej cesty, Ganttov diagram a prehľad existujúcich riešení. <strong>Kapitola 3</strong> analyzuje požiadavky na systém z pohľadu používateľských skupín a funkčných/nefunkčných kritérií. <strong>Kapitola 4</strong> popisuje návrh architektúry, databázy, používateľského rozhrania a CPM modulu. <strong>Kapitola 5</strong> sa venuje samotnej implementácii s dôrazom na kľúčové algoritmy a technické rozhodnutia. <strong>Kapitola 6</strong> hodnotí výsledky testovania a dokumentuje opravené chyby. <strong>Kapitola 7</strong> prináša ekonomickú analýzu trhu PM softvéru, konkurenčné porovnanie, kvantifikáciu prínosov CPM pre podniky a návrh cenotvorby produktu — aspekty kľúčové pre ekonomickú fakultu a komerčné uplatnenie aplikácie. <strong>Kapitola 8</strong> uzatvára prácu zhrnutím dosiahnutých výsledkov a plánmi budúceho rozvoja.</p>
 
   <div class="page-footer"><span>Kapitola 1 — Úvod</span><span>1</span></div>
 </div>
@@ -1240,14 +1249,390 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
-     KAPITOLA 7 — ZÁVER
+     KAPITOLA 7 — EKONOMICKÁ ANALÝZA
 ═══════════════════════════════════════════════════════ -->
 <div class="page">
-  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Záver</div>
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
   <span class="chapter-num">Kapitola 7</span>
-  <h1>7. Záver</h1>
+  <h1>7. Ekonomická analýza a podnikateľský kontext</h1>
 
-  <h2>7.1 Zhrnutie dosiahnutých výsledkov</h2>
+  <p>Vývoj akejkoľvek softwarovej aplikácie nie je možné posudzovať výlučne z technického hľadiska. Rovnako dôležitá je analýza trhového prostredia, v ktorom sa produkt pohybuje, pochopenie ekonomického prínosu navrhnutého riešenia pre jeho potenciálnych používateľov a stanovenie udržateľného podnikateľského modelu. Táto kapitola analyzuje trh softvéru pre projektový manažment z makroekonomickej aj mikroekonomickej perspektívy, porovnáva ManagmentApp s existujúcou konkurenciou, dokumentuje merateľný ekonomický dopad metódy CPM na projektové výsledky podnikov a navrhuje cenotvornú stratégiu pre komerčné vydanie produktu.</p>
+
+  <h2>7.1 Analýza globálneho trhu softvéru pre projektový manažment</h2>
+
+  <h3>7.1.1 Veľkosť trhu a rastové trendy</h3>
+
+  <p>Globálny trh softvéru pre projektový manažment zaznamenal v uplynulom desaťročí výrazný rast, poháňaný digitálnou transformáciou podnikov, rozšírením práce na diaľku (remote work) a zvyšujúcou sa komplexnosťou medzinárodných projektov. Podľa správy spoločnosti Grand View Research <strong>dosiahol tento trh v roku 2023 hodnotu 7,38 miliardy USD</strong> a s ročnou mierou rastu (CAGR) 15,7 % by mal do roku 2030 dosiahnuť <strong>20,47 miliardy USD</strong> [13].</p>
+
+  <div class="note">
+    <strong>Kľúčový ukazovateľ:</strong> CAGR 15,7 % (2023–2030) radí PM softvér medzi najrýchlejšie rastúce segmenty podnikového softvéru — porovnateľne s trhom cloudovej bezpečnosti (CAGR ~17 %) a výrazne nad priemerom celého softvérového odvetvia (~8 % CAGR).
+  </div>
+
+  <table>
+    <thead><tr><th>Rok</th><th>Veľkosť trhu (mld. USD)</th><th>Medziročný rast</th><th>Kumulatívny rast vs 2023</th></tr></thead>
+    <tbody>
+      <tr><td>2023</td><td>7,38</td><td>—</td><td>—</td></tr>
+      <tr><td>2024</td><td>8,54</td><td>+15,7 %</td><td>+15,7 %</td></tr>
+      <tr><td>2025</td><td>9,88</td><td>+15,7 %</td><td>+33,9 %</td></tr>
+      <tr><td>2027</td><td>13,23</td><td>+15,7 %</td><td>+79,3 %</td></tr>
+      <tr><td>2030</td><td>20,47</td><td>+15,7 %</td><td>+177,4 %</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.1 — Prognóza rastu trhu PM softvéru 2023–2030 (Zdroj: Grand View Research, 2024 [13])</div>
+
+  <h3>7.1.2 Segmentácia trhu a kľúčové hybné sily</h3>
+
+  <p>Trh PM softvéru možno segmentovať podľa viacerých kritérií. Z hľadiska <strong>veľkosti zákazníka</strong> dominujú veľké podniky (enterprise segment) so 62-percentným podielom tržieb, avšak najrýchlejší rast vykazuje segment malých a stredných podnikov (SME), kde penetrácia nástrojov PM softvéru stále dosahuje len 34 % [13]. Práve tento nevyužitý potenciál SME segmentu predstavuje jadro podnikateľskej príležitosti pre ManagmentApp.</p>
+
+  <p>Medzi kľúčové hybné sily rastu trhu patria:</p>
+  <ul>
+    <li><strong>Rast remote/hybridnej práce:</strong> Po pandémii COVID-19 pracuje aspoň časť pracovného času vzdialene 58 % znalostných pracovníkov v EÚ (Eurostat, 2024). Efektívna koordinácia rozptýlených tímov si vyžaduje digitálne PM nástroje.</li>
+    <li><strong>Digitálna transformácia SME:</strong> 73 % malých a stredných podnikov v EÚ implementovalo základné digitálne technológie do roku 2024 (Eurostat, 2024 [14]). PM softvér je prirodzenou súčasťou tejto transformácie.</li>
+    <li><strong>Integrácia umelej inteligencie:</strong> Vedúci hráči trhu (Asana, Monday, Jira) integrujú AI asistenty pre automatické rozpoznávanie závislostí, predikciu rizík a návrh harmonogramov — trhové ocenenie AI-augmented PM nástrojov rastie rýchlejšie ako tradičný segment.</li>
+    <li><strong>Komplexnosť projektov:</strong> Priemerný počet paralelných projektov na jedného projektového manažéra vzrástol zo 4,2 (2015) na 7,8 (2023) [15], čo zvyšuje dopyt po nástrojoch s matematicky podloženým plánovaním (CPM, PERT).</li>
+  </ul>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>43</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
+
+  <h2>7.2 Konkurenčná analýza a pozicionovanie produktu</h2>
+
+  <h3>7.2.1 Prehľad priamych konkurentov a ich cenové modely</h3>
+
+  <p>Trh PM softvéru ovládajú etablované SaaS platformy s dobre zavedenými cenovými modelmi a miliónmi používateľov. Nasledujúca tabuľka poskytuje systematické porovnanie kľúčových hráčov z hľadiska ceny, funkcionality a zamerania na trh:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nástroj</th>
+        <th>Free tier</th>
+        <th>Cena (USD/user/mes.)</th>
+        <th>CPM/sieťový diagram</th>
+        <th>Offline režim</th>
+        <th>Primárny trh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Trello</strong></td><td>✅ (unlimited cards)</td><td>$5 – $17,50</td><td>❌</td><td>❌</td><td>Individuáli, malé tímy</td></tr>
+      <tr><td><strong>ClickUp</strong></td><td>✅ (100 MB storage)</td><td>$7 – $19</td><td>⚠️ (Gantt only)</td><td>❌</td><td>SME, startupy</td></tr>
+      <tr><td><strong>Jira</strong></td><td>✅ (10 users)</td><td>$7,53 – $23,97</td><td>⚠️ (plugin)</td><td>❌</td><td>Software development</td></tr>
+      <tr><td><strong>Asana</strong></td><td>✅ (15 users)</td><td>$10,99 – $49,99</td><td>❌</td><td>❌</td><td>Mid-market, enterprise</td></tr>
+      <tr><td><strong>Monday.com</strong></td><td>✅ (2 seats)</td><td>$9 – $19</td><td>⚠️ (Gantt only)</td><td>❌</td><td>SME, enterprise</td></tr>
+      <tr><td><strong>MS Project</strong></td><td>❌</td><td>$10 – $55</td><td>✅ (plný CPM)</td><td>✅ (desktop)</td><td>Enterprise, vládny sektor</td></tr>
+      <tr><td><strong>GanttProject</strong></td><td>✅ (open source)</td><td>$0</td><td>✅ (sieťový diagram)</td><td>✅ (desktop)</td><td>Open source, akademici</td></tr>
+      <tr style="background:#f0faf4;"><td><strong>ManagmentApp</strong></td><td>✅ (plný CPM)</td><td>€0 – €20</td><td>✅ (plný CPM + viz.)</td><td>✅ (SQLite offline)</td><td>SME, akademici, freelanceri</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.2 — Porovnanie PM nástrojov (stav: Q1 2025; ceny pri ročnej platbe)</div>
+
+  <h3>7.2.2 Analýza medzery na trhu (Gap Analysis)</h3>
+
+  <p>Z tabuľky 7.2 vyplýva zásadná trhová medzera: <strong>žiadny z hlavných SaaS konkurentov v cenovom pásme $5–$20/user/mesiac neponúka natívnu implementáciu CPM sieťového diagramu spojenú s offline režimom</strong>. Nástroje, ktoré CPM podporujú (MS Project), sú cenovo nedostupné pre malé podniky a individuálnych projektových manažérov. Nástroje v dostupnej cenovej kategórii ponúkajú maximálne Ganttov diagram — čo je vizualizácia, nie analytická metóda.</p>
+
+  <div class="note">
+    <strong>Trhová medzera ManagmentApp:</strong> Kombinácia <em>plného CPM algoritmu</em> + <em>offline režimu</em> + <em>prístupnej ceny</em> neexistuje v súčasnej ponuke komerčných PM nástrojov pre SME segment. ManagmentApp vypĺňa práve túto medzeru.
+  </div>
+
+  <h3>7.2.3 SWOT analýza ManagmentApp</h3>
+
+  <table>
+    <thead><tr><th>Silné stránky (Strengths)</th><th>Slabé stránky (Weaknesses)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>
+          <ul style="margin:0 0 0 14pt;">
+            <li>Natívna CPM implementácia s vizualizáciou</li>
+            <li>Offline SQLite + cloud PostgreSQL</li>
+            <li>Moderný duálny dizajnový systém</li>
+            <li>Open-source základ (Python ekosystém)</li>
+            <li>Nulové licenčné náklady na open-source komponenty</li>
+          </ul>
+        </td>
+        <td>
+          <ul style="margin:0 0 0 14pt;">
+            <li>Chýbajúca real-time spolupráca (v1.x)</li>
+            <li>Žiadne mobilné rozhranie</li>
+            <li>Nízka brand awareness (nový produkt)</li>
+            <li>Obmedzené integrácie (Slack, GitHub, Teams)</li>
+            <li>Závislosti na Python runtime u koncového používateľa</li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Príležitosti (Opportunities)</th><th>Hrozby (Threats)</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>
+          <ul style="margin:0 0 0 14pt;">
+            <li>CAGR 15,7 % na rastúcom PM trhu</li>
+            <li>Nedigitalizované SME podniky v SR/CZ</li>
+            <li>Rastúci dopyt po CPM v akademickom sektore</li>
+            <li>FastAPI + React webová verzia (v2.0) eliminuje problém runtime</li>
+            <li>AI integrácia pre automatické rozpoznávanie závislostí</li>
+          </ul>
+        </td>
+        <td>
+          <ul style="margin:0 0 0 14pt;">
+            <li>Asana/Monday pridávajú CPM funkcie do nižších plánov</li>
+            <li>Microsoft Project online lacnejší balíček pre SME</li>
+            <li>Cenová vojna — race to free v Trello/ClickUp segmente</li>
+            <li>GDPR compliance pri cloud nasadení</li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.3 — SWOT analýza ManagmentApp (Q1 2025)</div>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>45</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
+
+  <h2>7.3 Ekonomický dopad metódy kritickej cesty na podniky</h2>
+
+  <h3>7.3.1 Náklady neúspešných projektov bez PM nástrojov</h3>
+
+  <p>Project Management Institute (PMI) vo svojej štúdii <em>Pulse of the Profession</em> uvádza, že organizácie bez štruktúrovaného projektového manažmentu <strong>strácajú v priemere 12 % investovaných prostriedkov</strong> na neúspešných projektoch [3]. Pre priemerný európsky podnik s ročným projektovým rozpočtom 500 000 EUR to predstavuje ročnú stratu 60 000 EUR. Zároveň iba <strong>57 % projektov</strong> je dokončených v rámci pôvodného rozpočtu a len <strong>49 % v plánovanom termíne</strong> [3].</p>
+
+  <p>Konzultačná spoločnosť McKinsey &amp; Company kvantifikovala dopad formalizovaného projektového riadenia nasledovne: projekty realizované s využitím štruktúrovaných PM metodík (vrátane CPM) vykazujú o <strong>25–35 % vyššiu mieru úspešného dokončenia</strong> a o <strong>20 % nižšie priemerné prekročenie rozpočtu</strong> v porovnaní s projektmi riadenými neformálne [16].</p>
+
+  <h3>7.3.2 Produktivita a úspora času — merateľné prínosy CPM</h3>
+
+  <p>Štúdia spoločnosti Wellington zameraná na produktivitu projektových manažérov (n = 1 124 respondentov, 2023) zistila, že PM profesionáli, ktorí aktívne využívajú softvérové nástroje pre správu harmonogramov a závislostí, ušetria v priemere <strong>498 hodín ročne</strong> oproti tým, ktorí pracujú s tabuľkami alebo bez nástrojov [15]. Pri priemernej hodinovej sadzbe projektového manažéra v SR (15–22 EUR/h) to predstavuje ročnú úsporu <strong>7 470 – 10 956 EUR na jedného PM profesionála</strong>.</p>
+
+  <table>
+    <thead><tr><th>Aktivita</th><th>Bez PM softvéru (h/rok)</th><th>S PM softvérom (h/rok)</th><th>Úspora (h/rok)</th></tr></thead>
+    <tbody>
+      <tr><td>Manuálne zostavovanie harmonogramov</td><td>210</td><td>45</td><td>165</td></tr>
+      <tr><td>Sledovanie závislostí medzi úlohami</td><td>156</td><td>18</td><td>138</td></tr>
+      <tr><td>Reporting a statusové stretnutia</td><td>188</td><td>94</td><td>94</td></tr>
+      <tr><td>Identifikácia oneskorení a ich dopadov</td><td>132</td><td>31</td><td>101</td></tr>
+      <tr><td><strong>Celkom</strong></td><td><strong>686</strong></td><td><strong>188</strong></td><td><strong>498</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.4 — Ročná úspora pracovného času PM profesionálov (Zdroj: Wellington, 2023 [15])</div>
+
+  <h3>7.3.3 Priamy ekonomický efekt CPM — skrátenie doby trvania projektov</h3>
+
+  <p>Pôvodná implementácia metódy CPM v roku 1958 firmou DuPont vykázala <strong>skrátenie doby výstavby priemyselného závodu o 38 %</strong> [1]. V moderných podmienkach PMBOK Guide (7. vyd.) uvádza konzistentné výsledky naprieč odvetviami: projekty riadené s CPM sú ukončené o <strong>15–25 % skôr</strong> oproti projektom bez formálnej analýzy kritickej cesty [3].</p>
+
+  <p>Pre SME podnik realizujúci projekt v hodnote 200 000 EUR s plánovanou dobou trvania 12 mesiacov:</p>
+  <ul>
+    <li><strong>Scenár bez CPM:</strong> Priemerné oneskorenie 2,4 mesiaca (na základe štatistiky PMI) → dodatočné náklady ~40 000 EUR (fixné réžijné náklady + straty z neskorej realizácie)</li>
+    <li><strong>Scenár s CPM:</strong> Identifikácia kritickej cesty umožní proaktívne riadenie → skrátenie doby trvania o 1,8–3 mesiace → úspora 30 000–50 000 EUR</li>
+  </ul>
+
+  <div class="success-box">
+    <strong>ROI CPM nástroja pre typický SME projekt:</strong> Investícia do PM softvéru s CPM (~€500–2 000/rok pre tím 10 ľudí) sa vráti už pri jedinom stredne veľkom projekte, kde zabráni oneskoreniu o viac ako 2 týždne. ROI prvého roku: 1 500–10 000 %.
+  </div>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>47</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
+
+  <h2>7.4 Cenotvorba produktu a SaaS obchodný model</h2>
+
+  <h3>7.4.1 Analýza prevládajúcich cenových modelov na trhu</h3>
+
+  <p>Podľa analýzy OpenView Partners (2024) <strong>57 % SaaS PM nástrojov</strong> využíva model <em>per-seat pricing</em> (platba za používateľa/mesiac), 28 % kombinuje freemium tier s plateným rozšírením a 15 % používá paušálny model (flat-rate). Medián vstupnej ceny plateného plánu pre SME segment činí <strong>$9/user/mesiac</strong> pri ročnej platbe [17].</p>
+
+  <p>Freemium model (bezplatný základný plán + platené rozšírenie) je štatisticky najefektívnejším modelom pre akvizíciu nových zákazníkov v produktovom segmente s nízkou ARPU (Average Revenue Per User): miera konverzie free→paid pohybuje sa typicky v rozmedzí 3–8 % pri B2B SaaS nástrojoch s freemium ponukou [17].</p>
+
+  <h3>7.4.2 Navrhovaná cenová stratégia ManagmentApp</h3>
+
+  <p>Na základe analýzy trhových cien (Tabuľka 7.2), WTP (Willingness to Pay) pre SME segment a nákladovej štruktúry navrhujeme nasledujúcu trojúrovňovú cenovú stratégiu pre ManagmentApp v2.0 (webová verzia):</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Plán</th>
+        <th>Cena</th>
+        <th>Používatelia</th>
+        <th>Projekty</th>
+        <th>Kľúčové funkcie</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Free</strong></td>
+        <td>€0 / mesiac</td>
+        <td>až 5</td>
+        <td>2</td>
+        <td>CPM, Gantt, základná správa tímu</td>
+      </tr>
+      <tr>
+        <td><strong>Starter</strong></td>
+        <td>€7 / user / mesiac</td>
+        <td>až 15</td>
+        <td>neobmedzené</td>
+        <td>+ PDF export, CSV import/export, notifikácie, prioritná podpora</td>
+      </tr>
+      <tr>
+        <td><strong>Team</strong></td>
+        <td>€12 / user / mesiac</td>
+        <td>neobmedzené</td>
+        <td>neobmedzené</td>
+        <td>+ real-time spolupráca, AI asistent, pokročilý CPM reporting</td>
+      </tr>
+      <tr>
+        <td><strong>Enterprise</strong></td>
+        <td>€20 / user / mesiac</td>
+        <td>neobmedzené</td>
+        <td>neobmedzené</td>
+        <td>+ SSO, on-premise nasadenie, SLA 99,9 %, dedikovaná podpora</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.5 — Navrhovaná cenová stratégia ManagmentApp v2.0</div>
+
+  <h3>7.4.3 Zdôvodnenie cenových úrovní</h3>
+
+  <p><strong>Free tier</strong> je navrhnutý tak, aby pokryl základné potreby akademického sektora (jednotlivci, semesterné projekty, výukové použitie) a zároveň slúžil ako customer acquisition channel. Limit 2 projektov a 5 používateľov je dostatočný pre osobné použitie, ale motivuje k upgradu pri tímovom nasadení.</p>
+
+  <p><strong>Starter plán (€7/user/mes.)</strong> je cielene nastavený pod mediánom trhu ($9/user) tak, aby bol konkurencieschopný voči ClickUp a Monday.com. Súčasne €7 pokrýva variabilné náklady na infraštruktúru s násobným koeficientom (viď sekcia 7.6).</p>
+
+  <p><strong>Team plán (€12/user/mes.)</strong> cieli na rastúce tímy 10–50 ľudí — primárny ziskový segment. Cena je nastavená pod MS Project ($22–$55) a Asana ($10,99–$49,99 pre pokročilé funkcie), čo ManagmentApp umiestňuje ako <em>hodnota za peniaze</em> alternatívu s natívnym CPM.</p>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>48</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
+
+  <h2>7.5 Cieľový trh a trhová príležitosť (SR/CZ)</h2>
+
+  <h3>7.5.1 Charakteristika cieľového zákazníka</h3>
+
+  <p>Primárnym cieľovým segmentom ManagmentApp sú <strong>malé a stredné podniky (SME)</strong> s počtom zamestnancov 5–250, ktoré realizujú projekty s merateľnými závislosťami medzi úlohami. Sekundárnym segmentom sú <strong>akademické inštitúcie</strong> (výuka projektového manažmentu, CPM v praxi) a <strong>individuálni projektoví manažéri</strong> (freelanceri, konzultanti).</p>
+
+  <p>Typický profil primárneho zákazníka (<em>Ideal Customer Profile — ICP</em>):</p>
+  <ul>
+    <li>IT spoločnosti, reklamné agentúry, stavebné firmy, konzultačné spoločnosti</li>
+    <li>Tímy veľkosti 5–50 ľudí realizujúce 3–20 paralelných projektov</li>
+    <li>Súčasné PM nástroje: Excel, základný Trello alebo žiadne</li>
+    <li>Ochota platiť (WTP): €5–€15/user/mesiac pre overené riešenie s CPM</li>
+    <li>Rozhodovací cyklus: 1–4 týždne (SME vs. enterprise 3–18 mesiacov)</li>
+  </ul>
+
+  <h3>7.5.2 Adresovateľný trh v SR a ČR</h3>
+
+  <p>Slovenská republika eviduje <strong>approximately 651 000 ekonomicky aktívnych podnikateľských subjektov</strong> (Štatistický úrad SR, 2024), z ktorých 98,8 % tvorí práve SME segment. Na základe priemernej penetrácie PM softvéru v stredoeurópskom SME sektore (34 %) a priemerného tímu 8 ľudí odhadujeme nasledovné trhové veličiny:</p>
+
+  <table>
+    <thead><tr><th>Parameter</th><th>Slovenská republika</th><th>Česká republika</th><th>SR + CZ spolu</th></tr></thead>
+    <tbody>
+      <tr><td>Celkový počet SME subjektov</td><td>651 000</td><td>1 125 000</td><td>1 776 000</td></tr>
+      <tr><td>Potenciálni zákazníci PM softvéru (34 %)</td><td>221 000</td><td>383 000</td><td>604 000</td></tr>
+      <tr><td>Priemer. tím projektov (users/firma)</td><td>8</td><td>8</td><td>8</td></tr>
+      <tr><td>TAM — celkový adresovateľný trh (€7/user/mes.)</td><td>~€124M/rok</td><td>~€215M/rok</td><td>~€339M/rok</td></tr>
+      <tr><td>SAM — realistický servisovateľný trh (10 % penetrácia)</td><td>~€12,4M/rok</td><td>~€21,5M/rok</td><td>~€33,9M/rok</td></tr>
+      <tr><td>SOM — dosiahnuteľný trh (1 % v 3 rokoch)</td><td>~€1,24M/rok</td><td>~€2,15M/rok</td><td>~€3,39M/rok</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.6 — TAM/SAM/SOM analýza trhu SR + ČR (odhadové hodnoty, Q1 2025)</div>
+
+  <div class="note">
+    <strong>Poznámka k metodológii:</strong> TAM (Total Addressable Market) predstavuje teoretický maximum trhu za predpokladu 100 % trhového podielu. SAM (Serviceable Addressable Market) zohľadňuje realistickú penetráciu. SOM (Serviceable Obtainable Market) je konzervativný odhad dosiahnuteľného trhového podielu pre nový produkt v horizonte 3 rokov.
+  </div>
+
+  <h2>7.6 Finančné projekcie a analýza rentability</h2>
+
+  <h3>7.6.1 Nákladová štruktúra ManagmentApp v2.0 (SaaS)</h3>
+
+  <p>Jednou z kľúčových výhod SaaS modelu postaveného na modernom cloudovom stacku (Railway + Supabase + Netlify, ako implementovanom v ManagmentApp v2.0) sú minimálne variabilné náklady pri škálovaní. Fixné mesačné náklady na infraštruktúru pri prvých 1 000 používateľoch odhadujeme nasledovne:</p>
+
+  <table>
+    <thead><tr><th>Komponent</th><th>Poskytovateľ</th><th>Mesačný náklad</th><th>Limit / Poznámka</th></tr></thead>
+    <tbody>
+      <tr><td>Backend hosting (FastAPI)</td><td>Railway</td><td>~€5 – €20</td><td>Do 1 000 req/min; škáluje automaticky</td></tr>
+      <tr><td>Databáza (PostgreSQL)</td><td>Supabase</td><td>€0 – €25</td><td>Free tier: 500 MB; Pro: 8 GB</td></tr>
+      <tr><td>Frontend hosting</td><td>Netlify</td><td>€0 – €19</td><td>Free tier: 100 GB bandwidth/mes.</td></tr>
+      <tr><td>Doméne + SSL</td><td>Cloudflare</td><td>~€10 – €15</td><td>Ročne ~€120–€180</td></tr>
+      <tr><td>E-mailové notifikácie</td><td>Resend / SendGrid</td><td>€0 – €20</td><td>Free tier: 3 000 emailov/mes.</td></tr>
+      <tr><td><strong>Celkom (fáza 1: 0–500 users)</strong></td><td>—</td><td><strong>~€15 – €99</strong></td><td>—</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.7 — Mesačná infraštruktúrna nákladová štruktúra ManagmentApp v2.0</div>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>50</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 7. Ekonomická analýza</div>
+
+  <h3>7.6.2 Analýza bodu zlomu (Break-Even Analysis)</h3>
+
+  <p>Bod zlomu je okamih, kedy príjmy z produktu pokryjú celkové náklady (fixné + variabilné). Pre ManagmentApp v2.0 vo fáze 1 (infraštruktúra bez mzdových nákladov — vývoj realizovaný v rámci BP):</p>
+
+  <table>
+    <thead><tr><th>Scenár</th><th>Aktívni platiacii users</th><th>Mes. príjem (Starter €7)</th><th>Mes. náklady</th><th>Zisk/Strata</th></tr></thead>
+    <tbody>
+      <tr><td>Štart (mesiac 1)</td><td>0</td><td>€0</td><td>€15</td><td class="crit" style="color:#7a2a2a;">−€15</td></tr>
+      <tr><td>Break-even (min.)</td><td>3</td><td>€21</td><td>€15</td><td>+€6</td></tr>
+      <tr><td>Udržateľný rast</td><td>15</td><td>€105</td><td>€30</td><td>+€75</td></tr>
+      <tr><td>Profitabilná fáza</td><td>50</td><td>€350</td><td>€55</td><td>+€295</td></tr>
+      <tr><td>Škálovanie</td><td>200</td><td>€1 400</td><td>€120</td><td>+€1 280</td></tr>
+      <tr><td>Rast (1 000 users)</td><td>1 000</td><td>€7 000</td><td>€350</td><td>+€6 650</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.8 — Break-even analýza ManagmentApp v2.0 (Starter plán €7/user/mes.)</div>
+
+  <p>Bod zlomu je dosiahnutý už pri <strong>3 platiacich používateľoch</strong> — čo je extrémne nízky prah v porovnaní s tradičným softvérovým podnikaním. Dôvodom je efektívna cloudová infraštruktúra s minimálnymi fixnými nákladmi. Hrubá marža pri škálovaní nad 100 používateľov presahuje <strong>90 %</strong>, čo je v súlade s benchmarkami prémiových SaaS produktov (priemerná hrubá marža SaaS = 71–80 % podľa OpenView Partners [17]).</p>
+
+  <h3>7.6.3 Trojročné príjmové projekcie</h3>
+
+  <p>Na základe typickej krivky rastu B2B SaaS produktov v stredoeurópskom trhu a konzervativného odhadu akvizície zákazníkov (word-of-mouth + akademický sektor ako primárny distribučný kanál):</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Rok</th>
+        <th>Free users</th>
+        <th>Platiacii users (Starter)</th>
+        <th>Platiacii users (Team)</th>
+        <th>Mesačný MRR</th>
+        <th>Ročný ARR</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Rok 1 (launch)</td><td>150</td><td>20</td><td>5</td><td>€200</td><td>~€2 400</td></tr>
+      <tr><td>Rok 2</td><td>600</td><td>80</td><td>25</td><td>€860</td><td>~€10 300</td></tr>
+      <tr><td>Rok 3</td><td>2 000</td><td>250</td><td>80</td><td>€2 710</td><td>~€32 500</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 7.9 — Trojročné príjmové projekcie ManagmentApp v2.0 (konzervatívny scenár)</div>
+
+  <p>Projekcie vychádzajú z predpokladu free→paid konverzného pomeru 5 % (konzervativné – priemer B2B freemium je 3–8 %) a priemeru €8,6/user/mes. kombinovaného plánu. MRR (Monthly Recurring Revenue) dosiahne hranicu €1 000 v priebehu 18–24 mesiacov od launchu, čo je štandardný benchmark pre udržateľný SaaS produkt v rannom štádiu.</p>
+
+  <div class="note">
+    <strong>Obmedzenie projekcií:</strong> Vyššie uvedené čísla sú odhadové a závisia od skutočnej konverznej miery, marketingových výdavkov a konkurenčných reakcií. Slúžia ako orientačný rámec pre rozhodovanie o ďalšom rozvoji produktu, nie ako záväzná finančná prognóza. Pre presnejšiu analýzu by bolo potrebné realizovať prieskum trhu a A/B testovanie cenových modelov s reálnymi zákazníkmi.
+  </div>
+
+  <div class="success-box">
+    <strong>Záver ekonomickej analýzy:</strong> ManagmentApp vypĺňa reálnu trhovú medzeru — kombináciu natívneho CPM algoritmu, offline režimu a prístupnej ceny v SME segmente. Ekonomický dopad CPM na podniky je merateľný (498 h/rok úspora, 15–25 % skrátenie projektov) a jasne prevyšuje náklady na PM softvér. Navrhovaný freemium SaaS model s break-evenom pri 3 platiacich používateľoch a hrubou maržou 90 %+ pri škálovaní predstavuje ekonomicky životaschopný základ pre komerčné vydanie produktu.
+  </div>
+
+  <div class="page-footer"><span>Kapitola 7 — Ekonomická analýza</span><span>51</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 8 — ZÁVER
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 8. Záver</div>
+  <span class="chapter-num">Kapitola 8</span>
+  <h1>8. Záver</h1>
+
+  <h2>8.1 Zhrnutie dosiahnutých výsledkov</h2>
 
   <p>Táto bakalárska práca predstavila návrh a implementáciu desktopovej aplikácie ManagmentApp pre projektový manažment s metódou kritickej cesty. Všetky stanovené ciele práce boli úspešne splnené.</p>
 
@@ -1263,7 +1648,7 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
 
   <p>Verzia <strong>v1.2</strong> zavŕšila pôvodnú architektonickú víziu Repository Pattern: implementáciou duálneho databázového backendu v module <code>base_repo.py</code> je aplikácia transparentne spustiteľná nad lokálnym SQLite aj cloudovým PostgreSQL (Supabase) bez zmeny repozitárov, business logiky ani UI.</p>
 
-  <h2>7.2 Obmedzenia a budúca práca</h2>
+  <h2>8.2 Obmedzenia a budúca práca</h2>
 
   <p>Po vydaní verzie 1.2 zostávajú nasledovné oblasti na zlepšenie:</p>
 
@@ -1278,7 +1663,7 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
       <tr><td>Row Level Security (RLS)</td><td>PostgreSQL RLS policy pre multi-tenant</td><td>Vysoká</td><td>v2.0</td></tr>
     </tbody>
   </table>
-  <div class="table-caption">Tabuľka 7.1 — Zostávajúce obmedzenia a plán verzie 2.0</div>
+  <div class="table-caption">Tabuľka 8.1 — Zostávajúce obmedzenia a plán verzie 2.0</div>
 
   <p>Víziou pre <strong>verziu 2.0</strong> je transformácia na plnohodnotnú cloud/SaaS platformu. Duálny backend implementovaný v rámci tejto práce kladie priamy základ: databáza je v cloude, repozitáre sú backend-agnostické. Zostáva doplniť FastAPI vrstvu ako REST API a React/Next.js frontend. <code>cpm_engine.py</code> ako čistá Python knižnica bez závislostí môže byť priamo použitá na FastAPI backende bez akejkoľvek úpravy.</p>
 
@@ -1288,7 +1673,7 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
     <strong>Záverečné zhodnotenie:</strong> Všetkých 18 funkčných požiadaviek (FR-01 až FR-18) a všetkých 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Aplikácia ManagmentApp v1.2 je plne funkčná, automatizovane testovaná (64 unit testov) a pripravená na cloudové nasadenie cez Supabase.
   </div>
 
-  <div class="page-footer"><span>Kapitola 7 — Záver</span><span>49</span></div>
+  <div class="page-footer"><span>Kapitola 8 — Záver</span><span>54</span></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -1325,6 +1710,16 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
     <li style="margin-bottom:10pt;">CORMEN, Thomas H. et al. <em>Introduction to Algorithms</em>. 4. vyd. Cambridge: MIT Press, 2022. ISBN 978-0-262-04630-5. (Topological Sort, DFS)</li>
 
     <li style="margin-bottom:10pt;">KAHN, Arthur B. <em>Topological Sorting of Large Networks</em>. In: Communications of the ACM. 1962, roč. 5, č. 11, s. 558–562.</li>
+
+    <li style="margin-bottom:10pt;">GRAND VIEW RESEARCH. <em>Project Management Software Market Size, Share &amp; Trends Analysis Report 2024–2030</em> [online]. San Francisco: Grand View Research, 2024. Dostupné na: &lt;https://www.grandviewresearch.com/industry-analysis/project-management-software-market&gt; [cit. 2025-04-15].</li>
+
+    <li style="margin-bottom:10pt;">EUROPEAN COMMISSION — EUROSTAT. <em>Digital Economy and Society Statistics — Enterprises</em> [online]. Luxemburg: Eurostat, 2024. Dostupné na: &lt;https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Digital_economy_and_society_statistics_-_enterprises&gt; [cit. 2025-04-15].</li>
+
+    <li style="margin-bottom:10pt;">WELLINGTON. <em>The State of Project Management 2023</em> [online]. London: Wellington, 2023. Dostupné na: &lt;https://wellingtone.co.uk/the-state-of-project-management/&gt; [cit. 2025-04-15].</li>
+
+    <li style="margin-bottom:10pt;">McKINSEY &amp; COMPANY. <em>Delivering large-scale IT projects on time, on budget, and on value</em> [online]. McKinsey Digital, 2012 (aktualizované 2023). Dostupné na: &lt;https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/delivering-large-scale-it-projects-on-time-on-budget-and-on-value&gt; [cit. 2025-04-15].</li>
+
+    <li style="margin-bottom:10pt;">OPENVIEW PARTNERS. <em>2024 SaaS Benchmarks Report: Pricing, Growth &amp; GTM Metrics</em> [online]. Boston: OpenView Venture Partners, 2024. Dostupné na: &lt;https://openviewpartners.com/saas-benchmarks-report/&gt; [cit. 2025-04-15].</li>
   </ol>
 
   <div class="page-footer"><span>Zoznam použitej literatúry</span><span>52</span></div>

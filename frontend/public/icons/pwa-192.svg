@@ -1,0 +1,15 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="48" fill="#0D1B4B"/>
+  <circle cx="30" cy="96" r="15" fill="#4B7FFF"/>
+  <circle cx="81" cy="54" r="15" fill="white"/>
+  <circle cx="132" cy="54" r="15" fill="white"/>
+  <circle cx="81" cy="138" r="15" fill="#4B7FFF" fill-opacity="0.5"/>
+  <circle cx="162" cy="96" r="15" fill="#4B7FFF"/>
+  <line x1="45" y1="87" x2="66" y2="63" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="96" y1="54" x2="117" y2="54" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="147" y1="63" x2="153" y2="81" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <line x1="45" y1="105" x2="66" y2="129" stroke="#4B7FFF" stroke-width="4.5" stroke-dasharray="9 6" stroke-linecap="round" opacity="0.7"/>
+  <line x1="96" y1="138" x2="147" y2="111" stroke="#4B7FFF" stroke-width="4.5" stroke-dasharray="9 6" stroke-linecap="round" opacity="0.7"/>
+  <circle cx="30" cy="96" r="24" fill="#4B7FFF" fill-opacity="0.2"/>
+  <circle cx="162" cy="96" r="24" fill="#4B7FFF" fill-opacity="0.2"/>
+</svg>

@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authApi } from '../api/client'
+import NodusLogo from '../components/NodusLogo'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -31,12 +32,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-bg dark:bg-bg-dark px-4">
       <div className="card w-full max-w-sm p-8">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-white font-bold text-lg">M</div>
-          <div>
-            <h1 className="font-bold text-gray-900 dark:text-white text-lg leading-tight">ManagmentApp</h1>
-            <p className="text-xs text-gray-500">Projektový manažment</p>
-          </div>
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <NodusLogo variant="wordmark" size={40} />
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">Projektový manažment na kritickej ceste</p>
         </div>
 
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Prihlásiť sa</h2>

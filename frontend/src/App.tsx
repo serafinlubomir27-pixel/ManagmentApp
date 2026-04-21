@@ -7,6 +7,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage'
 import TeamPage from './pages/TeamPage'
 import SettingsPage from './pages/SettingsPage'
 import Layout from './components/Layout'
+import PWABanner from './components/PWABanner'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth()
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <PWABanner />
     </AuthProvider>
   )
 }

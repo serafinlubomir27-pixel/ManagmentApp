@@ -21,7 +21,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import auth_router, projects_router, tasks_router, team_router
+from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router
 from repositories.base_repo import get_backend
 
 # ── Inicializácia databázy ───────────────────────────────────────────────────
@@ -61,6 +61,8 @@ app.include_router(auth_router.router)
 app.include_router(projects_router.router)
 app.include_router(tasks_router.router)
 app.include_router(team_router.router)
+app.include_router(comments_router.router, prefix="")
+app.include_router(notifications_router.router, prefix="")
 
 
 # ── Health check ─────────────────────────────────────────────────────────────

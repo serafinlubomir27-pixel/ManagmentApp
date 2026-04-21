@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
 import NetworkDiagram from '../components/NetworkDiagram'
+import CommentSection from '../components/CommentSection'
+import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending:     <Circle size={15} className="text-gray-400" />,
@@ -32,6 +34,10 @@ export default function ProjectDetailPage() {
   const [tab, setTab] = useState<'tasks' | 'gantt' | 'network'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null)
+
+  // Supabase Realtime — live aktualizácie úloh a komentárov
+  useRealtimeProject(projectId)
   const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
   const [createErr, setCreateErr] = useState('')
 
@@ -254,61 +260,74 @@ export default function ProjectDetailPage() {
               <tr><td colSpan={5} className="py-8 text-center text-gray-400">Žiadne úlohy</td></tr>
             ) : (
               filtered.map((t: any) => (
-                <tr
-                  key={t.id}
-                  className={t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : ''}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      {t.is_critical && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                <Fragment key={t.id}>
+                  <tr
+                    className={`cursor-pointer ${t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'}`}
+                    onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {t.is_critical && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                        )}
+                        <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
+                        {expandedTaskId === t.id
+                          ? <ChevronUp size={13} className="text-gray-400 flex-shrink-0" />
+                          : <ChevronDown size={13} className="text-gray-300 flex-shrink-0" />
+                        }
+                      </div>
+                      <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
+                        {t.priority}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                      {t.assigned_username ?? '—'}
+                    </td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      {isManager ? (
+                        <select
+                          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                          value={t.status}
+                          onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
+                        >
+                          {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                            <option key={v} value={v}>{l}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                          {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
+                        </span>
                       )}
-                      <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
-                    </div>
-                    <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
-                      {t.priority}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
-                    {t.assigned_username ?? '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    {isManager ? (
-                      <select
-                        className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
-                        value={t.status}
-                        onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
-                      >
-                        {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                          <option key={v} value={v}>{l}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                        {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    {t.es != null ? (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        ES {t.es} — EF {t.ef} | Float {t.total_float}d
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {isManager && (
-                      <button
-                        onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
-                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {t.es != null ? (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          ES {t.es} — EF {t.ef} | Float {t.total_float}d
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      {isManager && (
+                        <button
+                          onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
+                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  {expandedTaskId === t.id && (
+                    <tr className="bg-gray-50/50 dark:bg-gray-900/20">
+                      <td colSpan={5} className="px-6 py-4">
+                        <CommentSection taskId={t.id} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))
             )}
           </tbody>

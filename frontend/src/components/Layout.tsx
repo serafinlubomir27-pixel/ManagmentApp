@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useDarkMode } from '../hooks/useDarkMode'
 import clsx from 'clsx'
+import NodusLogo from './NodusLogo'
+import NotificationBell from './NotificationBell'
+import { useRealtimeNotifications } from '../hooks/useRealtimeProject'
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -17,6 +20,9 @@ export default function Layout() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const { dark, toggle } = useDarkMode()
+
+  // Supabase Realtime — live notifikácie pre aktuálneho usera
+  useRealtimeNotifications(user?.id ?? null)
 
   const handleLogout = () => {
     logout()
@@ -34,8 +40,7 @@ export default function Layout() {
       >
         {/* Logo */}
         <div className="flex items-center gap-2 px-5 h-16 border-b border-gray-200 dark:border-gray-800">
-          <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white font-bold text-sm">M</div>
-          <span className="font-semibold text-gray-900 dark:text-white text-sm">ManagmentApp</span>
+          <NodusLogo variant="wordmark" size={28} />
         </div>
 
         {/* Nav */}
@@ -82,6 +87,9 @@ export default function Layout() {
             {dark ? 'Svetlý mód' : 'Tmavý mód'}
           </button>
 
+          {/* Notifications */}
+          <NotificationBell />
+
           {/* Logout */}
           <button
             onClick={handleLogout}
@@ -106,7 +114,7 @@ export default function Layout() {
             <button onClick={() => setOpen(true)} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               <Menu size={20} />
             </button>
-            <span className="font-semibold text-sm">ManagmentApp</span>
+            <NodusLogo variant="wordmark" size={24} />
           </div>
           <button onClick={toggle} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
             {dark ? <Sun size={18} /> : <Moon size={18} />}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nodus — Brand Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0e1a;
+    color: white;
+    min-height: 100vh;
+    padding: 48px 32px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #4B7FFF;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #4a5568;
+    margin-bottom: 56px;
+  }
+
+  .options {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .card {
+    background: #101629;
+    border: 1px solid #1e2640;
+    border-radius: 20px;
+    padding: 40px 36px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .card.selected {
+    border-color: #4B7FFF;
+    box-shadow: 0 0 0 1px #4B7FFF22, 0 0 40px #4B7FFF18;
+  }
+
+  .option-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #4B7FFF;
+    margin-bottom: -24px;
+  }
+
+  .logo-row {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .logo-row .label {
+    font-size: 10px;
+    color: #4a5568;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: -16px;
+  }
+
+  /* ─── Icon only row ─── */
+  .icons-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* ─── Wordmark row ─── */
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .wordmark-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: white;
+  }
+  .wordmark-text span {
+    color: #4B7FFF;
+  }
+
+  /* Light bg preview */
+  .light-bg {
+    background: #f5f7ff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .light-bg .wordmark-text {
+    color: #1a2035;
+  }
+
+  /* Favicon row */
+  .favicon-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .favicon-label {
+    font-size: 10px;
+    color: #4a5568;
+  }
+
+  /* Name tag */
+  .name-tag {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    color: white;
+    margin-bottom: 4px;
+  }
+  .tagline {
+    font-size: 11px;
+    color: #4a5568;
+    font-weight: 500;
+  }
+
+  hr { border: none; border-top: 1px solid #1e2640; }
+</style>
+</head>
+<body>
+
+<h1>Nodus — Brand Identity</h1>
+<p class="subtitle">Project management on the critical path</p>
+
+<div class="options">
+
+  <!-- ═══════════ KAIROS ═══════════ -->
+  <div class="card">
+    <div>
+      <div class="option-label">Variant A</div>
+    </div>
+    <div>
+      <div class="name-tag">Kairos</div>
+      <div class="tagline">gr. "správny moment" — the right time to act</div>
+    </div>
+    <hr>
+
+    <!-- Icon sizes -->
+    <div class="logo-row">
+      <div class="label">Icon mark</div>
+      <div class="icons-row">
+        <!-- 64px -->
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#4B7FFF"/>
+          <!-- Hexagon outline -->
+          <polygon points="32,8 52,20 52,44 32,56 12,44 12,20"
+            fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <!-- CPM network: 3 nodes + 2 arrows = critical path -->
+          <!-- Node 1 (left) -->
+          <circle cx="18" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <!-- Node 2 (center) -->
+          <circle cx="32" cy="24" r="4" fill="white"/>
+          <!-- Node 3 (right) -->
+          <circle cx="46" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <!-- Critical path line (bold) -->
+          <line x1="22" y1="30" x2="28" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="36" y1="26" x2="42" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Float path (dim) -->
+          <line x1="22" y1="34" x2="42" y2="34" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/>
+          <!-- Moment marker -->
+          <circle cx="32" cy="24" r="6" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+        </svg>
+
+        <!-- 32px -->
+        <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#4B7FFF"/>
+          <polygon points="32,8 52,20 52,44 32,56 12,44 12,20"
+            fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+          <circle cx="18" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <circle cx="32" cy="24" r="4" fill="white"/>
+          <circle cx="46" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <line x1="22" y1="30" x2="28" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="36" y1="26" x2="42" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="22" y1="34" x2="42" y2="34" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/>
+        </svg>
+
+        <!-- 16px favicon -->
+        <svg width="16" height="16" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#4B7FFF"/>
+          <circle cx="18" cy="32" r="5" fill="white"/>
+          <circle cx="32" cy="22" r="5" fill="white"/>
+          <circle cx="46" cy="32" r="5" fill="white"/>
+          <line x1="23" y1="29" x2="27" y2="25" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <line x1="37" y1="25" x2="41" y2="29" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="favicon-label">64 · 32 · 16px</span>
+      </div>
+    </div>
+
+    <!-- Wordmark dark -->
+    <div class="logo-row">
+      <div class="label">Wordmark — dark</div>
+      <div class="wordmark">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#4B7FFF"/>
+          <circle cx="18" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <circle cx="32" cy="24" r="4" fill="white"/>
+          <circle cx="46" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <line x1="22" y1="30" x2="28" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="36" y1="26" x2="42" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="22" y1="34" x2="42" y2="34" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/>
+        </svg>
+        <span class="wordmark-text"><span>K</span>airos</span>
+      </div>
+    </div>
+
+    <!-- Wordmark light -->
+    <div class="logo-row">
+      <div class="label">Wordmark — light</div>
+      <div class="light-bg">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#4B7FFF"/>
+          <circle cx="18" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <circle cx="32" cy="24" r="4" fill="white"/>
+          <circle cx="46" cy="32" r="4" fill="white" fill-opacity="0.9"/>
+          <line x1="22" y1="30" x2="28" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="36" y1="26" x2="42" y2="30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="22" y1="34" x2="42" y2="34" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/>
+        </svg>
+        <span class="wordmark-text"><span>K</span>airos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ NODUS ═══════════ -->
+  <div class="card selected">
+    <div>
+      <div class="option-label">Variant B ★</div>
+    </div>
+    <div>
+      <div class="name-tag">Nodus</div>
+      <div class="tagline">lat. "uzol" — the node that connects everything</div>
+    </div>
+    <hr>
+
+    <div class="logo-row">
+      <div class="label">Icon mark</div>
+      <div class="icons-row">
+        <!-- 64px Nodus -->
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#0D1B4B"/>
+          <!-- 4-node CPM network: start → A → B → end (critical path top), A→end (float) -->
+          <!-- Start node -->
+          <circle cx="10" cy="32" r="5" fill="#4B7FFF"/>
+          <!-- Node A (top) -->
+          <circle cx="27" cy="18" r="5" fill="white"/>
+          <!-- Node B (top-right) -->
+          <circle cx="44" cy="18" r="5" fill="white"/>
+          <!-- Node C (bottom) -->
+          <circle cx="27" cy="46" r="5" fill="#4B7FFF" fill-opacity="0.5"/>
+          <!-- End node -->
+          <circle cx="54" cy="32" r="5" fill="#4B7FFF"/>
+          <!-- Critical path: Start → A → B → End (bold white) -->
+          <line x1="15" y1="29" x2="22" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="32" y1="18" x2="39" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="49" y1="21" x2="51" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <!-- Float: Start → C → End (dim dashed) -->
+          <line x1="15" y1="35" x2="22" y2="43" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+          <line x1="32" y1="46" x2="49" y2="37" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+          <!-- Glow on critical nodes -->
+          <circle cx="10" cy="32" r="8" fill="#4B7FFF" fill-opacity="0.2"/>
+          <circle cx="54" cy="32" r="8" fill="#4B7FFF" fill-opacity="0.2"/>
+        </svg>
+
+        <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="16" fill="#0D1B4B"/>
+          <circle cx="10" cy="32" r="5" fill="#4B7FFF"/>
+          <circle cx="27" cy="18" r="5" fill="white"/>
+          <circle cx="44" cy="18" r="5" fill="white"/>
+          <circle cx="27" cy="46" r="5" fill="#4B7FFF" fill-opacity="0.5"/>
+          <circle cx="54" cy="32" r="5" fill="#4B7FFF"/>
+          <line x1="15" y1="29" x2="22" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="32" y1="18" x2="39" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="49" y1="21" x2="51" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="15" y1="35" x2="22" y2="43" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+          <line x1="32" y1="46" x2="49" y2="37" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+        </svg>
+
+        <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="16" fill="#0D1B4B"/>
+          <circle cx="10" cy="32" r="6" fill="#4B7FFF"/>
+          <circle cx="32" cy="14" r="6" fill="white"/>
+          <circle cx="54" cy="32" r="6" fill="#4B7FFF"/>
+          <line x1="16" y1="28" x2="26" y2="18" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          <line x1="38" y1="18" x2="48" y2="28" stroke="white" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="favicon-label">64 · 32 · 16px</span>
+      </div>
+    </div>
+
+    <div class="logo-row">
+      <div class="label">Wordmark — dark</div>
+      <div class="wordmark">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#0D1B4B"/>
+          <circle cx="10" cy="32" r="5" fill="#4B7FFF"/>
+          <circle cx="27" cy="18" r="5" fill="white"/>
+          <circle cx="44" cy="18" r="5" fill="white"/>
+          <circle cx="27" cy="46" r="5" fill="#4B7FFF" fill-opacity="0.4"/>
+          <circle cx="54" cy="32" r="5" fill="#4B7FFF"/>
+          <line x1="15" y1="29" x2="22" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="32" y1="18" x2="39" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="49" y1="21" x2="51" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="15" y1="35" x2="22" y2="43" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+          <line x1="32" y1="46" x2="49" y2="37" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+        </svg>
+        <span class="wordmark-text"><span>N</span>odus</span>
+      </div>
+    </div>
+
+    <div class="logo-row">
+      <div class="label">Wordmark — light</div>
+      <div class="light-bg">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#0D1B4B"/>
+          <circle cx="10" cy="32" r="5" fill="#4B7FFF"/>
+          <circle cx="27" cy="18" r="5" fill="white"/>
+          <circle cx="44" cy="18" r="5" fill="white"/>
+          <circle cx="27" cy="46" r="5" fill="#4B7FFF" fill-opacity="0.4"/>
+          <circle cx="54" cy="32" r="5" fill="#4B7FFF"/>
+          <line x1="15" y1="29" x2="22" y2="21" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="32" y1="18" x2="39" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="49" y1="21" x2="51" y2="27" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <line x1="15" y1="35" x2="22" y2="43" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+          <line x1="32" y1="46" x2="49" y2="37" stroke="#4B7FFF" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round" opacity="0.7"/>
+        </svg>
+        <span class="wordmark-text"><span>N</span>odus</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ KRITIX ═══════════ -->
+  <div class="card">
+    <div>
+      <div class="option-label">Variant C</div>
+    </div>
+    <div>
+      <div class="name-tag">Kritix</div>
+      <div class="tagline">kritická cesta — where every day counts</div>
+    </div>
+    <hr>
+
+    <div class="logo-row">
+      <div class="label">Icon mark</div>
+      <div class="icons-row">
+        <!-- 64px Kritix: Arrow through a diamond (CPM critical path) -->
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="16" fill="#1a0a2e"/>
+          <!-- Diamond shape (CPM milestone node) -->
+          <path d="M32 10 L54 32 L32 54 L10 32 Z"
+            fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.5"/>
+          <!-- Inner diamond fill subtle -->
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="#7c3aed" fill-opacity="0.08"/>
+          <!-- Critical path arrow through center (horizontal) -->
+          <line x1="8" y1="32" x2="50" y2="32" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+          <!-- Arrowhead -->
+          <path d="M46 26 L54 32 L46 38" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Start node (circle) -->
+          <circle cx="8" cy="32" r="4" fill="#ef4444"/>
+          <!-- Milestone marker (diamond center) -->
+          <rect x="28" y="28" width="8" height="8" rx="2" fill="#7c3aed" transform="rotate(45 32 32)"/>
+        </svg>
+
+        <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="16" fill="#1a0a2e"/>
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.5"/>
+          <line x1="8" y1="32" x2="50" y2="32" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+          <path d="M46 26 L54 32 L46 38" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="8" cy="32" r="4" fill="#ef4444"/>
+          <rect x="28" y="28" width="8" height="8" rx="2" fill="#7c3aed" transform="rotate(45 32 32)"/>
+        </svg>
+
+        <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="16" fill="#1a0a2e"/>
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.5"/>
+          <line x1="8" y1="32" x2="50" y2="32" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+          <path d="M44 24 L56 32 L44 40" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="favicon-label">64 · 32 · 16px</span>
+      </div>
+    </div>
+
+    <div class="logo-row">
+      <div class="label">Wordmark — dark</div>
+      <div class="wordmark">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#1a0a2e"/>
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.5"/>
+          <line x1="8" y1="32" x2="50" y2="32" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+          <path d="M46 26 L54 32 L46 38" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="8" cy="32" r="4" fill="#ef4444"/>
+          <rect x="28" y="28" width="8" height="8" rx="2" fill="#7c3aed" transform="rotate(45 32 32)"/>
+        </svg>
+        <span class="wordmark-text" style="color:#ef4444;">K</span><span class="wordmark-text">ritix</span>
+      </div>
+    </div>
+
+    <div class="logo-row">
+      <div class="label">Wordmark — light</div>
+      <div class="light-bg">
+        <svg width="36" height="36" viewBox="0 0 64 64" fill="none">
+          <rect width="64" height="64" rx="14" fill="#1a0a2e"/>
+          <path d="M32 10 L54 32 L32 54 L10 32 Z" fill="none" stroke="#7c3aed" stroke-width="2" opacity="0.5"/>
+          <line x1="8" y1="32" x2="50" y2="32" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+          <path d="M46 26 L54 32 L46 38" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="8" cy="32" r="4" fill="#ef4444"/>
+          <rect x="28" y="28" width="8" height="8" rx="2" fill="#7c3aed" transform="rotate(45 32 32)"/>
+        </svg>
+        <span class="wordmark-text" style="color:#ef4444;">K</span><span class="wordmark-text" style="color:#1a0a2e;">ritix</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom note -->
+<p style="text-align:center; margin-top:48px; font-size:11px; color:#2d3748;">
+  ★ = môj odporúčaný variant &nbsp;·&nbsp; Všetky loga sú čisté SVG — scalable, kopírovateľné, 0 kB extra
+</p>
+
+</body>
+</html>

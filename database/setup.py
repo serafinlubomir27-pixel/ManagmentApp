@@ -116,6 +116,38 @@ def create_database():
     )
     ''')
 
+    # --- 8. KOMENTÁRE (comments) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    ''')
+
+    # --- 9. NOTIFIKÁCIE (notifications) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        task_id INTEGER,
+        project_id INTEGER,
+        is_read INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL
+    )
+    ''')
+
     # --- Bezpečná migrácia: nové stĺpce v tasks ---
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
