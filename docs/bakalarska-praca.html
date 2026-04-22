@@ -511,6 +511,38 @@
 
   <p>Úloha B má celkovú rezervu 2 dni — môže sa začať o 2 dni neskôr bez dopadu na celkové trvanie projektu. Úlohy A, C, D ležia na kritickej ceste a majú nulovú rezervu.</p>
 
+  <h3>2.1.3 PERT — Program Evaluation and Review Technique</h3>
+
+  <p>PERT je pravdepodobnostné rozšírenie CPM vyvinuté v roku 1959 pre americký námorný program Polaris [18]. Kým CPM pracuje s deterministickými odhadmi trvania (jedno číslo), PERT zavádza trojbodový odhad, ktorý zachytáva neistotu v plánovaní.</p>
+
+  <p>Pre každú úlohu sa zadávajú tri odhady:</p>
+  <ul>
+    <li><strong><em>a</em></strong> (optimistické trvanie) — najlepší realistický scenár, keď všetko prebehne hladko</li>
+    <li><strong><em>m</em></strong> (najpravdepodobnejšie trvanie) — trvanie za normálnych podmienok (totožné s CPM odhadom)</li>
+    <li><strong><em>b</em></strong> (pesimistické trvanie) — najhorší realistický scenár</li>
+  </ul>
+
+  <p>Z týchto troch hodnôt sa vypočíta <strong>PERT očakávané trvanie</strong> (vážený priemer beta-rozdelenia):</p>
+
+  <table class="no-break">
+    <thead><tr><th>Vzorec</th><th>Popis</th></tr></thead>
+    <tbody>
+      <tr><td><code>E = (a + 4m + b) / 6</code></td><td>Očakávané trvanie úlohy</td></tr>
+      <tr><td><code>σ = (b − a) / 6</code></td><td>Štandardná odchýlka trvania</td></tr>
+      <tr><td><code>V = σ²</code></td><td>Rozptyl trvania úlohy</td></tr>
+      <tr><td><code>E<sub>proj</sub> = Σ E<sub>i</sub></code> (krit. cesta)</td><td>Očakávané trvanie projektu</td></tr>
+      <tr><td><code>V<sub>proj</sub> = Σ V<sub>i</sub></code> (krit. cesta)</td><td>Rozptyl projektu</td></tr>
+      <tr><td><code>P(T ≤ D) = Φ((D − E<sub>proj</sub>) / σ<sub>proj</sub>)</code></td><td>Pravdepodobnosť splnenia deadline D</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.3 — PERT vzorce. Φ označuje distribučnú funkciu štandardného normálneho rozdelenia.</div>
+
+  <p>Súčtom rozptylov len kriticky cestových úloh vychádza projektový rozptyl <code>V<sub>proj</sub></code> — non-kritické úlohy majú rezervu a teda nižší dopad na deadline. Pravdepodobnosť P(T ≤ D) umožňuje manažérovi objektívne hodnotiť reálnosť plánovaného termínu: hodnota ≥ 80 % indikuje bezpečný deadline, hodnota &lt; 50 % signalizuje nereálne plánovanie.</p>
+
+  <div class="note">
+    <strong>PERT vs. CPM:</strong> PERT a CPM vznikli nezávisle v rovnakom roku (1959) a dnes sa often kombinujú. CPM je deterministický a vhodný pre opakované projekty s presnými odhadmi (stavebníctvo). PERT je pravdepodobnostný a vhodný pre výskumno-vývojové projekty s vysokou neistotou (IT, R&amp;D).
+  </div>
+
   <h2>2.2 Ganttov diagram</h2>
 
   <p>Ganttov diagram je horizontálny pruhový graf, ktorý vizualizuje projektový harmonogram. Každá úloha je reprezentovaná pruhom, ktorého ľavý okraj zodpovedá ES a dĺžka trvania úlohy. Henry Gantt navrhol túto vizualizáciu okolo roku 1910 [2], pričom dnes patrí k najrozšírenejším nástrojom projektového manažmentu.</p>
@@ -553,6 +585,26 @@
   <div class="table-caption">Tabuľka 2.4 — Technologický stack ManagmentApp</div>
 
   <p>Voľba Pythonu s CustomTkinter poskytuje niekoľko kľúčových výhod. Na rozdiel od PyQt5 alebo wxPython, CustomTkinter natívne podporuje systém farebných tokenov vo formáte <code>(light_value, dark_value)</code>, čo umožňuje transparentné prepínanie tém bez nutnosti manuálnej aktualizácie jednotlivých widgetov.</p>
+
+  <h2>2.5 Správa zdrojov v projektovom manažmente</h2>
+
+  <p>Správa zdrojov (<em>Resource Management</em>) je disciplína sledujúca kapacitu a alokáciu členov tímu v čase. Zatiaľ čo CPM optimalizuje <em>čas</em> dokončenia projektu, resource management rieši <em>kto</em> na čom pracuje a <em>kedy</em>.</p>
+
+  <p>Kľúčovým problémom je <strong>over-allocation</strong> — situácia, keď má jeden člen tímu naplánovaných viacero súbežných úloh na ten istý deň. Over-allocation má priamy ekonomický dopad: štúdie ukazujú, že pracovník prepínajúci medzi viacerými úlohami stratí až 20–40 % produktivity vplyvom kontextového prepínania [3].</p>
+
+  <p>Prepojenie resource managementu s CPM je prirodzené: CPM poskytuje ES a EF pre každú úlohu, čo definuje presné časové okno, kedy je člen tímu zaťažený danou úlohou. Systém tak dokáže detekovať konflikty a generovať <strong>resource histogramy</strong> — vizualizácie denného zaťaženia každého člena tímu.</p>
+
+  <table class="no-break">
+    <thead><tr><th>Pojem</th><th>Definícia</th></tr></thead>
+    <tbody>
+      <tr><td>Resource allocation</td><td>Priradenie konkrétneho člena tímu k úlohe na základe ES/EF</td></tr>
+      <tr><td>Over-allocation</td><td>Súčasné priradenie jednej osoby k viacerým úlohám v tom istom dni</td></tr>
+      <tr><td>Resource histogram</td><td>Graf denného zaťaženia (počet súbežných úloh) pre každého člena</td></tr>
+      <tr><td>Peak load</td><td>Maximálny počet súbežných úloh pre jednu osobu v projekte</td></tr>
+      <tr><td>Resource leveling</td><td>Technika úpravy harmonogramu na elimináciu over-allocation</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 2.5 — Základné pojmy resource managementu</div>
 
   <div class="page-footer"><span>Kapitola 2 — Analýza existujúcich riešení</span><span>4</span></div>
 </div>
@@ -1095,6 +1147,163 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
   </div>
 
   <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>28</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     KAPITOLA 5 — pokračovanie: v2.0 a v3.0
+═══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.10 Verzia 2.0 — Cloudová SaaS platforma (Nodus)</h2>
+
+  <p>Verzia 2.0 predstavuje kompletný prepisanie aplikácie z desktopového CustomTkinter+SQLite na cloudovú platformu s moderným webovým stackom. Aplikácia bola zároveň premenovaná na <strong>Nodus</strong> (lat. <em>uzel</em> — odkaz na uzly CPM sieťového diagramu).</p>
+
+  <h3>5.10.1 Nová architektúra</h3>
+
+  <table class="no-break">
+    <thead><tr><th>Vrstva</th><th>Technológia</th><th>Nasadenie</th></tr></thead>
+    <tbody>
+      <tr><td>Backend API</td><td>FastAPI (Python 3.14)</td><td>Railway (cloud)</td></tr>
+      <tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>Netlify (CDN)</td></tr>
+      <tr><td>Databáza</td><td>PostgreSQL (Supabase)</td><td>Supabase cloud</td></tr>
+      <tr><td>Real-time</td><td>Supabase Realtime (WebSocket)</td><td>Supabase cloud</td></tr>
+      <tr><td>Štýlovanie</td><td>Tailwind CSS 4</td><td>—</td></tr>
+      <tr><td>State management</td><td>TanStack Query v5</td><td>—</td></tr>
+      <tr><td>PWA</td><td>vite-plugin-pwa + Workbox</td><td>Netlify</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.4 — Technologický stack Nodus v2.0</div>
+
+  <h3>5.10.2 Progressive Web App (PWA)</h3>
+
+  <p>Aplikácia je nakonfigurovaná ako PWA pomocou <code>vite-plugin-pwa</code> s Service Workerom generovaným Workboxom. Service Worker zabezpečuje:</p>
+  <ul>
+    <li><strong>Offline cache</strong> — statické assety (JS, CSS, fonty) sú cachované pri prvej návšteve</li>
+    <li><strong>Runtime caching</strong> — Google Fonts cachované stratégiou <em>StaleWhileRevalidate</em></li>
+    <li><strong>Install prompt</strong> — banner pre pridanie aplikácie na plochu zariadenia</li>
+    <li><strong>Auto-update</strong> — notifikácia o dostupnosti novej verzie s možnosťou okamžitej aktualizácie</li>
+  </ul>
+
+  <h3>5.10.3 Supabase Realtime</h3>
+
+  <p>Real-time synchronizácia je implementovaná cez Supabase Realtime WebSocket kanály. Hook <code>useRealtimeProject(projectId)</code> subscribuje na PostgreSQL <em>change events</em> tabuliek <code>tasks</code> a <code>comments</code> pre daný projekt. Pri každej INSERT/UPDATE/DELETE udalosti sa automaticky invaliduje TanStack Query cache, čo spôsobí refetch a okamžitú aktualizáciu UI u všetkých pripojených klientov.</p>
+
+  <h3>5.10.4 Notifikačný systém a komentáre</h3>
+
+  <p>Aplikácia obsahuje dvojvrstvový notifikačný systém. <strong>Deadline scanner</strong> v <code>notification_repo.py</code> automaticky generuje upozornenia pre úlohy blížiace sa k termínu (D−1, D−3, D−7 dní). Zvonček v navigačnej lište zobrazuje počet neprečítaných notifikácií s červeným odznakom a každých 60 sekúnd polling aktualizuje stav.</p>
+
+  <p>Komentáre k úlohám sú implementované ako expandovateľné sekcie priamo v tabuľke úloh. Každý komentár zobrazuje avatar s iniciálami autora, čas v slovenskom formáte (napr. „pred 2 hodinami") a vlastník môže komentár zmazať.</p>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>29</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.11 Verzia 3.0 — PERT Engine</h2>
+
+  <p>Verzia 3.0 rozšírila aplikáciu o dva kľúčové akademické prínosy: pravdepodobnostné plánovanie cez PERT a správu zdrojov tímu. Oba moduly sú navrhnuté ako čisté rozšírenia bez modifikácie existujúceho CPM engine.</p>
+
+  <h3>5.11.1 Architektúra PERT modulu</h3>
+
+  <p>PERT engine je implementovaný v súbore <code>logic/pert_engine.py</code> ako samostatná knižnica bez databázových závislostí — rovnaký princíp čistej separácie ako <code>cpm_engine.py</code>. Dátové štruktúry:</p>
+
+  <pre><code>@dataclass
+class PERTTask:
+    task_id: int
+    name: str
+    duration_optimistic: float    # a — optimistický odhad
+    duration_likely: float        # m — najpravdepodobnejší odhad
+    duration_pessimistic: float   # b — pesimistický odhad
+    pert_expected: float          # E = (a + 4m + b) / 6
+    pert_std_dev: float           # σ = (b - a) / 6
+    pert_variance: float          # V = σ²
+    is_critical: bool = False
+
+@dataclass
+class PERTResult:
+    pert_tasks: list[PERTTask]
+    project_expected_duration: float   # Σ E_i (krit. cesta)
+    project_std_dev: float             # √(Σ V_i) (krit. cesta)
+    probability_by_deadline: dict[int, float]  # D → P(T ≤ D)
+    cpm_result: CPMResult</code></pre>
+
+  <h3>5.11.2 Výpočet pravdepodobnosti</h3>
+
+  <p>Pre výpočet pravdepodobnosti P(T ≤ D) sa využíva <strong>Central Limit Theorem</strong>: súčet nezávislých náhodných veličín (dĺžok kriticky cestových úloh) konverguje k normálnemu rozdeleniu. Python štandardná knižnica poskytuje <code>statistics.NormalDist</code> s metódou <code>.cdf(deadline)</code>:</p>
+
+  <pre><code>dist = NormalDist(mu=E_project, sigma=sigma_project)
+prob = dist.cdf(deadline_days)  # P(T ≤ D)</code></pre>
+
+  <p>Systém automaticky generuje pravdepodobnosti pre rozsah deadlinov okolo očakávaného trvania (±5 dní) a pre zadaný konkrétny deadline. Výsledky sú vizualizované cez SVG gauge (oblúkový ukazovateľ) s farebnými zónami: zelená ≥ 80 %, oranžová 50–79 %, červená &lt; 50 %.</p>
+
+  <h3>5.11.3 Databázová podpora PERT</h3>
+
+  <p>Do tabuľky <code>tasks</code> boli pridané dva nové stĺpce migráciou <code>003_pert_fields.sql</code>:</p>
+  <pre><code>ALTER TABLE tasks
+  ADD COLUMN IF NOT EXISTS duration_optimistic INTEGER CHECK (duration_optimistic >= 1),
+  ADD COLUMN IF NOT EXISTS duration_pessimistic INTEGER CHECK (duration_pessimistic >= 1);</code></pre>
+
+  <p>Stĺpce sú nullable — ak nie sú vyplnené, PERT engine automaticky dosadí <code>a = m = b = duration</code>, čo zodpovedá deterministickému CPM odhadu (σ = 0, P = 1.0 pre deadline ≥ trvanie).</p>
+
+  <h3>5.11.4 API endpoint</h3>
+
+  <p>Endpoint <code>GET /projects/{project_id}/pert?deadline={d}</code> vracia kompletný PERT response vrátane per-task štatistík, projektu-level E a σ, a mapu pravdepodobností. Frontend <code>PertPanel.tsx</code> zobrazuje výsledky v troch sekciách: gauge s ovládačom deadline, tabuľka pravdepodobností pre rôzne termíny a per-task tabuľka s hodnotami a/m/b/E/σ.</p>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>30</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.12 Verzia 3.0 — Resource Management</h2>
+
+  <p>Resource Management modul vizualizuje vyťaženosť členov tímu v čase na základe CPM ES/EF hodnôt a detekuje over-allocation — situáciu keď má člen tímu viacero súbežných úloh v rovnaký deň.</p>
+
+  <h3>5.12.1 Algoritmus alokácie zdrojov</h3>
+
+  <p>Endpoint <code>GET /projects/{project_id}/resources</code> implementuje nasledovný algoritmus:</p>
+
+  <ol>
+    <li>Získa všetky úlohy projektu s CPM poliami (ES, EF) a priradením (<code>assigned_to</code>)</li>
+    <li>Filtruje len úlohy s platným CPM rozpisom (EF &gt; ES) a neprázdnym priradením</li>
+    <li>Zoskupí úlohy podľa <code>user_id</code> (jeden záznam per člen tímu)</li>
+    <li>Pre každého člena tímu expanduje úlohy na denný rozpis: pre každý deň <em>d</em> ∈ [ES, EF) zvýši počítadlo <code>day_load[d]</code></li>
+    <li>Detekuje over-allocated dni: <code>{d : len(day_load[d]) &gt; 1}</code></li>
+    <li>Vráti <code>daily_load</code> ako array dĺžky <code>project_duration</code> pre každého člena</li>
+  </ol>
+
+  <pre><code># Day-by-day load: day → zoznam názvov úloh
+day_load: dict[int, list[str]] = defaultdict(list)
+for t in person_tasks:
+    for day in range(t["es"], t["ef"]):
+        day_load[day].append(t["name"])
+
+over_days = [d for d, names in day_load.items() if len(names) > 1]
+daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
+
+  <h3>5.12.2 Frontend vizualizácia</h3>
+
+  <p>Komponent <code>ResourcePanel.tsx</code> zobrazuje resource histogram ako timeline mriežku, kde každý riadok zodpovedá jednému členovi tímu a každý stĺpec jednému dňu projektu. Farebné kódovanie:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Farba bunky</th><th>Počet úloh</th><th>Interpretácia</th></tr></thead>
+    <tbody>
+      <tr><td>Transparentná</td><td>0</td><td>Člen nemá úlohu v daný deň</td></tr>
+      <tr><td>Modrá / zelená / červená</td><td>1</td><td>Normálna alokácia (podľa statusu)</td></tr>
+      <tr><td>Žltá (<code>amber</code>)</td><td>≥ 2</td><td>Over-allocation — konflikt zdrojov</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.5 — Farebné kódovanie resource histogramu</div>
+
+  <p>Nad histogramom sú zobrazené 4 summary karty: počet členov tímu, priradených úloh, celkový počet over-allocated dní a trvanie projektu. Pri detekcii over-allocation sa zobrazí výstražný banner s menami dotknutých osôb.</p>
+
+  <div class="note">
+    <strong>Akademický prínos:</strong> Prepojenie CPM algoritmu so správou zdrojov je jadrom moderného projektového manažmentu. Automatická detekcia over-allocation umožňuje manažérovi včas identifikovať kapacitné konflikty a buď prerozdeliť úlohy (resource leveling), alebo upraviť harmonogram využitím dostupnej celkovej rezervy (TF) nekritických úloh.
+  </div>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>31</span></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -1648,6 +1857,10 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
 
   <p>Verzia <strong>v1.2</strong> zavŕšila pôvodnú architektonickú víziu Repository Pattern: implementáciou duálneho databázového backendu v module <code>base_repo.py</code> je aplikácia transparentne spustiteľná nad lokálnym SQLite aj cloudovým PostgreSQL (Supabase) bez zmeny repozitárov, business logiky ani UI.</p>
 
+  <p>Verzia <strong>v2.0</strong> transformovala aplikáciu na cloudovú SaaS platformu s novou identitou <em>Nodus</em>. FastAPI backend nasadený na Railway poskytuje REST API, React frontend na Netlify je distribuovaný cez globálnu CDN, Supabase zabezpečuje PostgreSQL databázu a WebSocket Realtime synchronizáciu. Aplikácia je nakonfigurovaná ako Progressive Web App s Service Workerom, offline cache a inštalovateľnosťou na mobilné zariadenia. Súčasťou verzie sú komentáre k úlohám a notifikačný systém s automatickým skenovaním blížiacich sa termínov (D−1/D−3/D−7).</p>
+
+  <p>Verzia <strong>v3.0</strong> priniesla dva akademicky najvýznamnejšie prínosy práce. <strong>PERT engine</strong> rozširuje CPM o pravdepodobnostné trojbodové odhady (optimistický/najpravdepodobnejší/pesimistický) a umožňuje manažérovi kvantifikovať pravdepodobnosť splnenia deadline pomocou normálneho rozdelenia. <strong>Resource Management modul</strong> prepojil CPM harmonogram so správou kapacity tímu: automatická detekcia over-allocation (súbežné úlohy jednej osoby) je vizualizovaná ako farebne kódovaný resource histogram pre každého člena tímu.</p>
+
   <h2>8.2 Obmedzenia a budúca práca</h2>
 
   <p>Po vydaní verzie 1.2 zostávajú nasledovné oblasti na zlepšenie:</p>
@@ -1656,21 +1869,24 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
     <thead><tr><th>Obmedzenie</th><th>Plánované riešenie</th><th>Priorita</th><th>Verzia</th></tr></thead>
     <tbody>
       <tr><td>matplotlib grafy nie sú interaktívne</td><td>Hover tooltips, click-to-detail</td><td>Nízka</td><td>v1.x</td></tr>
-      <tr><td>Len desktopový klient</td><td>FastAPI backend — REST API</td><td>Vysoká</td><td>v2.0</td></tr>
-      <tr><td>Žiadny webový frontend</td><td>React / Next.js webová aplikácia</td><td>Vysoká</td><td>v2.0</td></tr>
-      <tr><td>Žiadna real-time spolupráca</td><td>Supabase Real-time subscriptions</td><td>Stredná</td><td>v2.0</td></tr>
-      <tr><td>Žiadne e-mailové notifikácie</td><td>Supabase Edge Functions + SMTP</td><td>Stredná</td><td>v2.0</td></tr>
-      <tr><td>Row Level Security (RLS)</td><td>PostgreSQL RLS policy pre multi-tenant</td><td>Vysoká</td><td>v2.0</td></tr>
+      <tr><td>Len desktopový klient</td><td>FastAPI backend — REST API</td><td>Vysoká</td><td>✅ v2.0</td></tr>
+      <tr><td>Žiadny webový frontend</td><td>React / Next.js webová aplikácia</td><td>Vysoká</td><td>✅ v2.0</td></tr>
+      <tr><td>Žiadna real-time spolupráca</td><td>Supabase Real-time subscriptions</td><td>Stredná</td><td>✅ v2.0</td></tr>
+      <tr><td>Žiadne e-mailové notifikácie</td><td>Supabase Edge Functions + SMTP</td><td>Stredná</td><td>v3.x</td></tr>
+      <tr><td>Row Level Security (RLS)</td><td>PostgreSQL RLS policy pre multi-tenant</td><td>Vysoká</td><td>v3.x</td></tr>
+      <tr><td>Len deterministické CPM odhady</td><td>PERT trojbodové odhady + pravdepodobnosť</td><td>Vysoká</td><td>✅ v3.0</td></tr>
+      <tr><td>Žiadna správa kapacity tímu</td><td>Resource histogram + over-allocation detekcia</td><td>Stredná</td><td>✅ v3.0</td></tr>
+      <tr><td>Žiadna AI asistencia pri tvorbe úloh</td><td>AI-CPM parser (OpenAI GPT-4o)</td><td>Stredná</td><td>v3.1</td></tr>
     </tbody>
   </table>
-  <div class="table-caption">Tabuľka 8.1 — Zostávajúce obmedzenia a plán verzie 2.0</div>
+  <div class="table-caption">Tabuľka 8.1 — Prehľad obmedzení a ich riešení naprieč verziami (✅ = implementované)</div>
 
-  <p>Víziou pre <strong>verziu 2.0</strong> je transformácia na plnohodnotnú cloud/SaaS platformu. Duálny backend implementovaný v rámci tejto práce kladie priamy základ: databáza je v cloude, repozitáre sú backend-agnostické. Zostáva doplniť FastAPI vrstvu ako REST API a React/Next.js frontend. <code>cpm_engine.py</code> ako čistá Python knižnica bez závislostí môže byť priamo použitá na FastAPI backende bez akejkoľvek úpravy.</p>
+  <p>Pre <strong>verziu 3.1</strong> je plánovaný AI-augmented CPM parser: používateľ zadá popis projektu v prirodzenom jazyku a systém automaticky vygeneruje zoznam úloh s odhadmi trvania a závislosťami pomocou OpenAI GPT-4o API. Infraštruktúra (FastAPI backend, React frontend, PostgreSQL) je pre túto funkciu plne pripravená.</p>
 
-  <p>Aplikácia ManagmentApp demonštruje, že moderné desktopové aplikácie v Pythone môžu konkurovať webovým riešeniam nielen funkčnosťou, ale aj vizuálnou kvalitou a používateľskou skúsenosťou — za predpokladu dôsledného použitia dizajnových systémov a architektonických vzorov.</p>
+  <p>Aplikácia Nodus (ManagmentApp v3.0) demonštruje, že moderné webové aplikácie postavené na princípoch čistej architektúry (Repository Pattern, separácia business logiky) sú schopné organicky rásť od desktopového prototypu cez cloudovú SaaS platformu až po pokročilé analytické nástroje — bez prepisovania jadra algoritmov.</p>
 
   <div class="success-box">
-    <strong>Záverečné zhodnotenie:</strong> Všetkých 18 funkčných požiadaviek (FR-01 až FR-18) a všetkých 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Aplikácia ManagmentApp v1.2 je plne funkčná, automatizovane testovaná (64 unit testov) a pripravená na cloudové nasadenie cez Supabase.
+    <strong>Záverečné zhodnotenie:</strong> Všetkých 18 pôvodných funkčných požiadaviek (FR-01 až FR-18) a 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Verzia 3.0 pridala PERT pravdepodobnostné plánovanie, Resource Management s over-allocation detekciou, PWA inštalovateľnosť a real-time Supabase synchronizáciu. Aplikácia Nodus je plne nasadená na https://managmentapps.netlify.app a dostupná verejnosti.
   </div>
 
   <div class="page-footer"><span>Kapitola 8 — Záver</span><span>54</span></div>
@@ -1720,6 +1936,10 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
     <li style="margin-bottom:10pt;">McKINSEY &amp; COMPANY. <em>Delivering large-scale IT projects on time, on budget, and on value</em> [online]. McKinsey Digital, 2012 (aktualizované 2023). Dostupné na: &lt;https://www.mckinsey.com/capabilities/mckinsey-digital/our-insights/delivering-large-scale-it-projects-on-time-on-budget-and-on-value&gt; [cit. 2025-04-15].</li>
 
     <li style="margin-bottom:10pt;">OPENVIEW PARTNERS. <em>2024 SaaS Benchmarks Report: Pricing, Growth &amp; GTM Metrics</em> [online]. Boston: OpenView Venture Partners, 2024. Dostupné na: &lt;https://openviewpartners.com/saas-benchmarks-report/&gt; [cit. 2025-04-15].</li>
+
+    <li style="margin-bottom:10pt;">MALCOLM, D. G. et al. <em>Application of a Technique for Research and Development Program Evaluation</em>. In: Operations Research. 1959, roč. 7, č. 5, s. 646–669. ISSN 0030-364X. (Pôvodný článok zavádzajúci metódu PERT)</li>
+
+    <li style="margin-bottom:10pt;">DEMEULEMEESTER, Erik; HERROELEN, Willy. <em>Project Scheduling: A Research Handbook</em>. Boston: Kluwer Academic Publishers, 2002. ISBN 978-0-306-48195-5. (Resource management a resource-constrained scheduling)</li>
   </ol>
 
   <div class="page-footer"><span>Zoznam použitej literatúry</span><span>52</span></div>
