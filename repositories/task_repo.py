@@ -432,6 +432,7 @@ def update_task_fields(task_id: int, fields: dict) -> None:
         "name", "description", "status", "due_date", "priority",
         "estimated_hours", "duration", "delay_days", "category",
         "notes", "sort_order", "assigned_to",
+        "duration_optimistic", "duration_pessimistic",
     }
     safe = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if not safe:
@@ -462,3 +463,19 @@ def delete_task(task_id: int) -> None:
 def get_dependencies(task_id: int) -> list[dict]:
     """Return dependency list for a task (alias for get_task_dependencies)."""
     return get_task_dependencies(task_id)
+
+
+def get_tasks_with_pert(project_id: int) -> list[dict]:
+    """Return tasks with PERT fields for a project."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT id, name, duration, duration_optimistic, duration_pessimistic,
+                      delay_days, status, es, ef, ls, lf, total_float, is_critical
+               FROM tasks WHERE project_id = ? ORDER BY sort_order, id""",
+            (project_id,)
+        )
+        return rows_to_dicts(cursor.fetchall())
+    finally:
+        conn.close()

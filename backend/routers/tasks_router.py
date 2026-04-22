@@ -22,6 +22,8 @@ class TaskCreate(BaseModel):
     duration: int = 1
     description: str = ""
     category: str = ""
+    duration_optimistic: int | None = None
+    duration_pessimistic: int | None = None
 
 
 class TaskUpdate(BaseModel):
@@ -34,6 +36,8 @@ class TaskUpdate(BaseModel):
     delay_days: int | None = None
     description: str | None = None
     category: str | None = None
+    duration_optimistic: int | None = None
+    duration_pessimistic: int | None = None
 
 
 # ── Pomocná funkcia ──────────────────────────────────────────────────────────
@@ -172,3 +176,71 @@ def add_dependency(
         except Exception:
             pass
     return {"detail": "Závislosť pridaná"}
+
+
+@router.get("/projects/{project_id}/pert")
+def get_pert_analysis(
+    project_id: int,
+    deadline: int | None = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """PERT analýza projektu — pravdepodobnostné CPM."""
+    from logic.pert_engine import calculate_pert
+    from logic.cpm_engine import CPMTask
+
+    _project_or_404(project_id)
+    tasks = task_repo.get_tasks_with_pert(project_id)
+    deps = task_repo.get_all_dependencies_for_project(project_id)
+
+    if not tasks:
+        return {"pert_tasks": [], "project_expected_duration": 0, "project_std_dev": 0,
+                "probability_by_deadline": {}, "critical_path_ids": []}
+
+    dep_map: dict[int, list[int]] = {}
+    for d in deps:
+        dep_map.setdefault(d["task_id"], []).append(d["depends_on_task_id"])
+
+    cpm_tasks = [
+        CPMTask(
+            id=t["id"],
+            name=t["name"],
+            duration=t["duration"],
+            dependencies=dep_map.get(t["id"], []),
+            delay_days=t.get("delay_days", 0),
+            status=t.get("status", "pending"),
+        )
+        for t in tasks
+    ]
+
+    pert_data = {}
+    for t in tasks:
+        a = t.get("duration_optimistic") or t["duration"]
+        b = t.get("duration_pessimistic") or t["duration"]
+        m = t["duration"]
+        if a != m or b != m:
+            pert_data[t["id"]] = (float(a), float(m), float(b))
+
+    result = calculate_pert(cpm_tasks, pert_data, deadline)
+
+    return {
+        "pert_tasks": [
+            {
+                "task_id": pt.task_id,
+                "name": pt.name,
+                "duration_optimistic": pt.duration_optimistic,
+                "duration_likely": pt.duration_likely,
+                "duration_pessimistic": pt.duration_pessimistic,
+                "pert_expected": pt.pert_expected,
+                "pert_std_dev": pt.pert_std_dev,
+                "pert_variance": pt.pert_variance,
+                "is_critical": pt.is_critical,
+            }
+            for pt in result.pert_tasks
+        ],
+        "critical_path_ids": result.critical_path_ids,
+        "project_expected_duration": result.project_expected_duration,
+        "project_std_dev": result.project_std_dev,
+        "project_variance": result.project_variance,
+        "probability_by_deadline": result.probability_by_deadline,
+        "cpm_duration": result.cpm_result.project_duration,
+    }

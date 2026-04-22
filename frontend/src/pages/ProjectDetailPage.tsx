@@ -1,12 +1,13 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
 import NetworkDiagram from '../components/NetworkDiagram'
 import CommentSection from '../components/CommentSection'
+import PertPanel from '../components/PertPanel'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -31,14 +32,17 @@ export default function ProjectDetailPage() {
   const qc = useQueryClient()
   const { isManager } = useAuth()
 
-  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network'>('tasks')
+  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null)
 
   // Supabase Realtime — live aktualizácie úloh a komentárov
   useRealtimeProject(projectId)
-  const [newTask, setNewTask] = useState({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
+  const [newTask, setNewTask] = useState({
+    name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '',
+    duration_optimistic: '' as number | '', duration_pessimistic: '' as number | '',
+  })
   const [createErr, setCreateErr] = useState('')
 
   const { data: project } = useQuery({
@@ -65,11 +69,13 @@ export default function ProjectDetailPage() {
     mutationFn: () => tasksApi.create(projectId, {
       ...newTask,
       assigned_to: newTask.assigned_to ? Number(newTask.assigned_to) : null,
+      duration_optimistic: newTask.duration_optimistic !== '' ? Number(newTask.duration_optimistic) : null,
+      duration_pessimistic: newTask.duration_pessimistic !== '' ? Number(newTask.duration_pessimistic) : null,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks', projectId] })
       setShowCreate(false)
-      setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '' })
+      setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '', duration_optimistic: '', duration_pessimistic: '' })
     },
     onError: (e: any) => setCreateErr(e.response?.data?.detail ?? 'Chyba'),
   })
@@ -118,7 +124,7 @@ export default function ProjectDetailPage() {
       )}
 
       {/* Záložky */}
-      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit">
+      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit flex-wrap">
         <button
           onClick={() => setTab('tasks')}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -148,6 +154,16 @@ export default function ProjectDetailPage() {
           }`}
         >
           <Network size={15} /> Sieťový diagram
+        </button>
+        <button
+          onClick={() => setTab('pert')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'pert'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <TrendingUp size={15} /> PERT
         </button>
       </div>
 
@@ -181,6 +197,11 @@ export default function ProjectDetailPage() {
         <NetworkDiagram tasks={tasks} dependencies={dependencies} />
       )}
 
+      {/* PERT analýza */}
+      {tab === 'pert' && (
+        <PertPanel projectId={projectId} />
+      )}
+
       {/* Formulár */}
       {tab === 'tasks' && showCreate && (
         <div className="card p-4 space-y-3">
@@ -212,7 +233,7 @@ export default function ProjectDetailPage() {
               type="number"
               className="input"
               min={1}
-              placeholder="Trvanie (dni)"
+              placeholder="Trvanie m (dni) *"
               value={newTask.duration}
               onChange={(e) => setNewTask({ ...newTask, duration: Number(e.target.value) })}
             />
@@ -227,6 +248,32 @@ export default function ProjectDetailPage() {
               ))}
             </select>
           </div>
+
+          {/* PERT sekcia */}
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+              <TrendingUp size={12} /> PERT odhady (voliteľné)
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                className="input text-sm"
+                min={1}
+                placeholder="Optimistické a (dni)"
+                value={newTask.duration_optimistic}
+                onChange={(e) => setNewTask({ ...newTask, duration_optimistic: e.target.value === '' ? '' : Number(e.target.value) })}
+              />
+              <input
+                type="number"
+                className="input text-sm"
+                min={1}
+                placeholder="Pesimistické b (dni)"
+                value={newTask.duration_pessimistic}
+                onChange={(e) => setNewTask({ ...newTask, duration_pessimistic: e.target.value === '' ? '' : Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
           {createErr && <p className="text-sm text-red-500">{createErr}</p>}
           <div className="flex gap-2 justify-end">
             <button className="btn-ghost text-sm" onClick={() => setShowCreate(false)}>Zrušiť</button>
@@ -304,6 +351,9 @@ export default function ProjectDetailPage() {
                       {t.es != null ? (
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           ES {t.es} — EF {t.ef} | Float {t.total_float}d
+                          {t.duration_optimistic && (
+                            <span className="ml-1 text-blue-400">PERT ✓</span>
+                          )}
                         </span>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
