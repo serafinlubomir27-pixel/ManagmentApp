@@ -31,7 +31,7 @@ api.interceptors.response.use(
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
   login: (username: string, password: string) =>
-    api.post('/auth/login', new URLSearchParams({ username, password }), {
+    api.post('/auth/login', new URLSearchParams({ username: username.trim(), password: password.trim() }), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     }),
   register: (data: { username: string; password: string; full_name: string; role?: string }) =>
