@@ -1,13 +1,14 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
 import NetworkDiagram from '../components/NetworkDiagram'
 import CommentSection from '../components/CommentSection'
 import PertPanel from '../components/PertPanel'
+import ResourcePanel from '../components/ResourcePanel'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -32,7 +33,7 @@ export default function ProjectDetailPage() {
   const qc = useQueryClient()
   const { isManager } = useAuth()
 
-  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert'>('tasks')
+  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert' | 'resources'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null)
@@ -165,6 +166,16 @@ export default function ProjectDetailPage() {
         >
           <TrendingUp size={15} /> PERT
         </button>
+        <button
+          onClick={() => setTab('resources')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'resources'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <Users size={15} /> Zdroje
+        </button>
       </div>
 
       {/* Toolbar (len pre záložku Úlohy) */}
@@ -200,6 +211,11 @@ export default function ProjectDetailPage() {
       {/* PERT analýza */}
       {tab === 'pert' && (
         <PertPanel projectId={projectId} />
+      )}
+
+      {/* Resource Management */}
+      {tab === 'resources' && (
+        <ResourcePanel projectId={projectId} />
       )}
 
       {/* Formulár */}

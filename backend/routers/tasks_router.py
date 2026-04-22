@@ -244,3 +244,87 @@ def get_pert_analysis(
         "probability_by_deadline": result.probability_by_deadline,
         "cpm_duration": result.cpm_result.project_duration,
     }
+
+
+@router.get("/projects/{project_id}/resources")
+def get_resource_allocation(
+    project_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Resource allocation — vyťaženosť členov tímu v čase (podľa CPM ES/EF)."""
+    _project_or_404(project_id)
+    tasks = task_repo.get_tasks_for_project_with_cpm(project_id)
+
+    # Filtrovanie — len priradené úlohy s platným CPM rozpisem
+    assigned = [
+        t for t in tasks
+        if t.get("assigned_to") and t.get("ef", 0) > t.get("es", 0)
+    ]
+
+    if not assigned:
+        return {"people": [], "project_duration": 0, "over_allocated_days": 0}
+
+    project_duration = max(t["ef"] for t in tasks if t.get("ef"))
+
+    # Skupiny podľa osoby
+    from collections import defaultdict
+    person_tasks: dict[int, list[dict]] = defaultdict(list)
+    person_info: dict[int, dict] = {}
+
+    for t in assigned:
+        uid = t["assigned_to"]
+        person_tasks[uid].append(t)
+        if uid not in person_info:
+            person_info[uid] = {
+                "user_id": uid,
+                "username": t.get("assigned_username") or f"user_{uid}",
+            }
+
+    people = []
+    total_over_allocated_days = 0
+
+    for uid, p_tasks in person_tasks.items():
+        # Day-by-day load: day → list of task names
+        day_load: dict[int, list[str]] = defaultdict(list)
+        for t in p_tasks:
+            for day in range(t["es"], t["ef"]):
+                day_load[day].append(t["name"])
+
+        over_days = [d for d, names in day_load.items() if len(names) > 1]
+        total_over_allocated_days += len(over_days)
+
+        # Task summary per person
+        task_summary = [
+            {
+                "id": t["id"],
+                "name": t["name"],
+                "es": t["es"],
+                "ef": t["ef"],
+                "duration": t["duration"],
+                "status": t["status"],
+                "is_critical": t["is_critical"],
+            }
+            for t in sorted(p_tasks, key=lambda x: x["es"])
+        ]
+
+        # Daily load array (0..project_duration-1)
+        daily = [len(day_load.get(d, [])) for d in range(project_duration)]
+
+        people.append({
+            **person_info[uid],
+            "tasks": task_summary,
+            "task_count": len(p_tasks),
+            "over_allocated_days": len(over_days),
+            "peak_load": max(daily) if daily else 0,
+            "daily_load": daily,
+        })
+
+    # Zoraď podľa mena
+    people.sort(key=lambda p: p["username"])
+
+    return {
+        "people": people,
+        "project_duration": project_duration,
+        "over_allocated_days": total_over_allocated_days,
+        "total_assigned_tasks": len(assigned),
+    }
