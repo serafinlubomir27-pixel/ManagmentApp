@@ -1,1 +1,5 @@
-/* /index.html 200
+# Proxy /api/* → Railway backend (musí byť pred SPA catch-all)
+/api/*  https://web-production-b865.up.railway.app/:splat  200
+
+# SPA fallback — všetky ostatné cesty servíruj cez React Router
+/*  /index.html  200
