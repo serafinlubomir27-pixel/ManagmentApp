@@ -21,7 +21,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router
+from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router, attachments_router
 from repositories.base_repo import get_backend
 
 # ── Inicializácia databázy ───────────────────────────────────────────────────
@@ -66,6 +66,14 @@ app.include_router(notifications_router.router, prefix="")
 app.include_router(calendar_router.router, prefix="")
 app.include_router(invite_router.router, prefix="")
 app.include_router(ai_router.router, prefix="")
+app.include_router(attachments_router.router, prefix="")
+
+# ── Static files (uploaded attachments) ──────────────────────────────────────
+from fastapi.staticfiles import StaticFiles
+import os as _os
+_uploads_dir = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), "uploads")
+_os.makedirs(_uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
 
 
 # ── Health check ─────────────────────────────────────────────────────────────
