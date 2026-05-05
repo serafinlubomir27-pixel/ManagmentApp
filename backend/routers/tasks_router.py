@@ -105,6 +105,18 @@ def create_task(
     return {"id": task_id, "detail": "Úloha vytvorená"}
 
 
+@router.get("/tasks/{task_id}")
+def get_task_detail(
+    task_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Full task detail — used by TaskDetailModal."""
+    task = task_repo.get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Úloha nenájdená")
+    return task
+
+
 @router.patch("/tasks/{task_id}")
 def update_task(
     task_id: int,

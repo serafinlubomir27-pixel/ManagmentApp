@@ -419,12 +419,19 @@ def get_tasks_for_project_with_cpm(project_id: int) -> list[dict]:
 
 
 def get_task_by_id(task_id: int) -> dict | None:
-    """Return full task row as dict, or None."""
+    """Return full task row as dict (with assigned user info), or None."""
     conn = get_connection()
     try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
-        return row_to_dict(cursor.fetchone())
+        row = conn.execute(
+            """
+            SELECT t.*, u.username AS assigned_username, u.full_name AS assigned_full_name
+            FROM tasks t
+            LEFT JOIN users u ON t.assigned_to = u.id
+            WHERE t.id = ?
+            """,
+            (task_id,),
+        ).fetchone()
+        return row_to_dict(row)
     finally:
         conn.close()
 
