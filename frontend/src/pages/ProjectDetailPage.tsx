@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
@@ -9,6 +9,8 @@ import NetworkDiagram from '../components/NetworkDiagram'
 import CommentSection from '../components/CommentSection'
 import PertPanel from '../components/PertPanel'
 import ResourcePanel from '../components/ResourcePanel'
+import AiParserModal from '../components/AiParserModal'
+import BurndownChart from '../components/BurndownChart'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -33,10 +35,11 @@ export default function ProjectDetailPage() {
   const qc = useQueryClient()
   const { isManager } = useAuth()
 
-  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert' | 'resources'>('tasks')
+  const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert' | 'resources' | 'burndown'>('tasks')
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null)
+  const [showAiModal, setShowAiModal] = useState(false)
 
   // Supabase Realtime — live aktualizácie úloh a komentárov
   useRealtimeProject(projectId)
@@ -185,6 +188,16 @@ export default function ProjectDetailPage() {
         >
           <Users size={15} /> Zdroje
         </button>
+        <button
+          onClick={() => setTab('burndown')}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'burndown'
+              ? 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          <TrendingDown size={15} /> Burndown
+        </button>
       </div>
 
       {/* Toolbar (len pre záložku Úlohy) */}
@@ -199,6 +212,14 @@ export default function ProjectDetailPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        {isManager && (
+          <button
+            onClick={() => setShowAiModal(true)}
+            className="btn-ghost flex items-center gap-2 text-sm border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+          >
+            <Sparkles size={14} /> AI generátor
+          </button>
+        )}
         {isManager && (
           <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 text-sm">
             <Plus size={15} /> Nová úloha
@@ -225,6 +246,23 @@ export default function ProjectDetailPage() {
       {/* Resource Management */}
       {tab === 'resources' && (
         <ResourcePanel projectId={projectId} />
+      )}
+
+      {/* Burndown Chart */}
+      {tab === 'burndown' && (
+        <BurndownChart tasks={tasks} />
+      )}
+
+      {/* AI Parser Modal */}
+      {showAiModal && (
+        <AiParserModal
+          projectId={projectId}
+          onClose={() => setShowAiModal(false)}
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+            setShowAiModal(false)
+          }}
+        />
       )}
 
       {/* Formulár */}
