@@ -293,7 +293,7 @@ export default function ProjectDetailPage() {
 
       {/* Sieťový diagram */}
       {tab === 'network' && (
-        <NetworkDiagram tasks={tasks} dependencies={dependencies} />
+        <NetworkDiagram tasks={tasks} dependencies={dependencies} teamMembers={teamMembers} />
       )}
 
       {/* PERT analýza */}

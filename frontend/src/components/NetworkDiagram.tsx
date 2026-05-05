@@ -6,6 +6,7 @@
  */
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import TaskDetailModal from './TaskDetailModal'
 
 interface Task {
   id: number
@@ -27,6 +28,7 @@ interface Dependency {
 interface Props {
   tasks: Task[]
   dependencies: Dependency[]
+  teamMembers?: Array<{ id: number; username: string; full_name?: string }>
 }
 
 const NODE_W = 164
@@ -60,10 +62,11 @@ function computeLayout(tasks: Task[]) {
   return { positions, maxX, maxY }
 }
 
-export default function NetworkDiagram({ tasks, dependencies }: Props) {
+export default function NetworkDiagram({ tasks, dependencies, teamMembers }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const dragging = useRef(false)
   const lastMouse = useRef({ x: 0, y: 0 })
 
@@ -136,6 +139,7 @@ export default function NetworkDiagram({ tasks, dependencies }: Props) {
     })
 
   return (
+    <>
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
@@ -238,7 +242,7 @@ export default function NetworkDiagram({ tasks, dependencies }: Props) {
             const short = t.name.length > 20 ? t.name.slice(0, 19) + '…' : t.name
 
             return (
-              <g key={t.id} transform={`translate(${pos.x},${pos.y})`} filter="url(#shadow)">
+              <g key={t.id} transform={`translate(${pos.x},${pos.y})`} filter="url(#shadow)" onClick={() => setSelectedTaskId(t.id)} style={{ cursor: 'pointer' }}>
                 {/* Telo */}
                 <rect width={NODE_W} height={NODE_H} rx={10}
                   fill="white" stroke={border} strokeWidth={t.is_critical ? 2.5 : 1.5} />
@@ -280,5 +284,14 @@ export default function NetworkDiagram({ tasks, dependencies }: Props) {
         </svg>
       </div>
     </div>
+    {selectedTaskId !== null && (
+      <TaskDetailModal
+        taskId={selectedTaskId}
+        teamMembers={teamMembers ?? []}
+        onClose={() => setSelectedTaskId(null)}
+        onUpdated={() => {}}
+      />
+    )}
+    </>
   )
 }
