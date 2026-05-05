@@ -92,11 +92,19 @@ export default function NetworkDiagram({ tasks, dependencies }: Props) {
 
   useEffect(() => { fitToScreen() }, [fitToScreen])
 
-  // ── Zoom koliesko ──────────────────────────────────────────────────────────
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom(z => Math.min(Math.max(z * delta, 0.15), 3))
+  // ── Zoom koliesko — natívny listener (passive: false) ─────────────────────
+  // React onWheel je passive by default (Chrome 51+), preventDefault sa ignoruje.
+  // Priame addEventListener s { passive: false } zaistí že stránka nescrolluje.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? 0.9 : 1.1
+      setZoom(z => Math.min(Math.max(z * delta, 0.15), 3))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
   }, [])
 
   // ── Pan myšou ─────────────────────────────────────────────────────────────
@@ -176,7 +184,6 @@ export default function NetworkDiagram({ tasks, dependencies }: Props) {
         ref={containerRef}
         className="w-full overflow-hidden cursor-grab active:cursor-grabbing"
         style={{ height: '520px' }}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
