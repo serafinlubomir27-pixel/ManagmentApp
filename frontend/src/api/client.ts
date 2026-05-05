@@ -145,3 +145,37 @@ export const attachmentsApi = {
   updateTaskVisibility: (id: number, visibility: string) =>
     api.patch(`/task-attachments/${id}/visibility`, null, { params: { visibility } }),
 }
+
+// ── Clients ───────────────────────────────────────────────────────────────────
+export const clientsApi = {
+  list: () => api.get('/clients/'),
+  get: (id: number) => api.get(`/clients/${id}`),
+  create: (data: {
+    name: string; email?: string; phone?: string;
+    category?: string; risk_profile?: string; notes?: string;
+  }) => api.post('/clients/', data),
+  update: (id: number, data: object) => api.patch(`/clients/${id}`, data),
+  archive: (id: number) => api.delete(`/clients/${id}`),
+  linkProject: (clientId: number, projectId: number) =>
+    api.post(`/clients/${clientId}/link-project`, null, { params: { project_id: projectId } }),
+
+  // Meetings
+  listMeetings: (clientId: number) => api.get(`/clients/${clientId}/meetings`),
+  addMeeting: (clientId: number, data: { meeting_date: string; notes?: string; follow_ups?: string[] }) =>
+    api.post(`/clients/${clientId}/meetings`, data),
+  deleteMeeting: (clientId: number, meetingId: number) =>
+    api.delete(`/clients/${clientId}/meetings/${meetingId}`),
+
+  // Compliance
+  listCompliance: (clientId: number) => api.get(`/clients/${clientId}/compliance`),
+  addCompliance: (clientId: number, data: { item_type: string; due_date?: string; notes?: string }) =>
+    api.post(`/clients/${clientId}/compliance`, data),
+  updateCompliance: (itemId: number, data: object) =>
+    api.patch(`/clients/compliance/${itemId}`, data),
+
+  // Pipeline
+  getPipeline: (clientId: number) => api.get(`/clients/${clientId}/pipeline`),
+  updatePipeline: (clientId: number, data: object) =>
+    api.patch(`/clients/${clientId}/pipeline`, data),
+  getAllPipeline: () => api.get('/clients/pipeline/all'),
+}
