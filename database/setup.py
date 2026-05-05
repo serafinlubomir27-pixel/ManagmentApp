@@ -191,6 +191,23 @@ def create_database():
     )
     ''')
 
+    # --- 12. PROJECT ATTACHMENTS ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS project_attachments (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id  INTEGER NOT NULL,
+        user_id     INTEGER NOT NULL,
+        file_name   TEXT NOT NULL,
+        file_path   TEXT NOT NULL,
+        file_size   INTEGER,
+        mime_type   TEXT,
+        visibility  TEXT NOT NULL DEFAULT 'team',
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    ''')
+
     # --- Bezpečná migrácia: nové stĺpce v tasks ---
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
@@ -221,6 +238,8 @@ def create_database():
         # Project template subscription defaults
         "ALTER TABLE projects ADD COLUMN default_auto_notify BOOLEAN DEFAULT 1",
         "ALTER TABLE projects ADD COLUMN default_auto_calendar BOOLEAN DEFAULT 1",
+        # Attachment visibility
+        "ALTER TABLE task_attachments ADD COLUMN visibility TEXT NOT NULL DEFAULT 'team'",
     ]:
         try:
             cursor.execute(column_sql)
