@@ -145,6 +145,142 @@ def delete_task(
     task_repo.delete_task(task_id)
 
 
+@router.get("/projects/{project_id}/risk-score")
+def get_risk_score(
+    project_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Composite AI risk score (0-100) for a project.
+
+    Components:
+      - PERT schedule uncertainty (40 %): 1 – P(finish by CPM deadline)
+      - Overdue task ratio (35 %): overdue / total
+      - Resource over-allocation (25 %): over-allocated days / project duration
+    """
+    from collections import defaultdict
+    from datetime import date
+    from logic.pert_engine import calculate_pert
+    from logic.cpm_engine import CPMTask
+
+    _project_or_404(project_id)
+    tasks = task_repo.get_tasks_for_project_with_cpm(project_id)
+
+    if not tasks:
+        return {"risk_score": 0, "level": "none", "components": {}, "meta": {}}
+
+    today = date.today().isoformat()
+    total = len(tasks)
+    completed = sum(1 for t in tasks if t["status"] == "completed")
+
+    # ── Component 1: Overdue ratio ────────────────────────────────────────────
+    overdue = sum(
+        1 for t in tasks
+        if t.get("due_date") and t["due_date"] <= today and t["status"] != "completed"
+    )
+    overdue_ratio = overdue / total if total > 0 else 0.0
+
+    # ── Component 2: Resource over-allocation ─────────────────────────────────
+    project_duration = max((t.get("ef") or 0 for t in tasks), default=1) or 1
+
+    assigned = [
+        t for t in tasks
+        if t.get("assigned_to") and (t.get("ef") or 0) > (t.get("es") or 0)
+    ]
+    day_load: dict[int, list] = defaultdict(list)
+    for t in assigned:
+        for day in range(t["es"], t["ef"]):
+            day_load[day].append(t["id"])
+
+    over_allocated_days = sum(1 for v in day_load.values() if len(v) > 1)
+    resource_ratio = min(1.0, over_allocated_days / project_duration)
+
+    # ── Component 3: PERT schedule uncertainty ────────────────────────────────
+    pert_tasks_raw = task_repo.get_tasks_with_pert(project_id)
+    deps = task_repo.get_all_dependencies_for_project(project_id)
+
+    dep_map: dict[int, list[int]] = {}
+    for d in deps:
+        dep_map.setdefault(d["task_id"], []).append(d["depends_on_task_id"])
+
+    cpm_tasks_list = [
+        CPMTask(
+            id=t["id"],
+            name=t["name"],
+            duration=t["duration"],
+            dependencies=dep_map.get(t["id"], []),
+            delay_days=t.get("delay_days", 0),
+            status=t.get("status", "pending"),
+        )
+        for t in pert_tasks_raw
+    ]
+
+    pert_data: dict[int, tuple[float, float, float]] = {}
+    for t in pert_tasks_raw:
+        a = t.get("duration_optimistic") or t["duration"]
+        b = t.get("duration_pessimistic") or t["duration"]
+        m = t["duration"]
+        if a != m or b != m:
+            pert_data[t["id"]] = (float(a), float(m), float(b))
+
+    pert_risk = 0.3          # default: moderate uncertainty
+    pert_details: dict = {}
+
+    if cpm_tasks_list:
+        try:
+            result = calculate_pert(cpm_tasks_list, pert_data, None)
+            E = result.project_expected_duration
+            sigma = result.project_std_dev
+            cpm_dur = result.cpm_result.project_duration
+
+            # P(T ≤ CPM duration) — risk is 1 minus that
+            if sigma > 0:
+                from statistics import NormalDist
+                prob_on_time = NormalDist(mu=E, sigma=sigma).cdf(cpm_dur)
+            else:
+                prob_on_time = 1.0 if cpm_dur >= E else 0.0
+
+            pert_risk = 1.0 - prob_on_time
+            pert_details = {
+                "expected_duration": round(E, 2),
+                "std_dev": round(sigma, 2),
+                "cpm_duration": cpm_dur,
+                "prob_on_time": round(prob_on_time, 4),
+            }
+        except Exception:
+            pass  # keep default
+
+    # ── Composite weighted score ──────────────────────────────────────────────
+    raw = 0.40 * pert_risk + 0.35 * overdue_ratio + 0.25 * resource_ratio
+    risk_score = min(100, round(raw * 100))
+
+    if risk_score < 25:
+        level = "low"
+    elif risk_score < 50:
+        level = "medium"
+    elif risk_score < 75:
+        level = "high"
+    else:
+        level = "critical"
+
+    return {
+        "risk_score": risk_score,
+        "level": level,
+        "components": {
+            "pert_risk": round(pert_risk, 4),
+            "overdue_ratio": round(overdue_ratio, 4),
+            "resource_ratio": round(resource_ratio, 4),
+            "overdue_tasks": overdue,
+            "over_allocated_days": over_allocated_days,
+            **pert_details,
+        },
+        "meta": {
+            "total_tasks": total,
+            "completed_tasks": completed,
+            "project_duration": project_duration,
+        },
+    }
+
+
 @router.get("/projects/{project_id}/dependencies")
 def get_project_dependencies(
     project_id: int,

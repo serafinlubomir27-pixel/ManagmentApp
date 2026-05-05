@@ -12,6 +12,7 @@ import ResourcePanel from '../components/ResourcePanel'
 import AiParserModal from '../components/AiParserModal'
 import BurndownChart from '../components/BurndownChart'
 import TimeLogSection from '../components/TimeLogSection'
+import RiskScoreWidget from '../components/RiskScoreWidget'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -136,6 +137,9 @@ export default function ProjectDetailPage() {
           </p>
         </div>
       )}
+
+      {/* AI Risk Score */}
+      <RiskScoreWidget projectId={projectId} variant="full" />
 
       {/* Záložky */}
       <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit flex-wrap">

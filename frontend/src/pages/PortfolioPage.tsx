@@ -9,6 +9,7 @@ import {
   FolderKanban, ChevronRight, Flame, Clock, Shield,
 } from 'lucide-react'
 import { api } from '../api/client'
+import RiskScoreWidget from '../components/RiskScoreWidget'
 
 interface ProjectHealth {
   id: number
@@ -236,8 +237,11 @@ export default function PortfolioPage() {
                 </span>
               )}
               {p.project_duration > 0 && (
-                <span className="ml-auto text-gray-400">{p.project_duration}d CPM</span>
+                <span className="text-gray-400">{p.project_duration}d CPM</span>
               )}
+              <span className="ml-auto" onClick={e => e.preventDefault()}>
+                <RiskScoreWidget projectId={p.id} variant="compact" />
+              </span>
             </div>
 
             <ChevronRight size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors" />
@@ -245,22 +249,24 @@ export default function PortfolioPage() {
         ))}
       </div>
 
-      {/* Health legend */}
-      <div className="card p-4">
-        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">Health skóre (0-100)</p>
-        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5">
-            <Shield size={11} className="text-green-500" />
-            75-100 — Výborný (projekt beží dobre)
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock size={11} className="text-amber-500" />
-            50-74 — Priemerný (potrebuje pozornosť)
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Flame size={11} className="text-red-500" />
-            0-49 — Rizikový (okamžitá akcia potrebná)
-          </span>
+      {/* Legend */}
+      <div className="card p-4 space-y-3">
+        <div>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Health skóre (0-100)</p>
+          <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1.5"><Shield size={11} className="text-green-500" />75-100 — Výborný</span>
+            <span className="flex items-center gap-1.5"><Clock size={11} className="text-amber-500" />50-74 — Priemerný</span>
+            <span className="flex items-center gap-1.5"><Flame size={11} className="text-red-500" />0-49 — Rizikový</span>
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">AI Risk skóre (0-100) — PERT + meškanie + konflikty zdrojov</p>
+          <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">● 0-24 — Nízke</span>
+            <span className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-400">● 25-49 — Stredné</span>
+            <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">● 50-74 — Vysoké</span>
+            <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400">● 75-100 — Kritické</span>
+          </div>
         </div>
       </div>
     </div>
