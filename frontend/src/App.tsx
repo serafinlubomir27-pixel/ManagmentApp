@@ -9,6 +9,8 @@ import SettingsPage from './pages/SettingsPage'
 import CalendarPage from './pages/CalendarPage'
 import InvitePage from './pages/InvitePage'
 import PortfolioPage from './pages/PortfolioPage'
+import ClientsPage from './pages/ClientsPage'
+import ClientDetailPage from './pages/ClientDetailPage'
 import Layout from './components/Layout'
 import PWABanner from './components/PWABanner'
 
@@ -37,6 +39,8 @@ function AppRoutes() {
         <Route path="team" element={<TeamPage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="portfolio" element={<PortfolioPage />} />
+        <Route path="clients" element={<ClientsPage />} />
+        <Route path="clients/:id" element={<ClientDetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -12,6 +12,7 @@ const nav = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
   { to: '/projects',  label: 'Projekty',   icon: FolderKanban },
   { to: '/portfolio', label: 'Portfolio',   icon: LayoutGrid },
+  { to: '/clients',   label: 'Klienti',    icon: Users },
   { to: '/calendar',  label: 'Kalendár',   icon: CalendarDays },
   { to: '/team',      label: 'Tím',         icon: Users },
   { to: '/settings',  label: 'Nastavenia', icon: Settings },
