@@ -208,6 +208,67 @@ def create_database():
     )
     ''')
 
+    # --- CLIENTS ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS clients (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT NOT NULL,
+        email        TEXT,
+        phone        TEXT,
+        category     TEXT NOT NULL DEFAULT 'retail',
+        risk_profile TEXT NOT NULL DEFAULT 'balanced',
+        advisor_id   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        notes        TEXT,
+        archived     INTEGER DEFAULT 0,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # --- CLIENT MEETINGS ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS client_meetings (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id    INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        meeting_date TEXT NOT NULL,
+        notes        TEXT,
+        follow_ups   TEXT,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # --- COMPLIANCE ITEMS ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS compliance_items (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id      INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        item_type      TEXT NOT NULL,
+        status         TEXT NOT NULL DEFAULT 'pending',
+        due_date       TEXT,
+        completed_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        completed_at   TIMESTAMP,
+        document_path  TEXT,
+        notes          TEXT,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # --- DEAL STAGES ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS deal_stages (
+        id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id            INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        stage                TEXT NOT NULL DEFAULT 'lead',
+        deal_value           REAL,
+        commission_expected  REAL,
+        commission_received  REAL,
+        currency             TEXT NOT NULL DEFAULT 'EUR',
+        notes                TEXT,
+        created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # --- Bezpečná migrácia: nové stĺpce v tasks ---
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
@@ -240,6 +301,8 @@ def create_database():
         "ALTER TABLE projects ADD COLUMN default_auto_calendar BOOLEAN DEFAULT 1",
         # Attachment visibility
         "ALTER TABLE task_attachments ADD COLUMN visibility TEXT NOT NULL DEFAULT 'team'",
+        # Client relationship
+        "ALTER TABLE projects ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL",
     ]:
         try:
             cursor.execute(column_sql)
