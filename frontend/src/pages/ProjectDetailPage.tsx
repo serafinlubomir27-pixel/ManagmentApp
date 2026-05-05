@@ -1,8 +1,8 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown } from 'lucide-react'
-import { projectsApi, tasksApi, teamApi } from '../api/client'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown, Paperclip } from 'lucide-react'
+import { projectsApi, tasksApi, teamApi, attachmentsApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
 import NetworkDiagram from '../components/NetworkDiagram'
@@ -14,6 +14,8 @@ import BurndownChart from '../components/BurndownChart'
 import TimeLogSection from '../components/TimeLogSection'
 import RiskScoreWidget from '../components/RiskScoreWidget'
 import AttachmentSidebar from '../components/AttachmentSidebar'
+import AttachmentList, { AttachmentItem } from '../components/AttachmentList'
+import FileUploadDropzone from '../components/FileUploadDropzone'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -30,6 +32,56 @@ const PRIORITY_COLOR: Record<string, string> = {
   medium:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   high:     'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   critical: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+}
+
+function TaskAttachmentSection({ taskId }: { taskId: number }) {
+  const qc = useQueryClient()
+  const [uploadError, setUploadError] = useState('')
+
+  const { data: attachments = [] } = useQuery<AttachmentItem[]>({
+    queryKey: ['task-attachments', taskId],
+    queryFn: () => attachmentsApi.listTask(taskId).then(r => r.data),
+    staleTime: 30_000,
+  })
+
+  const uploadMutation = useMutation({
+    mutationFn: ({ file, visibility }: { file: File; visibility: 'team' | 'managers' | 'private' }) =>
+      attachmentsApi.uploadTask(taskId, file, visibility),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['task-attachments', taskId] })
+      setUploadError('')
+    },
+    onError: (e: any) => setUploadError(e.response?.data?.detail ?? 'Chyba'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => attachmentsApi.deleteTask(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-attachments', taskId] }),
+  })
+
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, visibility }: { id: number; visibility: 'team' | 'managers' | 'private' }) =>
+      attachmentsApi.updateTaskVisibility(id, visibility),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-attachments', taskId] }),
+  })
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
+        <Paperclip size={12} /> Prílohy úlohy
+      </div>
+      <AttachmentList
+        attachments={attachments}
+        onDelete={id => deleteMutation.mutate(id)}
+        onVisibilityChange={(id, v) => visibilityMutation.mutate({ id, visibility: v })}
+      />
+      <FileUploadDropzone
+        onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility })}
+        uploading={uploadMutation.isPending}
+        error={uploadError}
+      />
+    </div>
+  )
 }
 
 export default function ProjectDetailPage() {
@@ -447,6 +499,9 @@ export default function ProjectDetailPage() {
                             <td colSpan={5} className="px-6 py-4 space-y-4">
                               {/* Time tracking */}
                               <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
+
+                              {/* Task attachments */}
+                              <TaskAttachmentSection taskId={t.id} />
 
                               {/* Subscription toggles */}
                               <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
