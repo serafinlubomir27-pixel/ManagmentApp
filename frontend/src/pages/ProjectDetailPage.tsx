@@ -13,6 +13,7 @@ import AiParserModal from '../components/AiParserModal'
 import BurndownChart from '../components/BurndownChart'
 import TimeLogSection from '../components/TimeLogSection'
 import RiskScoreWidget from '../components/RiskScoreWidget'
+import AttachmentSidebar from '../components/AttachmentSidebar'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -356,130 +357,137 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* Tabuľka úloh */}
-      {tab === 'tasks' && <div className="card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Úloha</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden sm:table-cell">Priradený</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">CPM</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {isLoading ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Načítavam…</td></tr>
-            ) : filtered.length === 0 ? (
-              <tr><td colSpan={5} className="py-8 text-center text-gray-400">Žiadne úlohy</td></tr>
-            ) : (
-              filtered.map((t: any) => (
-                <Fragment key={t.id}>
-                  <tr
-                    className={`cursor-pointer ${t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'}`}
-                    onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {t.is_critical && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                        )}
-                        <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
-                        {expandedTaskId === t.id
-                          ? <ChevronUp size={13} className="text-gray-400 flex-shrink-0" />
-                          : <ChevronDown size={13} className="text-gray-300 flex-shrink-0" />
-                        }
-                      </div>
-                      <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
-                        {t.priority}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
-                      {t.assigned_username ?? '—'}
-                    </td>
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                      {isManager ? (
-                        <select
-                          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
-                          value={t.status}
-                          onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
-                        >
-                          {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                            <option key={v} value={v}>{l}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                          {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      {t.es != null ? (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          ES {t.es} — EF {t.ef} | Float {t.total_float}d
-                          {t.duration_optimistic && (
-                            <span className="ml-1 text-blue-400">PERT ✓</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-300">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      {isManager && (
-                        <button
-                          onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
-                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                    </td>
+      {/* Tabuľka úloh + prílohy */}
+      {tab === 'tasks' && (
+        <div className="flex gap-4 items-start">
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="card overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                    <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Úloha</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden sm:table-cell">Priradený</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden md:table-cell">CPM</th>
+                    <th className="px-4 py-3" />
                   </tr>
-                  {expandedTaskId === t.id && (
-                    <tr className="bg-gray-50/50 dark:bg-gray-900/20">
-                      <td colSpan={5} className="px-6 py-4 space-y-4">
-                        {/* Time tracking */}
-                        <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {isLoading ? (
+                    <tr><td colSpan={5} className="py-8 text-center text-gray-400">Načítavam…</td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={5} className="py-8 text-center text-gray-400">Žiadne úlohy</td></tr>
+                  ) : (
+                    filtered.map((t: any) => (
+                      <Fragment key={t.id}>
+                        <tr
+                          className={`cursor-pointer ${t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'}`}
+                          onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              {t.is_critical && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                              )}
+                              <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
+                              {expandedTaskId === t.id
+                                ? <ChevronUp size={13} className="text-gray-400 flex-shrink-0" />
+                                : <ChevronDown size={13} className="text-gray-300 flex-shrink-0" />
+                              }
+                            </div>
+                            <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
+                              {t.priority}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                            {t.assigned_username ?? '—'}
+                          </td>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            {isManager ? (
+                              <select
+                                className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                                value={t.status}
+                                onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
+                              >
+                                {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                                  <option key={v} value={v}>{l}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                                {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            {t.es != null ? (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ES {t.es} — EF {t.ef} | Float {t.total_float}d
+                                {t.duration_optimistic && (
+                                  <span className="ml-1 text-blue-400">PERT ✓</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-300">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            {isManager && (
+                              <button
+                                onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
+                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {expandedTaskId === t.id && (
+                          <tr className="bg-gray-50/50 dark:bg-gray-900/20">
+                            <td colSpan={5} className="px-6 py-4 space-y-4">
+                              {/* Time tracking */}
+                              <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
 
-                        {/* Subscription toggles */}
-                        <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>
-                          <button
-                            onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_notify', value: !t.auto_notify })}
-                            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                              t.auto_notify
-                                ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
-                            }`}
-                          >
-                            {t.auto_notify ? <Bell size={11} /> : <BellOff size={11} />}
-                            {t.auto_notify ? 'Notifikácie zapnuté' : 'Notifikácie vypnuté'}
-                          </button>
-                          <button
-                            onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_calendar', value: !t.auto_calendar })}
-                            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                              t.auto_calendar
-                                ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
-                            }`}
-                          >
-                            <CalendarDays size={11} />
-                            {t.auto_calendar ? 'iCal feed aktívny' : 'iCal feed vypnutý'}
-                          </button>
-                        </div>
-                        <CommentSection taskId={t.id} />
-                      </td>
-                    </tr>
+                              {/* Subscription toggles */}
+                              <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>
+                                <button
+                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_notify', value: !t.auto_notify })}
+                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    t.auto_notify
+                                      ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                                  }`}
+                                >
+                                  {t.auto_notify ? <Bell size={11} /> : <BellOff size={11} />}
+                                  {t.auto_notify ? 'Notifikácie zapnuté' : 'Notifikácie vypnuté'}
+                                </button>
+                                <button
+                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_calendar', value: !t.auto_calendar })}
+                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    t.auto_calendar
+                                      ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                                  }`}
+                                >
+                                  <CalendarDays size={11} />
+                                  {t.auto_calendar ? 'iCal feed aktívny' : 'iCal feed vypnutý'}
+                                </button>
+                              </div>
+                              <CommentSection taskId={t.id} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))
                   )}
-                </Fragment>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <AttachmentSidebar projectId={projectId} />
+        </div>
+      )}
     </div>
   )
 }
