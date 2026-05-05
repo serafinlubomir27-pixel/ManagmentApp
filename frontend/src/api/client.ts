@@ -107,3 +107,40 @@ export const teamApi = {
   update: (userId: number, data: { role?: string; manager_id?: number | null }) =>
     api.patch(`/team/${userId}`, data),
 }
+
+// ── Attachments ───────────────────────────────────────────────────────────────
+export const attachmentsApi = {
+  // Project attachments
+  uploadProject: (projectId: number, file: File, visibility: string) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('visibility', visibility)
+    return api.post(`/projects/${projectId}/attachments`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  listProject: (projectId: number) =>
+    api.get(`/projects/${projectId}/attachments`),
+  listAll: (projectId: number) =>
+    api.get(`/projects/${projectId}/all-attachments`),
+  deleteProject: (id: number) =>
+    api.delete(`/project-attachments/${id}`),
+  updateProjectVisibility: (id: number, visibility: string) =>
+    api.patch(`/project-attachments/${id}/visibility`, null, { params: { visibility } }),
+
+  // Task attachments
+  uploadTask: (taskId: number, file: File, visibility: string) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('visibility', visibility)
+    return api.post(`/tasks/${taskId}/attachments`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  listTask: (taskId: number) =>
+    api.get(`/tasks/${taskId}/attachments`),
+  deleteTask: (id: number) =>
+    api.delete(`/task-attachments/${id}`),
+  updateTaskVisibility: (id: number, visibility: string) =>
+    api.patch(`/task-attachments/${id}/visibility`, null, { params: { visibility } }),
+}
