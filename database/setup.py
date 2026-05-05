@@ -148,6 +148,34 @@ def create_database():
     )
     ''')
 
+    # --- 10. INVITE TOKENS (Team Invitations) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS invite_tokens (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        token      TEXT        NOT NULL UNIQUE,
+        role       TEXT        NOT NULL DEFAULT 'employee',
+        created_by INTEGER     NOT NULL,
+        used_by    INTEGER,
+        used_at    TIMESTAMP,
+        expires_at TIMESTAMP   NOT NULL DEFAULT (datetime('now', '+7 days')),
+        created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE SET NULL
+    )
+    ''')
+
+    # --- 11. CALENDAR TOKENS (iCal feed) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS calendar_tokens (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL UNIQUE,
+        token      TEXT    NOT NULL UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    ''')
+
     # --- Bezpečná migrácia: nové stĺpce v tasks ---
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
@@ -164,6 +192,20 @@ def create_database():
         "ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT 'Other'",
         "ALTER TABLE tasks ADD COLUMN notes TEXT",
         "ALTER TABLE tasks ADD COLUMN sort_order INTEGER DEFAULT 0",
+        # PERT columns
+        "ALTER TABLE tasks ADD COLUMN duration_optimistic INTEGER",
+        "ALTER TABLE tasks ADD COLUMN duration_pessimistic INTEGER",
+        # User profile fields
+        "ALTER TABLE users ADD COLUMN bio TEXT",
+
+        "ALTER TABLE users ADD COLUMN avatar_color TEXT DEFAULT '#6366f1'",
+        "ALTER TABLE users ADD COLUMN timezone TEXT DEFAULT 'Europe/Bratislava'",
+        # Task subscription flags
+        "ALTER TABLE tasks ADD COLUMN auto_notify BOOLEAN DEFAULT 1",
+        "ALTER TABLE tasks ADD COLUMN auto_calendar BOOLEAN DEFAULT 1",
+        # Project template subscription defaults
+        "ALTER TABLE projects ADD COLUMN default_auto_notify BOOLEAN DEFAULT 1",
+        "ALTER TABLE projects ADD COLUMN default_auto_calendar BOOLEAN DEFAULT 1",
     ]:
         try:
             cursor.execute(column_sql)

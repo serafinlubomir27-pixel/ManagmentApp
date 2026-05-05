@@ -78,15 +78,46 @@ class MeResponse(BaseModel):
     username: str
     full_name: str
     role: str
+    bio: str | None = None
+    avatar_color: str = "#6366f1"
+    timezone: str = "Europe/Bratislava"
 
 
 @router.get("/me", response_model=MeResponse)
 def get_me(current_user: dict = Depends(get_current_user)):
-    """Vráti info o prihlásenom používateľovi."""
+    """Vráti info o prihlásenom používateľovi vrátane profilu."""
     user = user_repo.get_by_username(current_user["username"])
     if not user:
         raise HTTPException(status_code=404, detail="Používateľ nenájdený")
-    return MeResponse(**{k: user[k] for k in ("id", "username", "full_name", "role")})
+    return MeResponse(
+        id=user["id"],
+        username=user["username"],
+        full_name=user["full_name"],
+        role=user["role"],
+        bio=user.get("bio"),
+        avatar_color=user.get("avatar_color") or "#6366f1",
+        timezone=user.get("timezone") or "Europe/Bratislava",
+    )
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = None
+    bio: str | None = None
+    avatar_color: str | None = None
+    timezone: str | None = None
+
+
+@router.patch("/me/profile")
+def update_profile(
+    body: UpdateProfileRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Aktualizácia profilu — meno, bio, farba avatara, timezone."""
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not updates:
+        return {"detail": "Nič na aktualizáciu"}
+    user_repo.update_user_profile(current_user["id"], updates)
+    return {"detail": "Profil aktualizovaný"}
 
 
 class ChangePasswordRequest(BaseModel):

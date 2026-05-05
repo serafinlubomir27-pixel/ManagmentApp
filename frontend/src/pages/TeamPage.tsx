@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Users, UserPlus, ChevronRight, Pencil, X, Check } from 'lucide-react'
-import { teamApi, authApi } from '../api/client'
+import { Users, UserPlus, ChevronRight, Pencil, X, Check, Link2, Copy, Trash2 } from 'lucide-react'
+import { teamApi, authApi, invitesApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 
 const ROLE_COLOR: Record<string, string> = {
@@ -235,6 +235,132 @@ export default function TeamPage() {
               />
             )
           ))
+        )}
+      </div>
+
+      {/* ── Invite links (manager/admin only) ─────────────────────────── */}
+      {isManager && <InviteSection />}
+    </div>
+  )
+}
+
+// ── Invite Section ─────────────────────────────────────────────────────────
+function InviteSection() {
+  const qc = useQueryClient()
+  const [role, setRole] = useState<'employee' | 'manager'>('employee')
+  const [copied, setCopied] = useState<string | null>(null)
+
+  const { data: invites = [] } = useQuery({
+    queryKey: ['invites'],
+    queryFn: () => invitesApi.list().then(r => r.data),
+    staleTime: 30_000,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () => invitesApi.create(role),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['invites'] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => invitesApi.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['invites'] }),
+  })
+
+  const baseUrl = window.location.origin
+
+  async function copyLink(token: string) {
+    await navigator.clipboard.writeText(`${baseUrl}/invite/${token}`)
+    setCopied(token)
+    setTimeout(() => setCopied(null), 2500)
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+        <Link2 size={15} className="text-brand-500" />
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Pozvánkové linky</h3>
+        <span className="text-xs text-gray-400 ml-auto">Platné 7 dní</span>
+      </div>
+
+      <div className="px-5 py-4 space-y-4">
+        {/* Create invite */}
+        <div className="flex items-center gap-3">
+          <select
+            className="input text-sm flex-1 max-w-48"
+            value={role}
+            onChange={e => setRole(e.target.value as any)}
+          >
+            <option value="employee">Zamestnanec</option>
+            <option value="manager">Manažér</option>
+          </select>
+          <button
+            onClick={() => createMutation.mutate()}
+            disabled={createMutation.isPending}
+            className="btn-primary text-sm flex items-center gap-2"
+          >
+            <UserPlus size={14} />
+            {createMutation.isPending ? 'Generujem…' : 'Generovať link'}
+          </button>
+        </div>
+
+        {/* Invite list */}
+        {invites.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Žiadne aktívne pozvánky</p>
+        ) : (
+          <div className="space-y-2">
+            {invites.map((inv: any) => {
+              const isUsed = !!inv.used_by
+              const isExpired = new Date(inv.expires_at) < new Date()
+              const url = `${baseUrl}/invite/${inv.token}`
+              return (
+                <div
+                  key={inv.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-sm
+                    ${isUsed || isExpired
+                      ? 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30 opacity-60'
+                      : 'border-gray-200 dark:border-gray-700'
+                    }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`badge text-xs ${
+                        inv.role === 'manager'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                          : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      }`}>
+                        {inv.role === 'manager' ? 'Manažér' : 'Zamestnanec'}
+                      </span>
+                      {isUsed && (
+                        <span className="text-xs text-green-600 dark:text-green-400">
+                          ✓ Použitá (@{inv.used_by_username})
+                        </span>
+                      )}
+                      {!isUsed && isExpired && (
+                        <span className="text-xs text-red-500">Vypršala</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">{url}</p>
+                  </div>
+                  {!isUsed && !isExpired && (
+                    <button
+                      onClick={() => copyLink(inv.token)}
+                      className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 hover:bg-brand-100 transition-colors flex-shrink-0"
+                    >
+                      <Copy size={11} />
+                      {copied === inv.token ? 'Skopírované!' : 'Kopírovať'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteMutation.mutate(inv.id)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex-shrink-0"
+                    title="Zmazať pozvánku"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>

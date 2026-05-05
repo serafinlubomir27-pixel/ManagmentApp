@@ -5,12 +5,16 @@ interface User {
   username: string
   full_name: string
   role: 'admin' | 'manager' | 'employee'
+  bio?: string | null
+  avatar_color?: string
+  timezone?: string
 }
 
 interface AuthContextType {
   user: User | null
   token: string | null
   login: (token: string, user: User) => void
+  updateUser: (partial: Partial<User>) => void
   logout: () => void
   isAdmin: boolean
   isManager: boolean
@@ -34,6 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser)
   }
 
+  const updateUser = (partial: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev
+      const updated = { ...prev, ...partial }
+      localStorage.setItem('user', JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -47,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         token,
         login,
+        updateUser,
         logout,
         isAdmin: user?.role === 'admin',
         isManager: user?.role === 'admin' || user?.role === 'manager',

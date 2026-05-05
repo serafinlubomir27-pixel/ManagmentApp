@@ -81,6 +81,23 @@ export const notificationsApi = {
   checkDeadlines: () => api.post('/notifications/check-deadlines'),
 }
 
+// ── Invites ───────────────────────────────────────────────────────────────────
+export const invitesApi = {
+  create:  (role: string)  => api.post('/invites', { role }),
+  list:    ()              => api.get('/invites'),
+  delete:  (id: number)   => api.delete(`/invites/${id}`),
+  getInfo: (token: string) => api.get(`/invites/${token}/info`),
+  accept:  (token: string, data: { username: string; password: string; full_name: string }) =>
+    api.post(`/invites/${token}/accept`, data),
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+export const calendarApi = {
+  myTasks:       () => api.get('/me/calendar'),
+  getToken:      () => api.get('/me/calendar-token'),
+  generateToken: () => api.post('/me/calendar-token'),
+}
+
 // ── Team ──────────────────────────────────────────────────────────────────────
 export const teamApi = {
   myTeam: () => api.get('/team/'),

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, Settings, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, Settings, Sun, Moon, CalendarDays } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useDarkMode } from '../hooks/useDarkMode'
@@ -11,6 +11,7 @@ import { useRealtimeNotifications } from '../hooks/useRealtimeProject'
 const nav = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
   { to: '/projects',  label: 'Projekty',   icon: FolderKanban },
+  { to: '/calendar',  label: 'Kalendár',   icon: CalendarDays },
   { to: '/team',      label: 'Tím',         icon: Users },
   { to: '/settings',  label: 'Nastavenia', icon: Settings },
 ]
@@ -69,8 +70,11 @@ export default function Layout() {
         <div className="px-3 py-4 border-t border-gray-200 dark:border-gray-800 space-y-1">
           {/* User info */}
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {user?.full_name?.[0]?.toUpperCase() ?? 'U'}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+              style={{ backgroundColor: user?.avatar_color ?? '#6366f1' }}
+            >
+              {(user?.full_name ?? user?.username ?? 'U').split(/[\s_]/).map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.full_name}</p>

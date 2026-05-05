@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
@@ -90,6 +90,15 @@ export default function ProjectDetailPage() {
   const deleteMutation = useMutation({
     mutationFn: (taskId: number) => tasksApi.delete(taskId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+  })
+
+  const subscriptionMutation = useMutation({
+    mutationFn: ({ taskId, field, value }: { taskId: number; field: 'auto_notify' | 'auto_calendar'; value: boolean }) =>
+      tasksApi.update(taskId, { [field]: value }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      qc.invalidateQueries({ queryKey: ['calendar-tasks'] })
+    },
   })
 
   const filtered = tasks.filter((t: any) =>
@@ -388,7 +397,33 @@ export default function ProjectDetailPage() {
                   </tr>
                   {expandedTaskId === t.id && (
                     <tr className="bg-gray-50/50 dark:bg-gray-900/20">
-                      <td colSpan={5} className="px-6 py-4">
+                      <td colSpan={5} className="px-6 py-4 space-y-4">
+                        {/* Subscription toggles */}
+                        <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>
+                          <button
+                            onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_notify', value: !t.auto_notify })}
+                            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                              t.auto_notify
+                                ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                            }`}
+                          >
+                            {t.auto_notify ? <Bell size={11} /> : <BellOff size={11} />}
+                            {t.auto_notify ? 'Notifikácie zapnuté' : 'Notifikácie vypnuté'}
+                          </button>
+                          <button
+                            onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_calendar', value: !t.auto_calendar })}
+                            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                              t.auto_calendar
+                                ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                            }`}
+                          >
+                            <CalendarDays size={11} />
+                            {t.auto_calendar ? 'iCal feed aktívny' : 'iCal feed vypnutý'}
+                          </button>
+                        </div>
                         <CommentSection taskId={t.id} />
                       </td>
                     </tr>

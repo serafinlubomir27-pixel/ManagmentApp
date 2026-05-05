@@ -209,18 +209,23 @@ def get_tasks_assigned_to_user(user_id: int) -> list[dict]:
         conn.close()
 
 
-def get_tasks_with_due_dates(user_id: int) -> list:
-    """Returns all tasks with due_date set, for user (assigned_to OR project owner)"""
+def get_tasks_with_due_dates(user_id: int, only_auto_calendar: bool = False) -> list:
+    """Returns all tasks with due_date set, for user (assigned_to OR project owner).
+    If only_auto_calendar=True, only returns tasks where auto_calendar is enabled (for iCal feed).
+    """
     conn = get_connection()
     try:
+        calendar_filter = "AND t.auto_calendar = TRUE" if only_auto_calendar else ""
         rows = conn.execute(
-            """
+            f"""
             SELECT t.id, t.name, t.status, t.due_date, t.assigned_to,
+                   t.priority, t.auto_notify, t.auto_calendar,
                    p.name as project_name, p.user_id as project_owner
             FROM tasks t
             JOIN projects p ON t.project_id = p.id
             WHERE t.due_date IS NOT NULL AND t.due_date != ''
               AND (t.assigned_to = ? OR p.user_id = ?)
+              {calendar_filter}
             ORDER BY t.due_date
             """,
             (user_id, user_id),
@@ -433,6 +438,7 @@ def update_task_fields(task_id: int, fields: dict) -> None:
         "estimated_hours", "duration", "delay_days", "category",
         "notes", "sort_order", "assigned_to",
         "duration_optimistic", "duration_pessimistic",
+        "auto_notify", "auto_calendar",
     }
     safe = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if not safe:

@@ -124,3 +124,32 @@ def update_user_manager(user_id: int, manager_id: int | None) -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def update_user_profile(user_id: int, fields: dict) -> None:
+    """Update profile fields: full_name, bio, avatar_color, timezone."""
+    allowed = {"full_name", "bio", "avatar_color", "timezone"}
+    safe = {k: v for k, v in fields.items() if k in allowed}
+    if not safe:
+        return
+    set_clause = ", ".join(f"{k} = ?" for k in safe)
+    conn = get_connection()
+    try:
+        conn.execute(
+            f"UPDATE users SET {set_clause} WHERE id = ?",
+            (*safe.values(), user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_user_by_id(user_id: int) -> dict | None:
+    """Return full user dict by id, or None."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        return row_to_dict(cursor.fetchone())
+    finally:
+        conn.close()

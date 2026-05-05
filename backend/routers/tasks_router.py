@@ -24,6 +24,8 @@ class TaskCreate(BaseModel):
     category: str = ""
     duration_optimistic: int | None = None
     duration_pessimistic: int | None = None
+    auto_notify: bool = True
+    auto_calendar: bool = True
 
 
 class TaskUpdate(BaseModel):
@@ -38,6 +40,8 @@ class TaskUpdate(BaseModel):
     category: str | None = None
     duration_optimistic: int | None = None
     duration_pessimistic: int | None = None
+    auto_notify: bool | None = None
+    auto_calendar: bool | None = None
 
 
 # ── Pomocná funkcia ──────────────────────────────────────────────────────────
@@ -83,15 +87,16 @@ def create_task(
         created_by=current_user["id"],
         due_date=body.due_date,
     )
-    # Aktualizuj ďalšie polia ak sú zadané
-    if any([body.priority != "medium", body.duration != 1, body.description, body.category, body.estimated_hours]):
-        task_repo.update_task_fields(task_id, {
-            "priority": body.priority,
-            "duration": body.duration,
-            "description": body.description,
-            "category": body.category,
-            "estimated_hours": body.estimated_hours,
-        })
+    # Aktualizuj ďalšie polia
+    task_repo.update_task_fields(task_id, {
+        "priority": body.priority,
+        "duration": body.duration,
+        "description": body.description,
+        "category": body.category,
+        "estimated_hours": body.estimated_hours,
+        "auto_notify": body.auto_notify,
+        "auto_calendar": body.auto_calendar,
+    })
     # CPM prepočet
     try:
         cpm_manager.recalculate(project_id)
@@ -244,6 +249,15 @@ def get_pert_analysis(
         "probability_by_deadline": result.probability_by_deadline,
         "cpm_duration": result.cpm_result.project_duration,
     }
+
+
+@router.get("/me/calendar")
+def get_my_calendar_tasks(
+    current_user: dict = Depends(get_current_user),
+):
+    """Všetky úlohy s due_date pre aktuálneho používateľa (priradené alebo v jeho projektoch)."""
+    tasks = task_repo.get_tasks_with_due_dates(current_user["id"])
+    return {"tasks": tasks}
 
 
 @router.get("/projects/{project_id}/resources")

@@ -6,6 +6,8 @@ import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import TeamPage from './pages/TeamPage'
 import SettingsPage from './pages/SettingsPage'
+import CalendarPage from './pages/CalendarPage'
+import InvitePage from './pages/InvitePage'
 import Layout from './components/Layout'
 import PWABanner from './components/PWABanner'
 
@@ -18,6 +20,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/invite/:token" element={<InvitePage />} />
       <Route
         path="/"
         element={
@@ -31,6 +34,7 @@ function AppRoutes() {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailPage />} />
         <Route path="team" element={<TeamPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
