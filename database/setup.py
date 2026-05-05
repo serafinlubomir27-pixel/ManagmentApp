@@ -148,7 +148,22 @@ def create_database():
     )
     ''')
 
-    # --- 10. INVITE TOKENS (Team Invitations) ---
+    # --- 10. TIME LOGS (Time Tracking) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS time_logs (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id    INTEGER     NOT NULL,
+        user_id    INTEGER     NOT NULL,
+        hours      REAL        NOT NULL,
+        log_date   TEXT        NOT NULL DEFAULT (date('now')),
+        note       TEXT,
+        created_at TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+    ''')
+
+    # --- 11. INVITE TOKENS (Team Invitations) ---
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS invite_tokens (
         id         INTEGER PRIMARY KEY AUTOINCREMENT,

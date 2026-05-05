@@ -11,6 +11,7 @@ import PertPanel from '../components/PertPanel'
 import ResourcePanel from '../components/ResourcePanel'
 import AiParserModal from '../components/AiParserModal'
 import BurndownChart from '../components/BurndownChart'
+import TimeLogSection from '../components/TimeLogSection'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -436,6 +437,9 @@ export default function ProjectDetailPage() {
                   {expandedTaskId === t.id && (
                     <tr className="bg-gray-50/50 dark:bg-gray-900/20">
                       <td colSpan={5} className="px-6 py-4 space-y-4">
+                        {/* Time tracking */}
+                        <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
+
                         {/* Subscription toggles */}
                         <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>

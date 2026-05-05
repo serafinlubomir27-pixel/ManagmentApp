@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from backend.deps import get_current_user, require_manager_or_admin
-from repositories import task_repo, project_repo
+from repositories import task_repo, project_repo, time_repo
 from logic import cpm_manager
 
 router = APIRouter(tags=["tasks"])
@@ -249,6 +249,59 @@ def get_pert_analysis(
         "probability_by_deadline": result.probability_by_deadline,
         "cpm_duration": result.cpm_result.project_duration,
     }
+
+
+@router.get("/tasks/{task_id}/time")
+def get_time_logs(
+    task_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Return all time logs for a task."""
+    _task_or_404(task_id)
+    logs = time_repo.get_time_logs_for_task(task_id)
+    total = time_repo.get_total_logged_hours(task_id)
+    return {"logs": logs, "total_hours": total}
+
+
+class TimeLogCreate(BaseModel):
+    hours: float
+    log_date: str       # ISO "2026-05-10"
+    note: str = ""
+
+
+@router.post("/tasks/{task_id}/time", status_code=status.HTTP_201_CREATED)
+def log_time(
+    task_id: int,
+    body: TimeLogCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    """Log time spent on a task."""
+    _task_or_404(task_id)
+    if body.hours <= 0:
+        raise HTTPException(status_code=400, detail="Hodiny musia byť kladné číslo")
+    log_id = time_repo.log_time(task_id, current_user["id"], body.hours, body.log_date, body.note)
+    return {"id": log_id, "detail": "Čas zaznamenaný"}
+
+
+@router.delete("/time-logs/{log_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_time_log(
+    log_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Delete own time log entry."""
+    deleted = time_repo.delete_time_log(log_id, current_user["id"])
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Záznam nenájdený alebo nie je tvoj")
+
+
+@router.get("/projects/{project_id}/time-summary")
+def get_project_time_summary(
+    project_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """Time tracking summary per task for a project (estimated vs logged)."""
+    _project_or_404(project_id)
+    return time_repo.get_time_summary_for_project(project_id)
 
 
 @router.get("/me/calendar")

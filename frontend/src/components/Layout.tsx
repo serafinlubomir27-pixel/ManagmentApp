@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, Settings, Sun, Moon, CalendarDays } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, LogOut, Menu, Settings, Sun, Moon, CalendarDays, LayoutGrid } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useDarkMode } from '../hooks/useDarkMode'
@@ -11,6 +11,7 @@ import { useRealtimeNotifications } from '../hooks/useRealtimeProject'
 const nav = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
   { to: '/projects',  label: 'Projekty',   icon: FolderKanban },
+  { to: '/portfolio', label: 'Portfolio',   icon: LayoutGrid },
   { to: '/calendar',  label: 'Kalendár',   icon: CalendarDays },
   { to: '/team',      label: 'Tím',         icon: Users },
   { to: '/settings',  label: 'Nastavenia', icon: Settings },
