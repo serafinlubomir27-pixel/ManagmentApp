@@ -46,6 +46,8 @@ _allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
+    "https://managmentapp.surge.sh",
+    "https://managmentapps.netlify.app",
 ] + [o.strip() for o in _extra_origins.split(",") if o.strip()]
 
 app.add_middleware(
