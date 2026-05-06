@@ -70,7 +70,7 @@ export default function AttachmentSidebar({ projectId }: Props) {
 
       {/* Upload */}
       <FileUploadDropzone
-        onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility })}
+        onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility }).then(() => {})}
         uploading={uploadMutation.isPending}
         error={uploadError}
       />

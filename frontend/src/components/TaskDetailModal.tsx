@@ -249,7 +249,7 @@ export default function TaskDetailModal({ taskId, teamMembers, onClose, onUpdate
               />
               <div className="mt-2">
                 <FileUploadDropzone
-                  onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility })}
+                  onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility }).then(() => {})}
                   uploading={uploadMutation.isPending}
                   error={uploadError}
                 />

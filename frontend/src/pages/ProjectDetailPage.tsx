@@ -76,7 +76,7 @@ function TaskAttachmentSection({ taskId }: { taskId: number }) {
         onVisibilityChange={(id, v) => visibilityMutation.mutate({ id, visibility: v })}
       />
       <FileUploadDropzone
-        onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility })}
+        onUpload={(file, visibility) => uploadMutation.mutateAsync({ file, visibility }).then(() => {})}
         uploading={uploadMutation.isPending}
         error={uploadError}
       />
