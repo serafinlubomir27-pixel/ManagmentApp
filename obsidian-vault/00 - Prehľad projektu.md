@@ -1,20 +1,25 @@
-# 🗂️ ManagmentApp v1.0
+# 🗂️ ManagmentApp — Prehľad projektu
 
-#projekt #python #desktop #mvp
+#projekt #python #desktop #web #mvp #bp
 
 ## Čo to je
 
-Desktopová **projektová manažérska aplikácia** postavená v Pythone s CustomTkinter.
-Pôvodne vznikla ako webová app na platforme **Lovable** (PathFlow), následne prepísaná do Pythonu cez Gemini a dokončená s Claudom.
+**Nodus** — projektová manažérska aplikácia s natívnym CPM (Critical Path Method) algoritmom.
+Vznikla ako bakalárska práca Ľubomíra Serafína. Prešla tromi vývojovými etapami:
+
+- **v1.x** — Python desktopová app (CustomTkinter, SQLite, CPM, Gantt, PDF export)
+- **v2.0** — Web rewrite: FastAPI + React + SQLite, deploynuté na Railway + Surge.sh
 
 ## Cieľová skupina
 
 - Freelanceri a solopodnikatelia
 - Malé tímy (5–20 ľudí)
 - Manažéri s podriadenými
-- Finančný poradcovia, konzultanti
+- **Finanční poradcovia a makléri** (MiFID II compliance, klientský modul)
 
 ## Stav projektu
+
+### v1.x — Desktopová aplikácia
 
 | Etapa | Popis | Stav |
 |-------|-------|------|
@@ -25,43 +30,65 @@ Pôvodne vznikla ako webová app na platforme **Lovable** (PathFlow), následne 
 | Etapa 5 | [[06 - Team Management]] | ✅ Hotovo |
 | Etapa 6 | [[09 - PDF Export]] (reportlab) | ✅ Hotovo |
 | Etapa 7 | UI: šablóny, search, komentáre, prílohy, závislosti | ✅ Hotovo |
-| Bugfixy | [[07 - Bugy & Opravy]] — canvas conflict, farby, dict/tuple | ✅ Hotovo |
 | **v1.0 MVP** | **Kompletné** | 🎉 **Vydané** |
 | v1.1 | Unit testy, search, Gantt scroll, notifikácie, CSV, strom hierarchie | ✅ Hotovo |
 | v1.2 | [[11 - Supabase Migrácia]] — duálny backend SQLite/PostgreSQL | ✅ Hotovo |
-| v2.0 | [[08 - Roadmap v2.0]] — FastAPI + React web frontend | 🔜 Plánované |
+
+### v2.0 — Web aplikácia (FastAPI + React)
+
+| Fáza | Popis | Stav |
+|------|-------|------|
+| Základ | FastAPI + React + JWT auth, CRUD projektov/úloh | ✅ Hotovo |
+| CPM Web | CPM engine na backende, sieťový diagram SVG | ✅ Hotovo |
+| Gantt | SVG Gantt chart | ✅ Hotovo |
+| PERT | Probabilistická analýza (a/m/b odhady) | ✅ Hotovo |
+| Tím | Správa používateľov, rolí, hierarchia | ✅ Hotovo |
+| Fáza 1 | [[13 - Prílohy & Sieťový Diagram\|Prílohy súborov]] — projektové + taskové, 3 úrovne viditeľnosti | ✅ Hotovo |
+| Fáza 2 | [[13 - Prílohy & Sieťový Diagram\|Interaktívny sieťový diagram]] — klik na uzol → TaskDetailModal | ✅ Hotovo |
+| Fáza 3 | [[14 - Klientský Modul]] — klientský register, pipeline, compliance, stretnutia | ✅ Hotovo |
 
 ## Technologický stack
 
-- **GUI:** `customtkinter 5.2+`
-- **Databáza:** `SQLite3` (lokálna) **alebo** `PostgreSQL / Supabase` — [[11 - Supabase Migrácia|duálny backend cez DB_BACKEND env var]]
-- **Grafy:** `matplotlib 3.7+` (FigureCanvasTkAgg)
-- **Obrázky:** `Pillow 10+`
-- **PDF Export:** `reportlab 4.x` → [[09 - PDF Export]]
-- **Algoritmus:** [[02 - CPM Engine|CPM — Critical Path Method]]
+### v2.0 (aktuálny)
 
-## Súbory projektu
+| Vrstva | Technológia |
+|--------|-------------|
+| Backend | FastAPI (Python), SQLite, JWT auth |
+| Frontend | React 18, TypeScript, Tailwind CSS, React Query |
+| Diagramy | SVG (vlastný renderer — CPM sieťový diagram, Gantt) |
+| Deployment | Railway (backend) + Surge.sh (frontend) |
+| Produkčné URL | `https://web-production-b865.up.railway.app` / `https://managmentapp.surge.sh` |
+
+### v1.x (historický)
+
+- **GUI:** `customtkinter 5.2+`
+- **Databáza:** `SQLite3` / `PostgreSQL` cez duálny backend
+- **Grafy:** `matplotlib 3.7+`
+- **PDF Export:** `reportlab 4.x`
+
+## Štruktúra repozitára (v2.0)
 
 ```
 ManagmentApp/
-├── main.py                    ← Entry point, navigácia
-├── database/setup.py          ← Tvorba tabuliek, migrácie
-├── repositories/              ← [[03 - Databáza & Repo|Repository Pattern]]
-├── logic/                     ← Business logika
-│   ├── cpm_engine.py          ← [[02 - CPM Engine|Čistý CPM algoritmus]]
-│   ├── cpm_manager.py         ← Bridge CPM ↔ DB
-│   ├── auth.py
-│   ├── task_manager.py
-│   └── ...
-├── ui/
-│   ├── theme.py               ← Farby, color_blend()
-│   ├── components/sidebar.py
-│   └── screens/               ← [[04 - UI Obrazovky]]
-└── obsidian-vault/            ← Tento trezor
+├── backend/
+│   ├── main.py                  ← FastAPI app, CORS, StaticFiles
+│   ├── routers/                 ← API routery (projects, tasks, clients, attachments...)
+│   ├── repositories/            ← Repository pattern (task_repo, client_repo, attachment_repo...)
+│   ├── database/setup.py        ← SQLite schéma + migrácie
+│   └── uploads/                 ← Nahrané súbory (lokálne)
+├── frontend/
+│   ├── src/
+│   │   ├── pages/               ← ProjectDetailPage, ClientsPage, ClientDetailPage...
+│   │   ├── components/          ← NetworkDiagram, TaskDetailModal, AttachmentSidebar...
+│   │   └── api/client.ts        ← Axios API klient
+│   ├── .env.production          ← VITE_API_URL pre produkčný build
+│   └── vercel.json              ← SPA rewrite pravidlá
+└── obsidian-vault/              ← Táto dokumentácia
 ```
 
 ## Súvisiace poznámky
 
+### v1.x
 - [[01 - Architektúra]]
 - [[02 - CPM Engine]]
 - [[03 - Databáza & Repo]]
@@ -69,7 +96,12 @@ ManagmentApp/
 - [[05 - Gantt & Network]]
 - [[06 - Team Management]]
 - [[07 - Bugy & Opravy]]
-- [[08 - Roadmap v2.0]]
 - [[09 - PDF Export]]
 - [[10 - v1.1 Featury]]
 - [[11 - Supabase Migrácia]]
+
+### v2.0
+- [[08 - Roadmap v2.0]]
+- [[12 - v2.0 Web Aplikácia]]
+- [[13 - Prílohy & Sieťový Diagram]]
+- [[14 - Klientský Modul]]

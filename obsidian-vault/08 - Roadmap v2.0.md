@@ -45,67 +45,88 @@ Detaily: [[11 - Supabase Migrácia]]
 ## REST API / Backend
 
 ```
-FastAPI backend:
-├── /auth          ← login, register, JWT
-├── /projects      ← CRUD projektov
-├── /tasks         ← CRUD úloh + CPM trigger
-├── /dependencies  ← správa závislostí
-├── /team          ← hierarchia, workload
-└── /reports       ← export PDF/Excel
+FastAPI backend (✅ implementované):
+├── /auth               ← login, register, JWT
+├── /projects           ← CRUD projektov
+├── /tasks              ← CRUD úloh + CPM trigger + GET /tasks/{id} detail
+├── /dependencies       ← správa závislostí
+├── /team               ← hierarchia, workload
+├── /projects/{id}/attachments     ← prílohy projektu (Fáza 1)
+├── /projects/{id}/all-attachments ← všetky prílohy (projekt + tasky)
+├── /tasks/{id}/attachments        ← prílohy úlohy (Fáza 1)
+├── /project-attachments/{id}      ← PATCH visibility, DELETE
+├── /task-attachments/{id}         ← PATCH visibility, DELETE
+└── /clients                       ← klientský modul (Fáza 3)
+    ├── /clients/{id}/meetings
+    ├── /clients/{id}/compliance
+    └── /clients/{id}/pipeline
 ```
 
-[[02 - CPM Engine|CPM Engine]] (`cpm_engine.py`) je **čistý Python bez závislostí** → môže bežať priamo na backendu.
+[[02 - CPM Engine|CPM Engine]] (`cpm_engine.py`) je **čistý Python bez závislostí** → beží priamo na FastAPI backende.
 
 ---
 
 ## Web Frontend
 
-Možnosti:
-- **React + TypeScript** (ako pôvodný PathFlow/Lovable)
-- **Next.js** — SSR pre lepší SEO a performance
+✅ **Implementované:** React + TypeScript + Tailwind CSS + React Query
 
-Inspirácia z `lovable projekt/` — PathFlow komponenty.
+Hlavné stránky a komponenty:
+- `ProjectDetailPage` — tasky, Gantt, sieťový diagram, PERT, Zdroje, Burndown
+- `NetworkDiagram` — interaktívny SVG sieťový diagram (klik na uzol → modal)
+- `TaskDetailModal` — dvojsĺpcový modal (info + komentáre + prílohy)
+- `ClientsPage` / `ClientDetailPage` — klientský register (Fáza 3)
 
 ---
 
 ## Team Features
 
-Rozšírenia [[06 - Team Management|Team Management]]:
-
-| Feature | Popis |
-|---------|-------|
-| Rekurzívna hierarchia | Admin vidí celý strom, nie len priamych |
-| Notifikácie | E-mail / push keď je priradená úloha |
-| Kapacitné plánovanie | Koľko % má kto obsadených |
-| Kalendárna integrácia | Google Calendar / Outlook sync |
+| Feature | Stav |
+|---------|------|
+| Správa používateľov (admin) | ✅ Hotovo |
+| Rolový systém (admin/manager/employee) | ✅ Hotovo |
+| Rekurzívna hierarchia (manager → podriadení) | ✅ Hotovo |
+| Workload / time tracking | ✅ Hotovo |
+| Kalendárna integrácia (.ics export) | ✅ Hotovo |
 
 ---
 
 ## Reporting & Export
 
-- Export Gantt chartu do **PDF/PNG**
-- Export task listu do **Excel**
-- Automatické reporty manažérovi (weekly summary)
-- Dashboard s KPI metrikami
+| Feature | Stav |
+|---------|------|
+| Gantt SVG v prehliadači | ✅ Hotovo |
+| PERT analýza (a/m/b, pravdepodobnosť) | ✅ Hotovo |
+| Burndown chart | ✅ Hotovo |
+| PDF report klienta | 🔜 Fáza 4 |
+| Excel export | 🔜 Budúcnosť |
 
 ---
 
 ## Ďalšie features
 
+### Prílohy súborov (Fáza 1) ✅
+Detaily: [[13 - Prílohy & Sieťový Diagram]]
+- Projektové prílohy + taskové prílohy
+- 3 úrovne viditeľnosti: Tím / Manažéri / Len ja
+- AttachmentSidebar v ProjectDetailPage
+
+### Interaktívny sieťový diagram (Fáza 2) ✅
+Detaily: [[13 - Prílohy & Sieťový Diagram]]
+- Klik na uzol → `TaskDetailModal`
+- Editácia úlohy bez opustenia diagramu
+
+### Klientský modul (Fáza 3) ✅
+Detaily: [[14 - Klientský Modul]]
+- Klientský register s MiFID II kategóriami
+- Deal pipeline (Kanban — 7 fáz)
+- Compliance checklist (KYC, AML, suitability...)
+- Log stretnutí s follow-up akciami
+
 ### Šablóny projektov
-✅ **Implementované v v1.0** — `FromTemplateDialog`, `NewProjectDialog`, menu ⚙️ na kartách projektov.
+✅ **Implementované v v1.0** — `FromTemplateDialog`, `NewProjectDialog`
 
 ### Časové sledovanie
-- Stopky na úlohe (`estimated_hours` vs `actual_hours`)
-- Reporty skutočného vs odhadovaného času
-
-### Notifikácie
-- Deadline upozornenia (D-3, D-1)
-- Upozornenie keď dependency je dokončená
-
-### Multi-project dashboard
-- Prehľad všetkých projektov naraz
-- Portfólio health score
+✅ Time log na úlohách (actual_hours vs estimated_hours)
 
 ---
 
