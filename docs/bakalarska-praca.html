@@ -403,6 +403,12 @@
     <div class="toc-line toc-h2"><span>5.9 Migrácia na cloudový backend (v1.2)</span><span>44</span></div>
     <div class="toc-line toc-h3"><span>5.9.1 Duálny backend — base_repo.py</span><span>44</span></div>
     <div class="toc-line toc-h3"><span>5.9.2 PostgreSQL schema a migrácia dát</span><span>45</span></div>
+    <div class="toc-line toc-h2"><span>5.10 Verzia 2.0 — Cloudová SaaS platforma (Nodus)</span><span>29</span></div>
+    <div class="toc-line toc-h2"><span>5.11 Verzia 3.0 — PERT Engine</span><span>30</span></div>
+    <div class="toc-line toc-h2"><span>5.12 Verzia 3.0 — Resource Management</span><span>31</span></div>
+    <div class="toc-line toc-h2"><span>5.13 Prílohy súborov — projektové a taskové (Fáza 1)</span><span>32</span></div>
+    <div class="toc-line toc-h2"><span>5.14 Interaktívny sieťový diagram — TaskDetailModal (Fáza 2)</span><span>33</span></div>
+    <div class="toc-line toc-h2"><span>5.15 Klientský modul pre finančných poradcov (Fáza 3)</span><span>34</span></div>
 
     <div class="toc-line toc-h1" style="margin-top:8pt;"><span>6. Testovanie a hodnotenie</span><span>47</span></div>
     <div class="toc-line toc-h2"><span>6.1 Testovacia stratégia a pokrytie</span><span>47</span></div>
@@ -1165,12 +1171,12 @@ DATABASE_URL=postgresql://postgres.[ref]:[pwd]@[host]:6543/postgres</pre>
     <thead><tr><th>Vrstva</th><th>Technológia</th><th>Nasadenie</th></tr></thead>
     <tbody>
       <tr><td>Backend API</td><td>FastAPI (Python 3.14)</td><td>Railway (cloud)</td></tr>
-      <tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>Netlify (CDN)</td></tr>
+      <tr><td>Frontend</td><td>React 19 + TypeScript + Vite</td><td>Surge.sh (CDN)</td></tr>
       <tr><td>Databáza</td><td>PostgreSQL (Supabase)</td><td>Supabase cloud</td></tr>
       <tr><td>Real-time</td><td>Supabase Realtime (WebSocket)</td><td>Supabase cloud</td></tr>
       <tr><td>Štýlovanie</td><td>Tailwind CSS 4</td><td>—</td></tr>
       <tr><td>State management</td><td>TanStack Query v5</td><td>—</td></tr>
-      <tr><td>PWA</td><td>vite-plugin-pwa + Workbox</td><td>Netlify</td></tr>
+      <tr><td>PWA</td><td>vite-plugin-pwa + Workbox</td><td>Surge.sh</td></tr>
     </tbody>
   </table>
   <div class="table-caption">Tabuľka 5.4 — Technologický stack Nodus v2.0</div>
@@ -1304,6 +1310,122 @@ daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
   </div>
 
   <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>31</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.13 Prílohy súborov — projektové a taskové (Fáza 1)</h2>
+
+  <p>Fáza 1 rozšírila aplikáciu o správu súborov na dvoch úrovniach: projektové prílohy (viazané na celý projekt) a taskové prílohy (viazané na konkrétnu úlohu). Kľúčovou novinkou je trojúrovňový systém viditeľnosti, ktorý umožňuje kontrolovať, kto má prístup k jednotlivým dokumentom.</p>
+
+  <h3>5.13.1 Dátový model</h3>
+
+  <p>Do existujúcej tabuľky <code>task_attachments</code> bol pridaný stĺpec <code>visibility</code> migráciou pri štarte aplikácie. Nová tabuľka <code>project_attachments</code> pokrýva prílohy na úrovni projektu:</p>
+
+  <pre><code>CREATE TABLE project_attachments (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id     INTEGER NOT NULL REFERENCES users(id),
+  file_name   TEXT NOT NULL,
+  file_path   TEXT NOT NULL,
+  file_size   INTEGER,
+  mime_type   TEXT,
+  visibility  TEXT DEFAULT 'team',
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)</code></pre>
+
+  <h3>5.13.2 Tri úrovne viditeľnosti</h3>
+
+  <table class="no-break">
+    <thead><tr><th>Hodnota</th><th>Zobrazenie</th><th>Kto vidí súbor</th></tr></thead>
+    <tbody>
+      <tr><td><code>team</code></td><td>👥 Tím</td><td>Všetci členovia projektu</td></tr>
+      <tr><td><code>managers</code></td><td>👔 Manažéri</td><td>Len používatelia s rolou <code>manager</code> alebo <code>admin</code></td></tr>
+      <tr><td><code>private</code></td><td>🔒 Len ja</td><td>Výhradne nahrávateľ súboru (<code>user_id</code>)</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.6 — Úrovne viditeľnosti príloh</div>
+
+  <p>Filtrovacia logika je implementovaná v <code>attachment_repo.py</code>. Pre rolu <code>admin</code>/<code>manager</code> sú viditeľné súbory s viditeľnosťou <code>team</code>, <code>managers</code> a vlastné <code>private</code>. Pre rolu <code>employee</code> sú dostupné len <code>team</code> a vlastné <code>private</code> súbory.</p>
+
+  <h3>5.13.3 Frontend komponenty</h3>
+
+  <p>Komponenta <code>AttachmentSidebar.tsx</code> je zobrazená napravo od zoznamu úloh v <code>ProjectDetailPage</code> (len na záložke „Úlohy"). Používa React Query pre načítanie a mutácie. Klik na farebnú vizibilitu-odznaku cykluje viditeľnosť (<code>team → managers → private → team</code>) s okamžitým PATCH volaním. Drag &amp; drop upload zabezpečuje komponent <code>FileUploadDropzone.tsx</code> s integrovaným <code>VisibilitySelector</code>.</p>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>32</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.14 Interaktívny sieťový diagram — TaskDetailModal (Fáza 2)</h2>
+
+  <p>Fáza 2 transformovala sieťový CPM diagram z pasívnej vizualizácie na interaktívny nástroj. Klik na ľubovoľný uzol otvára modálne okno s plným detailom úlohy — bez nutnosti navigovať preč z diagramu.</p>
+
+  <h3>5.14.1 Interakcia s diagramom</h3>
+
+  <p>Každý uzol <code>&lt;g&gt;</code> elementu v SVG diagrame dostal obsluhu kliknutia:</p>
+
+  <pre><code>// NetworkDiagram.tsx
+const [selectedTaskId, setSelectedTaskId] = useState&lt;number | null&gt;(null)
+
+// Na každom uzle:
+onClick={() =&gt; setSelectedTaskId(t.id)}
+style={{ cursor: 'pointer' }}</code></pre>
+
+  <div class="note">
+    <strong>Architektúrna poznámka:</strong> Modal musí byť renderovaný <em>mimo</em> SVG elementu — HTML elementy (div, input, textarea) nie sú platnými potomkami SVG. Riešenie: React fragment zabalí SVG aj modal vedľa seba.
+  </div>
+
+  <h3>5.14.2 Layout modálneho okna</h3>
+
+  <p>Modal <code>TaskDetailModal.tsx</code> má dvojsĺpcové rozloženie (max-šírka 3xl, max-výška 90vh s vnútorným scrollom). Ľavý stĺpec obsahuje editovateľné polia úlohy (status, pridelenie, deadline, priorita, popis) a CPM hodnoty v režime len na čítanie (ES/EF/Float/kritická cesta). Pravý stĺpec zobrazuje sekciu komentárov (existujúci <code>CommentSection</code> komponent) a sekciu príloh (<code>AttachmentList</code> + <code>FileUploadDropzone</code>).</p>
+
+  <p>Zatvorenie modalu je možné cez tlačidlo ✕, stlačenie klávesu Escape, alebo kliknutím na stmavený backdrop. Zmeny sa ukladajú okamžite cez existujúci endpoint <code>PATCH /tasks/{id}</code>. Po zatvorení sa invaliduje React Query cache kľúč <code>['tasks', projectId]</code>, čo spôsobí refetch a aktualizáciu diagramu.</p>
+
+  <h3>5.14.3 Nový backend endpoint</h3>
+
+  <p>Pre potreby modalu bol pridaný endpoint <code>GET /tasks/{task_id}</code>, ktorý vracia plný detail úlohy vrátane mena a priezviska priradeného používateľa (JOIN s tabuľkou <code>users</code>). Tento endpoint reuse-uje existujúci repozitárový volanie, rozšírené o JOIN.</p>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>33</span></div>
+</div>
+
+<div class="page">
+  <div class="page-header">ManagmentApp — Bakalárska práca &nbsp;|&nbsp; 5. Implementácia</div>
+
+  <h2>5.15 Klientský modul pre finančných poradcov (Fáza 3)</h2>
+
+  <p>Fáza 3 zaviedla vertikálne rozšírenie aplikácie pre špecifickú cieľovú skupinu — finančných poradcov a maklérov podliehajúcich európskej regulácii MiFID II (Markets in Financial Instruments Directive II). Klient je v tomto module <strong>prvotriedna entita</strong> — nie len tag projektu — s vlastnou tabuľkou, životným cyklom a compliance povinnosťami.</p>
+
+  <h3>5.15.1 Dátový model</h3>
+
+  <p>Fáza 3 pridala štyri nové tabuľky a rozšírila existujúcu tabuľku projektov:</p>
+
+  <table class="no-break">
+    <thead><tr><th>Tabuľka</th><th>Účel</th><th>Kľúčové stĺpce</th></tr></thead>
+    <tbody>
+      <tr><td><code>clients</code></td><td>Register klientov</td><td>category (retail/professional), risk_profile, advisor_id</td></tr>
+      <tr><td><code>client_meetings</code></td><td>Log stretnutí</td><td>meeting_date, notes, follow_ups (JSON pole)</td></tr>
+      <tr><td><code>compliance_items</code></td><td>MiFID II checklist</td><td>item_type, status (pending/complete/expired), due_date, completed_by</td></tr>
+      <tr><td><code>deal_stages</code></td><td>Obchodný pipeline</td><td>stage (7 fáz), deal_value, commission_expected, commission_received</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Tabuľka 5.7 — Nové tabuľky klientského modulu (Fáza 3)</div>
+
+  <h3>5.15.2 MiFID II compliance</h3>
+
+  <p>Compliance checklist pokrýva povinné položky európskej regulácie: KYC (Know Your Customer), suitability assessment (posúdenie vhodnosti produktu), AML kontrolu (Anti-Money Laundering), overenie totožnosti, rizikový dotazník a zmluvnú dokumentáciu. Každá položka sleduje stav (<em>pending / complete / expired</em>) a automaticky indikuje vypršanie platnosti: ak je stav <code>pending</code> a dátum splatnosti je v minulosti, položka je vizuálne označená ako 🔴 <em>Expired</em>.</p>
+
+  <h3>5.15.3 Deal Pipeline</h3>
+
+  <p>Obchodný pipeline je implementovaný ako sedemfázový horizontálny selektor: <em>Lead → Prvý kontakt → Analýza → Návrh → Podpis → Aktívny → Stratený</em>. Pre každý deal sú evidované finančné hodnoty: plánovaná hodnota obchodu, očakávaná a skutočne prijatá provízia v eurách. Komponent <code>PipelineKanban.tsx</code> ukladá zmeny pri <code>onBlur</code> udalosti (nie pri každom stlačení klávesu), čím minimalizuje počet API volaní.</p>
+
+  <div class="note">
+    <strong>Motivácia pre finančný sektor:</strong> Žiadny z analyzovaných PM nástrojov (Asana, Jira, Monday, ClickUp) neposkytuje natívny CPM v kombinácii s MiFID II compliance checklistom a deal pipeline. ManagmentApp tak vypĺňa medzeru pre regulovaných finančných poradcov, ktorí dnes musia kombinovať viacero nástrojov (CRM + PM softvér + Excel pre compliance).
+  </div>
+
+  <div class="page-footer"><span>Kapitola 5 — Implementácia</span><span>34</span></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -1764,7 +1886,7 @@ daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
     <tbody>
       <tr><td>Backend hosting (FastAPI)</td><td>Railway</td><td>~€5 – €20</td><td>Do 1 000 req/min; škáluje automaticky</td></tr>
       <tr><td>Databáza (PostgreSQL)</td><td>Supabase</td><td>€0 – €25</td><td>Free tier: 500 MB; Pro: 8 GB</td></tr>
-      <tr><td>Frontend hosting</td><td>Netlify</td><td>€0 – €19</td><td>Free tier: 100 GB bandwidth/mes.</td></tr>
+      <tr><td>Frontend hosting</td><td>Surge.sh</td><td>€0 – €19</td><td>Free tier: 100 GB bandwidth/mes.</td></tr>
       <tr><td>Doméne + SSL</td><td>Cloudflare</td><td>~€10 – €15</td><td>Ročne ~€120–€180</td></tr>
       <tr><td>E-mailové notifikácie</td><td>Resend / SendGrid</td><td>€0 – €20</td><td>Free tier: 3 000 emailov/mes.</td></tr>
       <tr><td><strong>Celkom (fáza 1: 0–500 users)</strong></td><td>—</td><td><strong>~€15 – €99</strong></td><td>—</td></tr>
@@ -1861,6 +1983,8 @@ daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
 
   <p>Verzia <strong>v3.0</strong> priniesla dva akademicky najvýznamnejšie prínosy práce. <strong>PERT engine</strong> rozširuje CPM o pravdepodobnostné trojbodové odhady (optimistický/najpravdepodobnejší/pesimistický) a umožňuje manažérovi kvantifikovať pravdepodobnosť splnenia deadline pomocou normálneho rozdelenia. <strong>Resource Management modul</strong> prepojil CPM harmonogram so správou kapacity tímu: automatická detekcia over-allocation (súbežné úlohy jednej osoby) je vizualizovaná ako farebne kódovaný resource histogram pre každého člena tímu.</p>
 
+  <p>Implementačné fázy <strong>1 až 3</strong> ďalej obohatili platformu o tri samostatné rozšírenia. <strong>Fáza 1</strong> zaviedla správu súborov s trojúrovňovým systémom viditeľnosti (<em>team / managers / private</em>) na úrovni projektu aj jednotlivých úloh. <strong>Fáza 2</strong> transformovala CPM sieťový diagram na interaktívny nástroj: klik na uzol otvára modálne okno s plnou editáciou úlohy, komentármi a prílohami bez nutnosti opustiť diagram. <strong>Fáza 3</strong> zaviedla klientský modul pre finančných poradcov zahŕňajúci register klientov s MiFID II compliance checklistom, sedemfázový deal pipeline a log stretnutí.</p>
+
   <h2>8.2 Obmedzenia a budúca práca</h2>
 
   <p>Po vydaní verzie 1.2 zostávajú nasledovné oblasti na zlepšenie:</p>
@@ -1876,6 +2000,9 @@ daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
       <tr><td>Row Level Security (RLS)</td><td>PostgreSQL RLS policy pre multi-tenant</td><td>Vysoká</td><td>v3.x</td></tr>
       <tr><td>Len deterministické CPM odhady</td><td>PERT trojbodové odhady + pravdepodobnosť</td><td>Vysoká</td><td>✅ v3.0</td></tr>
       <tr><td>Žiadna správa kapacity tímu</td><td>Resource histogram + over-allocation detekcia</td><td>Stredná</td><td>✅ v3.0</td></tr>
+      <tr><td>Žiadna správa príloh k projektom</td><td>Prílohy s viditeľnosťou (team/managers/private)</td><td>Vysoká</td><td>✅ Fáza 1</td></tr>
+      <tr><td>Sieťový diagram len pasívna vizualizácia</td><td>Klik na uzol → TaskDetailModal</td><td>Stredná</td><td>✅ Fáza 2</td></tr>
+      <tr><td>Žiadna podpora pre finančných poradcov</td><td>Klientský modul — MiFID II, pipeline, stretnutia</td><td>Stredná</td><td>✅ Fáza 3</td></tr>
       <tr><td>Žiadna AI asistencia pri tvorbe úloh</td><td>AI-CPM parser (OpenAI GPT-4o)</td><td>Stredná</td><td>v3.1</td></tr>
     </tbody>
   </table>
@@ -1886,7 +2013,7 @@ daily = [len(day_load.get(d, [])) for d in range(project_duration)]</code></pre>
   <p>Aplikácia Nodus (ManagmentApp v3.0) demonštruje, že moderné webové aplikácie postavené na princípoch čistej architektúry (Repository Pattern, separácia business logiky) sú schopné organicky rásť od desktopového prototypu cez cloudovú SaaS platformu až po pokročilé analytické nástroje — bez prepisovania jadra algoritmov.</p>
 
   <div class="success-box">
-    <strong>Záverečné zhodnotenie:</strong> Všetkých 18 pôvodných funkčných požiadaviek (FR-01 až FR-18) a 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Verzia 3.0 pridala PERT pravdepodobnostné plánovanie, Resource Management s over-allocation detekciou, PWA inštalovateľnosť a real-time Supabase synchronizáciu. Aplikácia Nodus je plne nasadená na https://managmentapps.netlify.app a dostupná verejnosti.
+    <strong>Záverečné zhodnotenie:</strong> Všetkých 18 pôvodných funkčných požiadaviek (FR-01 až FR-18) a 8 nefunkčných požiadaviek (NFR-01 až NFR-08) bolo splnených. Verzia 3.0 pridala PERT pravdepodobnostné plánovanie, Resource Management s over-allocation detekciou, PWA inštalovateľnosť a real-time Supabase synchronizáciu. Implementačné Fázy 1–3 doplnili správu príloh s viditeľnosťou, interaktívny sieťový diagram s TaskDetailModal a klientský modul pre finančných poradcov (MiFID II compliance, deal pipeline). Aplikácia Nodus je plne nasadená na https://managmentapp.surge.sh a dostupná verejnosti.
   </div>
 
   <div class="page-footer"><span>Kapitola 8 — Záver</span><span>54</span></div>
