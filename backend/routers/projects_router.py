@@ -72,6 +72,16 @@ def update_project(
     return {"detail": "Projekt aktualizovaný"}
 
 
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(
+    project_id: int,
+    current_user: dict = Depends(require_manager_or_admin),
+):
+    """Zmazať projekt vrátane úloh, komentárov, príloh a súvisiacich záznamov."""
+    assert_project_access(project_id, current_user)
+    project_repo.delete_project(project_id)
+
+
 @router.get("/templates/list")
 def list_templates(current_user: dict = Depends(get_current_user)):
     """Šablóny projektov vlastnené aktuálnym používateľom."""

@@ -68,6 +68,21 @@ def test_check_deadlines_requires_manager():
     assert client.post("/notifications/check-deadlines", headers=h).status_code == 200
 
 
+# ── DELETE /projects — zmaže projekt aj jeho úlohy (cascade) ─────────────────
+
+def test_delete_project_cascades():
+    h = _admin()
+    pid = client.post("/projects/", json={"name": "Na zmazanie"}, headers=h).json()["id"]
+    tid = client.post(f"/projects/{pid}/tasks", json={"name": "T", "duration": 2}, headers=h).json()["id"]
+    client.post(f"/tasks/{tid}/comments", json={"content": "ahoj"}, headers=h)
+
+    r = client.delete(f"/projects/{pid}", headers=h)
+    assert r.status_code == 204
+
+    assert client.get(f"/projects/{pid}", headers=h).status_code == 404   # projekt preč
+    assert client.get(f"/tasks/{tid}", headers=h).status_code == 404      # úloha tiež (cascade)
+
+
 # ── iCal DTEND — +1 deň aj cez koniec mesiaca (predtým bugnuté pre deň ≥ 28) ──
 
 def test_ical_dtend_next_day_month_end():

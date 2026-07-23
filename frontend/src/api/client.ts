@@ -47,8 +47,9 @@ export const projectsApi = {
   get: (id: number) => api.get(`/projects/${id}`),
   create: (data: { name: string; description?: string; status?: string }) =>
     api.post('/projects/', data),
-  update: (id: number, data: { status?: string; name?: string }) =>
+  update: (id: number, data: { status?: string; name?: string; description?: string }) =>
     api.patch(`/projects/${id}`, data),
+  delete: (id: number) => api.delete(`/projects/${id}`),
   templates: () => api.get('/projects/templates/list'),
 }
 
