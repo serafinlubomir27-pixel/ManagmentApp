@@ -98,10 +98,7 @@ def generate_tasks_from_ai(
                 deps_added += 1
 
     # Recalculate CPM
-    try:
-        cpm_manager.recalculate(project_id)
-    except Exception:
-        pass
+    cpm_manager.recalculate(project_id)
 
     return {
         "created_tasks": len(created_ids),

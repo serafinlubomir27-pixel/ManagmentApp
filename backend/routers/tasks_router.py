@@ -88,11 +88,7 @@ def create_task(
         "auto_notify": body.auto_notify,
         "auto_calendar": body.auto_calendar,
     })
-    # CPM prepočet
-    try:
-        cpm_manager.recalculate(project_id)
-    except Exception:
-        pass  # CPM chyba neblokuje odpoveď
+    cpm_manager.recalculate(project_id)  # loguje chyby interne, nezhodí request
     return {"id": task_id, "detail": "Úloha vytvorená"}
 
 
@@ -127,10 +123,7 @@ def update_task(
     # CPM prepočet — zistíme project_id z task
     task = task_repo.get_task_by_id(task_id)
     if task:
-        try:
-            cpm_manager.recalculate(task["project_id"])
-        except Exception:
-            pass
+        cpm_manager.recalculate(task["project_id"])
 
     return {"detail": "Úloha aktualizovaná"}
 
@@ -312,10 +305,7 @@ def add_dependency(
     task_repo.add_dependency(task_id, depends_on)
     task = task_repo.get_task_by_id(task_id)
     if task:
-        try:
-            cpm_manager.recalculate(task["project_id"])
-        except Exception:
-            pass
+        cpm_manager.recalculate(task["project_id"])
     return {"detail": "Závislosť pridaná"}
 
 

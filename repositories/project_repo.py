@@ -85,6 +85,25 @@ def update_project_status(project_id: int, new_status: str) -> None:
         conn.close()
 
 
+def update_project_fields(project_id: int, fields: dict) -> bool:
+    """Update allowed project fields (name, description, status). Returns True if a row changed."""
+    allowed = {"name", "description", "status"}
+    updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not updates:
+        return False
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            f"UPDATE projects SET {set_clause} WHERE id = ?",
+            list(updates.values()) + [project_id],
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
 def user_has_access(user_id, project_id) -> bool:
     """True if the user owns the project OR has a task assigned in it.
 

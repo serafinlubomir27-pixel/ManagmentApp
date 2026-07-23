@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from backend.deps import get_current_user
+from backend.deps import get_current_user, require_manager_or_admin
 from repositories import notification_repo
 
 router = APIRouter(tags=["notifications"])
@@ -47,8 +47,12 @@ def mark_read(
 
 @router.post("/notifications/check-deadlines")
 def check_deadlines(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_manager_or_admin),
 ):
-    """Interný endpoint: prechádza úlohy a vytvára deadline_warning notifikácie."""
+    """Interný endpoint: prechádza VŠETKY úlohy a vytvára deadline_warning notifikácie.
+
+    Obmedzené na manager/admin — skenuje globálne, nemá ho spúšťať hocikto (spam/DoS).
+    Ideálne volať naplánovane (cron / Supabase Edge Function), nie z klienta.
+    """
     created = notification_repo.check_and_create_deadline_notifications(days_ahead=[1, 3, 7])
     return {"detail": f"Vytvorených {created} nových notifikácií o deadlinoch"}
