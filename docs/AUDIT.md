@@ -17,7 +17,14 @@ ALE medzi tým, čo bakalárka označuje ✅, a „plne funkčná a bezpečná p
 
 Poradie riešenia: **P0 (kritické) → P1 (vysoké) → P2 (lesk/konkurencieschopnosť)**.
 
-> **Stav opráv (2026-07-23):** Fáza 0 — autorizačný balík **hotový v kóde** (P0-1 ✅, P0-2 ✅, P0-3 ✅ migrácia napísaná). Pridaných 15 authz regresných testov (`tests/test_authz.py`), celá sada **79/79 prechádza**. **Zostáva manuálny krok:** spustiť `database/migrations/005_enable_rls.sql` v Supabase SQL Editore. Ďalej: P0-4 (chýbajúce prod tabuľky), P0-5/6/7 (hardening).
+> **Stav opráv (2026-07-23):** **Celá Fáza 0 (P0-1 až P0-7) hotová v kóde** na vetve `fix/phase0-authz` (3 commity). Testy **84/84 prechádzajú** (`tests/test_authz.py` 15× authz, `tests/test_passwords.py` 5× hashovanie).
+> - P0-1/2/3 ✅ — register zamknutý, object-level authz naprieč routermi, RLS migrácia.
+> - P0-4 ✅ — `006_missing_tables.sql` (7 tabuliek + stĺpce) + oprava bugu v `attachment_repo` (task prílohy padali).
+> - P0-5 ✅ — bcrypt heslá s migráciou pri logine (`logic/passwords.py`).
+> - P0-6 ✅ — JWT fail-fast bez `APP_AUTH_KEY` v prode.
+> - P0-7 ✅ — preč default admin z prod schémy; `scripts/create_admin.py` na bootstrap.
+>
+> **Zostávajú manuálne kroky na Supabase/Railway (na tebe):** 1) spustiť `005_enable_rls.sql` a `006_missing_tables.sql` v Supabase SQL Editore; 2) nastaviť `APP_AUTH_KEY` na Railway; 3) vytvoriť admina cez `scripts/create_admin.py`. Potom Fáza 1 (funkcie) a Fáza 2 (lesk).
 
 ---
 
