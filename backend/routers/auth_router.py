@@ -1,8 +1,6 @@
 """POST /auth/login  — prihlásenie, vydanie JWT tokenu."""
 from __future__ import annotations
 
-import hashlib
-
 from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Depends
@@ -10,6 +8,7 @@ from pydantic import BaseModel
 
 from backend.auth import create_access_token
 from backend.deps import get_current_user, require_manager_or_admin
+from logic.passwords import hash_password
 from repositories import user_repo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -81,7 +80,7 @@ def register(
             detail=f"Používateľ '{req.username}' už existuje",
         )
     manager_id = current_user["id"] if current_user.get("role") == "manager" else req.manager_id
-    hashed = hashlib.sha256(req.password.encode()).hexdigest()
+    hashed = hash_password(req.password)
     ok, msg = user_repo.create_user(
         req.username, hashed, req.full_name, requested_role, manager_id
     )
@@ -156,6 +155,6 @@ def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nesprávne aktuálne heslo",
         )
-    new_hashed = hashlib.sha256(body.new_password.encode()).hexdigest()
+    new_hashed = hash_password(body.new_password)
     user_repo.update_password(current_user["id"], new_hashed)
     return {"detail": "Heslo bolo zmenené"}

@@ -11,21 +11,12 @@ Pozn.: env sa nastavuje PRED importom aplikácie, lebo base_repo číta DB_BACKE
 SQLITE_PATH pri importe a backend.main vytvorí tabuľky + seed admina pri štarte.
 """
 import hashlib
-import os
-import tempfile
 
 import pytest
+from fastapi.testclient import TestClient
 
-# ── Izolovaná dočasná SQLite DB + testovací JWT kľúč (nastaviť pred importom) ──
-_db_fd, _DB_PATH = tempfile.mkstemp(suffix=".db")
-os.close(_db_fd)
-os.environ["DB_BACKEND"] = "sqlite"
-os.environ["SQLITE_PATH"] = _DB_PATH
-os.environ["APP_AUTH_KEY"] = "test-only-secret-key-min-32-characters-xx"
-
-from fastapi.testclient import TestClient  # noqa: E402
-
-import backend.main as main  # noqa: E402  (import vytvorí tabuľky + seed admin/admin123)
+# DB + JWT kľúč pripraví conftest.py (spoločná testová SQLite DB).
+import backend.main as main  # noqa: E402
 from repositories import user_repo, project_repo, task_repo, client_repo  # noqa: E402
 
 

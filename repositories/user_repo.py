@@ -1,20 +1,27 @@
 """Repository for all user / auth / hierarchy SQL."""
-import hashlib
-
 from repositories.base_repo import get_connection, row_to_dict, rows_to_dicts
+from logic.passwords import verify_password, hash_password, needs_rehash
 
 
 def get_by_username_and_password(username, password):
-    """Return the user row as a dict if credentials match, else None."""
-    hashed = hashlib.sha256(password.encode()).hexdigest()
+    """Return the user row as a dict if credentials match, else None.
+
+    Podporuje bcrypt aj staré SHA-256 heslá. Ak sa prihlási používateľ so starým
+    SHA-256 hashom, heslo sa transparentne prehashuje na bcrypt (migrácia pri logine).
+    """
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         row = row_to_dict(cursor.fetchone())
-        if row and row.get("password") == hashed:
-            return row
-        return None
+        if not row or not verify_password(password, row.get("password") or ""):
+            return None
+        if needs_rehash(row["password"]):
+            new_hash = hash_password(password)
+            cursor.execute("UPDATE users SET password = ? WHERE id = ?", (new_hash, row["id"]))
+            conn.commit()
+            row["password"] = new_hash
+        return row
     finally:
         conn.close()
 
