@@ -4,7 +4,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import (
+    get_current_user,
+    require_manager_or_admin,
+    assert_project_access,
+    assert_task_access,
+)
 from repositories import task_repo, project_repo, time_repo
 from logic import cpm_manager
 
@@ -44,23 +49,9 @@ class TaskUpdate(BaseModel):
     auto_calendar: bool | None = None
 
 
-# ── Pomocná funkcia ──────────────────────────────────────────────────────────
-
-def _project_or_404(project_id: int):
-    p = project_repo.get_project_by_id(project_id)
-    if not p:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projekt nenájdený")
-    return p
-
-
-def _task_or_404(task_id: int):
-    t = task_repo.get_task_status_and_name(task_id)
-    if not t:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha nenájdená")
-    return t
-
-
 # ── Endpointy ───────────────────────────────────────────────────────────────
+# Poznámka: prístup ku konkrétnemu projektu/úlohe rieši assert_project_access /
+# assert_task_access z backend.deps (kontrolujú vlastníctvo, nie len existenciu).
 
 @router.get("/projects/{project_id}/tasks")
 def list_tasks(
@@ -68,7 +59,7 @@ def list_tasks(
     current_user: dict = Depends(get_current_user),
 ):
     """Zoznam úloh projektu vrátane CPM polí."""
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     return task_repo.get_tasks_for_project_with_cpm(project_id)
 
 
@@ -79,7 +70,7 @@ def create_task(
     current_user: dict = Depends(require_manager_or_admin),
 ):
     """Vytvoriť úlohu v projekte. Po vytvorení spustí CPM prepočet."""
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     task_id = task_repo.create_task(
         project_id=project_id,
         name=body.name,
@@ -111,10 +102,7 @@ def get_task_detail(
     current_user: dict = Depends(get_current_user),
 ):
     """Full task detail — used by TaskDetailModal."""
-    task = task_repo.get_task_by_id(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Úloha nenájdená")
-    return task
+    return assert_task_access(task_id, current_user)
 
 
 @router.patch("/tasks/{task_id}")
@@ -124,7 +112,7 @@ def update_task(
     current_user: dict = Depends(get_current_user),
 ):
     """Aktualizovať úlohu (status, assignee, dátumy...). Spustí CPM prepočet."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
 
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
@@ -153,7 +141,7 @@ def delete_task(
     current_user: dict = Depends(require_manager_or_admin),
 ):
     """Vymazať úlohu."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     task_repo.delete_task(task_id)
 
 
@@ -174,7 +162,7 @@ def get_risk_score(
     from logic.pert_engine import calculate_pert
     from logic.cpm_engine import CPMTask
 
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     tasks = task_repo.get_tasks_for_project_with_cpm(project_id)
 
     if not tasks:
@@ -299,7 +287,7 @@ def get_project_dependencies(
     current_user: dict = Depends(get_current_user),
 ):
     """Všetky závislosti úloh v projekte (pre sieťový diagram)."""
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     return task_repo.get_all_dependencies_for_project(project_id)
 
 
@@ -309,7 +297,7 @@ def get_dependencies(
     current_user: dict = Depends(get_current_user),
 ):
     """Zoznam závislostí úlohy."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     return task_repo.get_dependencies(task_id)
 
 
@@ -320,7 +308,7 @@ def add_dependency(
     current_user: dict = Depends(require_manager_or_admin),
 ):
     """Pridať závislosť úlohy."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     task_repo.add_dependency(task_id, depends_on)
     task = task_repo.get_task_by_id(task_id)
     if task:
@@ -341,7 +329,7 @@ def get_pert_analysis(
     from logic.pert_engine import calculate_pert
     from logic.cpm_engine import CPMTask
 
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     tasks = task_repo.get_tasks_with_pert(project_id)
     deps = task_repo.get_all_dependencies_for_project(project_id)
 
@@ -405,7 +393,7 @@ def get_time_logs(
     current_user: dict = Depends(get_current_user),
 ):
     """Return all time logs for a task."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     logs = time_repo.get_time_logs_for_task(task_id)
     total = time_repo.get_total_logged_hours(task_id)
     return {"logs": logs, "total_hours": total}
@@ -424,7 +412,7 @@ def log_time(
     current_user: dict = Depends(get_current_user),
 ):
     """Log time spent on a task."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     if body.hours <= 0:
         raise HTTPException(status_code=400, detail="Hodiny musia byť kladné číslo")
     log_id = time_repo.log_time(task_id, current_user["id"], body.hours, body.log_date, body.note)
@@ -448,7 +436,7 @@ def get_project_time_summary(
     current_user: dict = Depends(get_current_user),
 ):
     """Time tracking summary per task for a project (estimated vs logged)."""
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     return time_repo.get_time_summary_for_project(project_id)
 
 
@@ -467,7 +455,7 @@ def get_resource_allocation(
     current_user: dict = Depends(get_current_user),
 ):
     """Resource allocation — vyťaženosť členov tímu v čase (podľa CPM ES/EF)."""
-    _project_or_404(project_id)
+    assert_project_access(project_id, current_user)
     tasks = task_repo.get_tasks_for_project_with_cpm(project_id)
 
     # Filtrovanie — len priradené úlohy s platným CPM rozpisem

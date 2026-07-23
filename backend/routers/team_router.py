@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_admin, require_manager_or_admin
+from backend.deps import get_current_user, require_admin, require_manager_or_admin, assert_can_view_user
 from repositories import user_repo, task_repo
 from logic.hierarchy import get_full_tree
 
@@ -44,6 +44,7 @@ def get_workload(
     user = user_repo.get_username_by_id(user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Používateľ nenájdený")
+    assert_can_view_user(user_id, current_user)
     return task_repo.get_workload_for_user(user_id)
 
 

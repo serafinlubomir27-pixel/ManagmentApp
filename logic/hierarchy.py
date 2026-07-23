@@ -1,6 +1,5 @@
-import hashlib
-
 from repositories import user_repo
+from logic.passwords import hash_password
 
 
 def get_my_team(manager_id):
@@ -51,7 +50,7 @@ def get_full_tree(manager_id) -> list[dict]:
 def add_new_member(manager_id, full_name, username, password, role="employee"):
     """Vytvorí nového užívateľa a priradí ho pod aktuálneho manažéra"""
     try:
-        hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        hashed_password = hash_password(password)
         success, message = user_repo.create_user(username, hashed_password, full_name, role, manager_id)
         if not success and "UNIQUE constraint" in message:
             return False, "Užívateľské meno už existuje!"

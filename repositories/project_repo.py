@@ -85,6 +85,30 @@ def update_project_status(project_id: int, new_status: str) -> None:
         conn.close()
 
 
+def user_has_access(user_id, project_id) -> bool:
+    """True if the user owns the project OR has a task assigned in it.
+
+    Used for object-level authorization (IDOR ochrana). Admin sa kontroluje
+    zvlášť vo vrstve deps — tu ide čisto o vzťah user ↔ projekt.
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT 1 FROM projects WHERE id = ? AND user_id = ? LIMIT 1",
+            (project_id, user_id),
+        )
+        if cursor.fetchone() is not None:
+            return True
+        cursor.execute(
+            "SELECT 1 FROM tasks WHERE project_id = ? AND assigned_to = ? LIMIT 1",
+            (project_id, user_id),
+        )
+        return cursor.fetchone() is not None
+    finally:
+        conn.close()
+
+
 def get_project_by_id(project_id):
     """Return a single project dict or None."""
     conn = get_connection()

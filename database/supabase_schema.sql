@@ -134,10 +134,12 @@ CREATE INDEX IF NOT EXISTS idx_deps_task_id       ON task_dependencies(task_id);
 CREATE INDEX IF NOT EXISTS idx_logs_task_id       ON activity_logs(task_id);
 
 -- ============================================================
--- SEED: default admin user (password: admin123)
--- SHA-256("admin123") = 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a
+-- ADMIN ÚČET
 -- ============================================================
-
-INSERT INTO users (username, password, full_name, role)
-VALUES ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a', 'Hlavný Admin', 'admin')
-ON CONFLICT (username) DO NOTHING;
+-- Default admin s known heslom (admin/admin123) bol bezpečnostné riziko a bol
+-- odstránený. Prvého admina vytvor bezpečne bootstrap skriptom s vlastným heslom:
+--
+--   ADMIN_USERNAME=admin ADMIN_PASSWORD='silne-nahodne-heslo' \
+--       python scripts/create_admin.py
+--
+-- (funguje pre Postgres aj SQLite podľa DB_BACKEND / DATABASE_URL, uloží bcrypt hash)

@@ -5,13 +5,17 @@ from repositories.base_repo import get_connection, rows_to_dicts
 
 # ── Visibility helper ──────────────────────────────────────────────────────────
 
-def _visibility_filter(user_role: str, user_id: int) -> tuple[str, list]:
-    """Return SQL WHERE clause fragment and params for visibility filtering."""
+def _visibility_filter(user_role: str, user_id: int, owner_col: str = "user_id") -> tuple[str, list]:
+    """Return SQL WHERE clause fragment and params for visibility filtering.
+
+    owner_col je názov stĺpca s vlastníkom prílohy — líši sa podľa tabuľky:
+    project_attachments má `user_id`, task_attachments má `uploaded_by`.
+    """
     if user_role in ("admin", "manager"):
         # Managers see team + managers; not private of others
-        return "(visibility IN ('team', 'managers') OR user_id = ?)", [user_id]
+        return f"(visibility IN ('team', 'managers') OR {owner_col} = ?)", [user_id]
     # Regular employees: see team files + their own private
-    return "(visibility = 'team' OR user_id = ?)", [user_id]
+    return f"(visibility = 'team' OR {owner_col} = ?)", [user_id]
 
 
 # ── Project attachments ────────────────────────────────────────────────────────
@@ -139,7 +143,7 @@ def get_task_attachments(
     user_id: int,
 ) -> list[dict]:
     """Return task attachments visible to the requesting user."""
-    vis_clause, vis_params = _visibility_filter(user_role, user_id)
+    vis_clause, vis_params = _visibility_filter(user_role, user_id, owner_col="uploaded_by")
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -205,7 +209,7 @@ def get_all_attachments_for_project(
 ) -> dict:
     """Return project attachments + all task attachments for a project."""
     project_files = get_project_attachments(project_id, user_role, user_id)
-    vis_clause, vis_params = _visibility_filter(user_role, user_id)
+    vis_clause, vis_params = _visibility_filter(user_role, user_id, owner_col="uploaded_by")
     conn = get_connection()
     try:
         rows = conn.execute(

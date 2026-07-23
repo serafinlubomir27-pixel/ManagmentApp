@@ -8,8 +8,11 @@ DB_NAME = "my_project_app.db"
 def create_database():
     # Zabezpečíme, aby sa databáza vytvorila v hlavnom priečinku projektu,
     # nie vo vnútri priečinka database/
+    # Cesta k DB je jednotná s repositories/base_repo (rovnaká SQLITE_PATH env
+    # premenná) — inak by setup vytvoril tabuľky v inom súbore, než z ktorého
+    # potom repozitáre čítajú (rozbíja to testy aj custom cesty).
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db_path = os.path.join(base_dir, DB_NAME)
+    db_path = os.path.join(base_dir, os.environ.get("SQLITE_PATH", DB_NAME))
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -309,14 +312,21 @@ def create_database():
         except Exception:
             pass  # Stĺpec už existuje, preskakujeme
 
-    # --- Vytvorenie prvého ADMINA (aby si sa mal ako prihlásiť) ---
+    # --- Vytvorenie prvého ADMINA pre LOKÁLNY vývoj ---
+    # Beží len pre SQLite (lokál). V produkcii (Postgres) sa default admin neseeduje
+    # (supabase_schema.sql) — použi scripts/create_admin.py s vlastným heslom.
+    # Heslo sa dá prepísať cez SEED_ADMIN_PASSWORD.
+    seed_pw = os.environ.get("SEED_ADMIN_PASSWORD", "admin123")
     try:
-        admin_password_hash = hashlib.sha256(b'admin123').hexdigest()
+        admin_password_hash = hashlib.sha256(seed_pw.encode()).hexdigest()
         cursor.execute(
             "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)",
             ('admin', admin_password_hash, 'Hlavný Admin', 'admin'),
         )
-        print("[DB] Vytvoreny pouzivatel: admin / heslo: admin123")
+        if seed_pw == "admin123":
+            print("[DB] VAROVANIE: admin/admin123 je LEN pre lokálny vývoj — zmeň heslo a nikdy nepoužívaj v produkcii!")
+        else:
+            print("[DB] Vytvoreny admin s heslom zo SEED_ADMIN_PASSWORD.")
     except sqlite3.IntegrityError:
         print("[DB] Admin uz existuje, preskakujem vytvaranie.")
 

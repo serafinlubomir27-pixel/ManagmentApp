@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
 from backend.auth import decode_token
+from repositories import project_repo, task_repo, client_repo
+from logic.hierarchy import get_full_tree
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -37,3 +39,62 @@ def require_manager_or_admin(current_user: dict = Depends(get_current_user)) -> 
     if current_user.get("role") not in ("admin", "manager"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Vyžaduje sa rola manager alebo admin")
     return current_user
+
+
+# ── Object-level authorization (BOLA/IDOR ochrana) ───────────────────────────
+# Tieto helpery vynucujú, že používateľ má prístup ku KONKRÉTNEMU objektu —
+# nie len že objekt existuje. Bez nich vie ktokoľvek prihlásený čítať/meniť
+# cudzie projekty, úlohy a klientov len uhádnutím ID.
+
+def assert_project_access(project_id: int, current_user: dict) -> dict:
+    """Vráti projekt ak naň má používateľ prístup, inak 404/403.
+
+    Prístup má: admin, vlastník projektu, alebo osoba s priradenou úlohou v ňom.
+    """
+    project = project_repo.get_project_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projekt nenájdený")
+    if current_user.get("role") == "admin":
+        return project
+    if project.get("user_id") == current_user["id"]:
+        return project
+    if project_repo.user_has_access(current_user["id"], project_id):
+        return project
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáš prístup k tomuto projektu")
+
+
+def assert_task_access(task_id: int, current_user: dict) -> dict:
+    """Vráti úlohu ak má používateľ prístup k jej projektu, inak 404/403."""
+    task = task_repo.get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha nenájdená")
+    assert_project_access(task["project_id"], current_user)
+    return task
+
+
+def assert_client_access(client_id: int, current_user: dict) -> dict:
+    """Vráti klienta ak má používateľ prístup, inak 404/403.
+
+    Prístup má: admin/manager (vidia všetkých klientov), alebo advisor daného klienta.
+    """
+    client = client_repo.get_client_by_id(client_id)
+    if not client or client.get("archived"):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Klient nenájdený")
+    if current_user.get("role") in ("admin", "manager"):
+        return client
+    if client.get("advisor_id") == current_user["id"]:
+        return client
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáš prístup k tomuto klientovi")
+
+
+def assert_can_view_user(target_user_id: int, current_user: dict) -> None:
+    """Povolené: admin (ktokoľvek), používateľ sám seba, manažér svojich (aj nepriamych) podriadených."""
+    if current_user.get("role") == "admin":
+        return
+    if target_user_id == current_user["id"]:
+        return
+    if current_user.get("role") == "manager":
+        subordinate_ids = {m["id"] for m in get_full_tree(current_user["id"])}
+        if target_user_id in subordinate_ids:
+            return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáš prístup k tomuto používateľovi")

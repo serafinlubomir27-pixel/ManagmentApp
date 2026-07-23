@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import get_current_user, require_manager_or_admin, assert_project_access
 from repositories import task_repo, project_repo
 from logic import ai_parser, cpm_manager
 
@@ -55,9 +55,7 @@ def generate_tasks_from_ai(
     """Parse description + create all tasks in the project with dependencies.
     Returns list of created task ids.
     """
-    p = project_repo.get_project_by_id(project_id)
-    if not p:
-        raise HTTPException(status_code=404, detail="Projekt nenájdený")
+    assert_project_access(project_id, current_user)
 
     if len(body.description.strip()) < 10:
         raise HTTPException(status_code=400, detail="Popis projektu je príliš krátky")

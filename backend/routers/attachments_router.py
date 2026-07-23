@@ -7,7 +7,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 
-from backend.deps import get_current_user
+from backend.deps import get_current_user, assert_project_access, assert_task_access
 from repositories import attachment_repo, project_repo, task_repo
 
 router = APIRouter(tags=["attachments"])
@@ -43,8 +43,7 @@ async def upload_project_attachment(
     visibility: str = Form("team"),
     current_user: dict = Depends(get_current_user),
 ):
-    if not project_repo.get_project_by_id(project_id):
-        raise HTTPException(404, "Projekt nenájdený")
+    assert_project_access(project_id, current_user)
     if visibility not in ALLOWED_VISIBILITY:
         raise HTTPException(400, "Neplatná viditeľnosť")
 
@@ -66,8 +65,7 @@ def list_project_attachments(
     project_id: int,
     current_user: dict = Depends(get_current_user),
 ):
-    if not project_repo.get_project_by_id(project_id):
-        raise HTTPException(404, "Projekt nenájdený")
+    assert_project_access(project_id, current_user)
     return attachment_repo.get_project_attachments(
         project_id, current_user["role"], current_user["id"]
     )
@@ -79,8 +77,7 @@ def list_all_project_attachments(
     current_user: dict = Depends(get_current_user),
 ):
     """Combined view: project files + all task files in one response."""
-    if not project_repo.get_project_by_id(project_id):
-        raise HTTPException(404, "Projekt nenájdený")
+    assert_project_access(project_id, current_user)
     return attachment_repo.get_all_attachments_for_project(
         project_id, current_user["role"], current_user["id"]
     )
@@ -127,8 +124,7 @@ async def upload_task_attachment(
     visibility: str = Form("team"),
     current_user: dict = Depends(get_current_user),
 ):
-    if not task_repo.get_task_by_id(task_id):
-        raise HTTPException(404, "Úloha nenájdená")
+    assert_task_access(task_id, current_user)
     if visibility not in ALLOWED_VISIBILITY:
         raise HTTPException(400, "Neplatná viditeľnosť")
 
@@ -150,8 +146,7 @@ def list_task_attachments(
     task_id: int,
     current_user: dict = Depends(get_current_user),
 ):
-    if not task_repo.get_task_by_id(task_id):
-        raise HTTPException(404, "Úloha nenájdená")
+    assert_task_access(task_id, current_user)
     return attachment_repo.get_task_attachments(
         task_id, current_user["role"], current_user["id"]
     )

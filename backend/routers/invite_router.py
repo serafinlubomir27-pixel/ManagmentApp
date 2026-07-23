@@ -8,13 +8,13 @@ POST   /invites/{token}/accept — public: register via invite link
 """
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from backend.deps import get_current_user, require_manager_or_admin
+from logic.passwords import hash_password
 from repositories import invite_repo, user_repo
 
 router = APIRouter(tags=["invites"])
@@ -124,7 +124,7 @@ def accept_invite(token: str, body: AcceptInviteRequest):
     if user_repo.username_exists(username):
         raise HTTPException(status_code=409, detail=f"Používateľ '{username}' už existuje")
 
-    hashed = hashlib.sha256(body.password.encode()).hexdigest()
+    hashed = hash_password(body.password)
     ok, msg = user_repo.create_user(username, hashed, body.full_name.strip(), invite["role"], None)
     if not ok:
         raise HTTPException(status_code=400, detail=msg)

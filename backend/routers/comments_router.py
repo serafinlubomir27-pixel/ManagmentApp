@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user
+from backend.deps import get_current_user, assert_task_access
 from repositories import comment_repo, task_repo
 
 router = APIRouter(tags=["comments"])
@@ -19,20 +19,13 @@ class CommentCreate(BaseModel):
     content: str
 
 
-def _task_or_404(task_id: int):
-    t = task_repo.get_task_status_and_name(task_id)
-    if not t:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha nenájdená")
-    return t
-
-
 @router.get("/tasks/{task_id}/comments")
 def list_comments(
     task_id: int,
     current_user: dict = Depends(get_current_user),
 ):
     """Zoznam komentárov pre danú úlohu."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     return comment_repo.get_comments_for_task(task_id)
 
 
@@ -43,7 +36,7 @@ def create_comment(
     current_user: dict = Depends(get_current_user),
 ):
     """Pridať komentár k úlohe."""
-    _task_or_404(task_id)
+    assert_task_access(task_id, current_user)
     if not body.content.strip():
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Komentár nesmie byť prázdny")
     comment = comment_repo.create_comment(

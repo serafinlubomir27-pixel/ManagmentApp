@@ -183,6 +183,16 @@ def add_compliance_item(
         conn.close()
 
 
+def get_compliance_item(item_id: int) -> dict | None:
+    """Return a single compliance item (incl. its client_id) or None — pre kontrolu prístupu."""
+    conn = get_connection()
+    try:
+        row = conn.execute("SELECT * FROM compliance_items WHERE id = ?", (item_id,)).fetchone()
+        return row_to_dict(row)
+    finally:
+        conn.close()
+
+
 def get_compliance_items(client_id: int) -> list[dict]:
     conn = get_connection()
     try:

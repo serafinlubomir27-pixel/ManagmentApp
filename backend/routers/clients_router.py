@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user
+from backend.deps import get_current_user, assert_client_access
 from repositories import client_repo
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -60,16 +60,9 @@ class DealUpdate(BaseModel):
     notes: str | None = None
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-def _client_or_404(client_id: int) -> dict:
-    c = client_repo.get_client_by_id(client_id)
-    if not c or c.get("archived"):
-        raise HTTPException(status_code=404, detail="Klient nenájdený")
-    return c
-
-
 # ── Clients CRUD ───────────────────────────────────────────────────────────────
+# Poznámka: prístup ku konkrétnemu klientovi rieši assert_client_access z backend.deps
+# (admin/manager vidia všetkých, inak len advisor daného klienta).
 
 @router.get("/pipeline/all")
 def get_all_pipeline(current_user: dict = Depends(get_current_user)):
@@ -107,7 +100,7 @@ def create_client(
 
 @router.get("/{client_id}")
 def get_client(client_id: int, current_user: dict = Depends(get_current_user)):
-    c = _client_or_404(client_id)
+    c = assert_client_access(client_id, current_user)
     projects = client_repo.get_client_projects(client_id)
     deal = client_repo.get_deal(client_id)
     return {**c, "projects": projects, "deal": deal}
@@ -119,7 +112,7 @@ def update_client(
     body: ClientUpdate,
     current_user: dict = Depends(get_current_user),
 ):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     fields = {k: v for k, v in body.model_dump().items() if v is not None}
     client_repo.update_client(client_id, fields)
     return {"detail": "Klient aktualizovaný"}
@@ -132,7 +125,7 @@ def archive_client(
 ):
     if current_user["role"] not in ("admin", "manager"):
         raise HTTPException(403, "Len manažér môže archivovať klientov")
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     client_repo.archive_client(client_id)
 
 
@@ -144,7 +137,7 @@ def link_project(
 ):
     if current_user["role"] not in ("admin", "manager"):
         raise HTTPException(403, "Len manažér môže priraďovať projekty")
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     client_repo.link_project_to_client(project_id, client_id)
     return {"detail": "Projekt priradený ku klientovi"}
 
@@ -153,7 +146,7 @@ def link_project(
 
 @router.get("/{client_id}/meetings")
 def list_meetings(client_id: int, current_user: dict = Depends(get_current_user)):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     return client_repo.get_meetings(client_id)
 
 
@@ -164,7 +157,7 @@ def add_meeting(
     current_user: dict = Depends(get_current_user),
 ):
     import json
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     meeting_id = client_repo.add_meeting(
         client_id=client_id,
         user_id=current_user["id"],
@@ -190,7 +183,7 @@ def delete_meeting(
 
 @router.get("/{client_id}/compliance")
 def list_compliance(client_id: int, current_user: dict = Depends(get_current_user)):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     return client_repo.get_compliance_items(client_id)
 
 
@@ -200,7 +193,7 @@ def add_compliance(
     body: ComplianceCreate,
     current_user: dict = Depends(get_current_user),
 ):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     item_id = client_repo.add_compliance_item(
         client_id=client_id,
         item_type=body.item_type,
@@ -216,6 +209,10 @@ def update_compliance(
     body: ComplianceUpdate,
     current_user: dict = Depends(get_current_user),
 ):
+    item = client_repo.get_compliance_item(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Compliance položka nenájdená")
+    assert_client_access(item["client_id"], current_user)
     fields = {k: v for k, v in body.model_dump().items() if v is not None}
     if "status" in fields and fields["status"] == "complete":
         from datetime import datetime
@@ -229,7 +226,7 @@ def update_compliance(
 
 @router.get("/{client_id}/pipeline")
 def get_pipeline(client_id: int, current_user: dict = Depends(get_current_user)):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     return client_repo.get_deal(client_id) or {}
 
 
@@ -239,7 +236,7 @@ def update_pipeline(
     body: DealUpdate,
     current_user: dict = Depends(get_current_user),
 ):
-    _client_or_404(client_id)
+    assert_client_access(client_id, current_user)
     if body.stage not in client_repo.DEAL_STAGES:
         raise HTTPException(400, f"Neplatná fáza. Platné: {client_repo.DEAL_STAGES}")
     client_repo.upsert_deal(

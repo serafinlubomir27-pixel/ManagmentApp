@@ -6,10 +6,18 @@ from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 
-SECRET_KEY = (
-    os.environ.get("APP_AUTH_KEY")
-    or "change-me-in-production-use-32-chars!"
-)
+SECRET_KEY = os.environ.get("APP_AUTH_KEY")
+if not SECRET_KEY:
+    # V produkcii (Postgres/Supabase) je APP_AUTH_KEY POVINNÝ — bez neho by boli
+    # JWT tokeny falšovateľné cez známy default. Fail-fast pri štarte.
+    if os.environ.get("DB_BACKEND", "sqlite").strip().lower() == "postgres":
+        raise RuntimeError(
+            "APP_AUTH_KEY nie je nastavený. V produkcii (DB_BACKEND=postgres) je povinný — "
+            "nastav ho v prostredí (napr. Railway) na min. 32 náhodných znakov."
+        )
+    # Len pre lokálny vývoj so SQLite — NIKDY nepoužívať v produkcii.
+    SECRET_KEY = "dev-only-insecure-secret-do-not-use-in-production-0123456789"
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hodín
 
