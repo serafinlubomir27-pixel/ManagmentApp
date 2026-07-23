@@ -24,7 +24,13 @@ Poradie riešenia: **P0 (kritické) → P1 (vysoké) → P2 (lesk/konkurenciesch
 > - P0-6 ✅ — JWT fail-fast bez `APP_AUTH_KEY` v prode.
 > - P0-7 ✅ — preč default admin z prod schémy; `scripts/create_admin.py` na bootstrap.
 >
-> **Zostávajú manuálne kroky na Supabase/Railway (na tebe):** 1) spustiť `005_enable_rls.sql` a `006_missing_tables.sql` v Supabase SQL Editore; 2) nastaviť `APP_AUTH_KEY` na Railway; 3) vytvoriť admina cez `scripts/create_admin.py`. Potom Fáza 1 (funkcie) a Fáza 2 (lesk).
+> **Zostávajú manuálne kroky na Supabase/Railway (na tebe):** 1) spustiť `005_enable_rls.sql` a `006_missing_tables.sql` v Supabase SQL Editore; 2) nastaviť `APP_AUTH_KEY` na Railway; 3) vytvoriť admina cez `scripts/create_admin.py`.
+>
+> **Fáza 1 — batch 1 (2026-07-23, vetva `feat/phase1-completeness`, testy 88/88):**
+> - 🔴 **KRITICKÝ bug nájdený a opravený:** routery volali `cpm_manager.recalculate()`, ale existovala len `recalculate_project_cpm` → `AttributeError` prehltnutý tichým `except: pass`. **CPM sa po zmene úloh cez web API NIKDY neprepočítal** — es/ef/ls/lf/is_critical ostávali 0, takže Gantt/sieťový diagram/PERT/kritická cesta zobrazovali prázdne dáta. Pridaný `cpm_manager.recalculate()` (loguje, nezhadzuje request) + odstránené tiché prehĺtanie na 4 miestach. Dôkaz: `tests/test_phase1.py::test_cpm_actually_recalculates_via_api`.
+> - P1-4 ✅ `update_project` už mení aj name/description (nie len status).
+> - P1-6 ✅ iCal DTEND cez `timedelta` (bolo zle pre deň ≥ 28).
+> - P1-2 ✅ `check-deadlines` obmedzené na manager/admin.
 
 ---
 
