@@ -83,9 +83,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-xs text-center text-gray-400">
-          Demo: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">admin</code> / <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">admin123</code>
-        </p>
       </div>
     </div>
   )

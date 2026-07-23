@@ -6,7 +6,7 @@ Private endpoint: GET /me/calendar-token      → get current token
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import PlainTextResponse
@@ -56,11 +56,11 @@ def _build_ical(tasks: list[dict], calendar_name: str = "Nodus úlohy") -> str:
         due_ymd = t["due_date"][:10]
         ical_date = _ical_date(due_ymd)
 
-        # DTEND = next day (DATE-only events are exclusive end)
+        # DTEND = next day (DATE-only events are exclusive end).
+        # (Predtým to bolo počítané ručne a pre dni ≥ 28 nesprávne — timedelta to rieši
+        #  korektne aj cez koniec mesiaca a priestupné roky.)
         due_dt = datetime.strptime(due_ymd, "%Y-%m-%d")
-        next_day = due_dt.replace(day=due_dt.day + 1) if due_dt.day < 28 else \
-            datetime(due_dt.year + (due_dt.month // 12), (due_dt.month % 12) + 1, 1)
-        end_date = next_day.strftime("%Y%m%d")
+        end_date = (due_dt + timedelta(days=1)).strftime("%Y%m%d")
 
         uid = f"task-{t['id']}@nodus.app"
         status_str = _ICAL_STATUS.get(t.get("status", "pending"), "NEEDS-ACTION")

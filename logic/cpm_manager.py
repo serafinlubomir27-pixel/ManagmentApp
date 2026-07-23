@@ -4,8 +4,27 @@ Fetches tasks + dependencies, runs CPM, saves results back.
 """
 from __future__ import annotations
 
+import logging
+
 from logic.cpm_engine import CPMTask, CPMResult, calculate_cpm, calculate_health_score
 from repositories import task_repo
+
+logger = logging.getLogger(__name__)
+
+
+def recalculate(project_id: int) -> CPMResult | None:
+    """Prepočíta CPM pre projekt a uloží výsledky. Chyby zaloguje a NEZHODÍ request
+    (vráti None). Toto je verejné API pre routery — volať po každej zmene úloh/závislostí.
+
+    Pozn.: routery predtým volali práve `cpm_manager.recalculate(...)`, ale existovala
+    len `recalculate_project_cpm` → AttributeError, ktorý tiché `except: pass` prehltlo,
+    takže CPM sa v skutočnosti nikdy neprepočítal. Táto funkcia to naprávala.
+    """
+    try:
+        return recalculate_project_cpm(project_id)
+    except Exception:
+        logger.exception("CPM prepočet zlyhal pre projekt %s", project_id)
+        return None
 
 
 def recalculate_project_cpm(project_id: int) -> CPMResult:

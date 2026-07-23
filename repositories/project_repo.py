@@ -85,6 +85,25 @@ def update_project_status(project_id: int, new_status: str) -> None:
         conn.close()
 
 
+def update_project_fields(project_id: int, fields: dict) -> bool:
+    """Update allowed project fields (name, description, status). Returns True if a row changed."""
+    allowed = {"name", "description", "status"}
+    updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not updates:
+        return False
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            f"UPDATE projects SET {set_clause} WHERE id = ?",
+            list(updates.values()) + [project_id],
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
 def user_has_access(user_id, project_id) -> bool:
     """True if the user owns the project OR has a task assigned in it.
 
@@ -105,6 +124,39 @@ def user_has_access(user_id, project_id) -> bool:
             (project_id, user_id),
         )
         return cursor.fetchone() is not None
+    finally:
+        conn.close()
+
+
+def delete_project(project_id: int) -> bool:
+    """Zmaž projekt a všetky závislé záznamy (manuálny cascade).
+
+    SQLite má vo výdefaulte vypnuté FK enforcement a schéma má nekonzistentné
+    ON DELETE pravidlá, takže deti mažeme explicitne, nech neostanú siroty.
+    Vráti True, ak sa projekt reálne zmazal.
+    """
+    conn = get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM tasks WHERE project_id = ?", (project_id,))
+        task_ids = [row["id"] for row in cur.fetchall()]
+
+        if task_ids:
+            ph = ",".join("?" for _ in task_ids)
+            conn.execute(
+                f"DELETE FROM task_dependencies WHERE task_id IN ({ph}) OR depends_on_task_id IN ({ph})",
+                task_ids + task_ids,
+            )
+            for table in ("comments", "task_comments", "task_attachments", "time_logs", "activity_logs"):
+                conn.execute(f"DELETE FROM {table} WHERE task_id IN ({ph})", task_ids)
+            conn.execute(f"DELETE FROM notifications WHERE task_id IN ({ph})", task_ids)
+
+        conn.execute("DELETE FROM notifications WHERE project_id = ?", (project_id,))
+        conn.execute("DELETE FROM project_attachments WHERE project_id = ?", (project_id,))
+        conn.execute("DELETE FROM tasks WHERE project_id = ?", (project_id,))
+        deleted = conn.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+        conn.commit()
+        return deleted.rowcount > 0
     finally:
         conn.close()
 
