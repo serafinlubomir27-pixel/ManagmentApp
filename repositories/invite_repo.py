@@ -7,14 +7,18 @@ from datetime import datetime, timezone
 from repositories.base_repo import get_connection, row_to_dict
 
 
-def create_invite(created_by: int, role: str = "employee") -> str:
-    """Create a new invite token. Returns the token string."""
+def create_invite(created_by: int, organization_id: int, role: str = "employee") -> str:
+    """Create a new invite token bound to an organization. Returns the token string.
+
+    organization_id je povinné — pozvánka smie pridať používateľa len do organizácie
+    toho, kto ju vytvoril.
+    """
     token = str(uuid.uuid4())
     conn = get_connection()
     try:
         conn.execute(
-            "INSERT INTO invite_tokens (token, role, created_by) VALUES (?, ?, ?)",
-            (token, role, created_by),
+            "INSERT INTO invite_tokens (token, role, created_by, organization_id) VALUES (?, ?, ?, ?)",
+            (token, role, created_by, organization_id),
         )
         conn.commit()
         return token
@@ -27,7 +31,8 @@ def get_invite(token: str) -> dict | None:
     conn = get_connection()
     try:
         row = conn.execute(
-            """SELECT id, token, role, created_by, used_by, used_at, expires_at, created_at
+            """SELECT id, token, role, created_by, used_by, used_at, expires_at, created_at,
+                      organization_id
                FROM invite_tokens WHERE token = ?""",
             (token,),
         ).fetchone()

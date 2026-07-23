@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import get_current_user, require_manager_or_admin, current_org_id
 from logic.passwords import hash_password
 from repositories import invite_repo, user_repo
 
@@ -78,7 +78,7 @@ def create_invite(
     """Create a new invite link (valid 7 days)."""
     if body.role not in ("employee", "manager"):
         raise HTTPException(status_code=400, detail="Rola musí byť 'employee' alebo 'manager'")
-    token = invite_repo.create_invite(current_user["id"], body.role)
+    token = invite_repo.create_invite(current_user["id"], current_org_id(current_user), body.role)
     return {"token": token, "detail": "Pozvánka vytvorená"}
 
 
@@ -125,7 +125,10 @@ def accept_invite(token: str, body: AcceptInviteRequest):
         raise HTTPException(status_code=409, detail=f"Používateľ '{username}' už existuje")
 
     hashed = hash_password(body.password)
-    ok, msg = user_repo.create_user(username, hashed, body.full_name.strip(), invite["role"], None)
+    # Rola AJ organizácia pochádzajú z pozvánky — nie zo vstupu používateľa.
+    ok, msg = user_repo.create_user(
+        username, hashed, body.full_name.strip(), invite["role"], None, invite["organization_id"]
+    )
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
 

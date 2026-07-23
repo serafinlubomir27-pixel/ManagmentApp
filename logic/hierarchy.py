@@ -11,15 +11,15 @@ def get_my_team(manager_id):
         return []
 
 
-def get_full_tree(manager_id) -> list[dict]:
-    """Vráti celý strom podriadených rekurzívne (BFS).
+def get_full_tree(manager_id, organization_id) -> list[dict]:
+    """Vráti celý strom podriadených rekurzívne (BFS) v rámci jednej organizácie.
 
     Každý člen dostane naviac kľúč 'depth' (0 = priamy podriadeý,
     1 = podriadeý podriadeého, ...) a 'manager_name' pre zobrazenie.
     Zastavuje na max hĺbke 10 ako ochrana voči cyklom v dátach.
     """
     MAX_DEPTH = 10
-    all_users = {u["id"]: u for u in user_repo.get_all_users()}
+    all_users = {u["id"]: u for u in user_repo.get_all_users(organization_id)}
     result: list[dict] = []
     visited: set[int] = {manager_id}
 
@@ -47,11 +47,13 @@ def get_full_tree(manager_id) -> list[dict]:
     return result
 
 
-def add_new_member(manager_id, full_name, username, password, role="employee"):
-    """Vytvorí nového užívateľa a priradí ho pod aktuálneho manažéra"""
+def add_new_member(manager_id, full_name, username, password, organization_id, role="employee"):
+    """Vytvorí nového užívateľa v danej organizácii a priradí ho pod aktuálneho manažéra"""
     try:
         hashed_password = hash_password(password)
-        success, message = user_repo.create_user(username, hashed_password, full_name, role, manager_id)
+        success, message = user_repo.create_user(
+            username, hashed_password, full_name, role, manager_id, organization_id
+        )
         if not success and "UNIQUE constraint" in message:
             return False, "Užívateľské meno už existuje!"
         return success, message

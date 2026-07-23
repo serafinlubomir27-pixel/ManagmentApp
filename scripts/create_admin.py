@@ -15,7 +15,7 @@ import sys
 # Repo root na sys.path (aby fungovali importy repositories.* / logic.*)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from repositories import user_repo  # noqa: E402
+from repositories import user_repo, org_repo  # noqa: E402
 from logic.passwords import hash_password  # noqa: E402
 
 
@@ -36,7 +36,13 @@ def main() -> int:
         user_repo.update_password(existing["id"], hashed)
         print(f"OK: heslo admina '{username}' bolo aktualizované (bcrypt).")
     else:
-        ok, msg = user_repo.create_user(username, hashed, "Administrator", "admin", None)
+        # Admin musí patriť do organizácie — použi existujúcu "default", inak ju vytvor.
+        org_slug = os.environ.get("ADMIN_ORG_SLUG", "default")
+        org = org_repo.get_organization_by_slug(org_slug)
+        org_id = org["id"] if org else org_repo.create_organization(
+            os.environ.get("ADMIN_ORG_NAME", "Default"), org_slug
+        )
+        ok, msg = user_repo.create_user(username, hashed, "Administrator", "admin", None, org_id)
         if ok:
             print(f"OK: admin '{username}' bol vytvorený (bcrypt).")
         else:

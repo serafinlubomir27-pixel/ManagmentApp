@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 # DB + JWT kľúč pripraví conftest.py (spoločná testová SQLite DB).
 import backend.main as main  # noqa: E402
-from repositories import user_repo, project_repo, task_repo, client_repo  # noqa: E402
+from repositories import user_repo, project_repo, task_repo, client_repo, org_repo  # noqa: E402
 
 
 def _sha(pwd: str) -> str:
@@ -32,21 +32,25 @@ def client():
 @pytest.fixture(scope="module")
 def seed():
     """Vytvorí testovacích používateľov + dáta. Vráti mapu mien na id."""
-    # admin (id 1) je nasadený automaticky v create_database()
-    user_repo.create_user("alice", _sha("pw"), "Alice Manager", "manager", None)   # id 2
-    user_repo.create_user("bob", _sha("pw"), "Bob Employee", "employee", None)     # id 3
-    user_repo.create_user("carol", _sha("pw"), "Carol Employee", "employee", None) # id 4
+    # admin (id 1) je nasadený automaticky v create_database(), v "default" organizácii
+    org_id = org_repo.get_organization_by_slug("default")["id"]
 
-    ids = {u["username"]: u["id"] for u in user_repo.get_all_users()}
+    user_repo.create_user("alice", _sha("pw"), "Alice Manager", "manager", None, org_id)
+    user_repo.create_user("bob", _sha("pw"), "Bob Employee", "employee", None, org_id)
+    user_repo.create_user("carol", _sha("pw"), "Carol Employee", "employee", None, org_id)
+
+    ids = {u["username"]: u["id"] for u in user_repo.get_all_users(org_id)}
 
     # Projekt vlastní BOB; CAROL je nezúčastnená.
-    project_id = project_repo.create_project(ids["bob"], "Bobov projekt", "desc")
+    project_id = project_repo.create_project(ids["bob"], "Bobov projekt", "desc", org_id)
     # Úloha v projekte priradená bobovi.
     task_id = task_repo.create_task(
         project_id=project_id, name="Úloha", assigned_to=ids["bob"], created_by=ids["bob"],
     )
     # Klient, ktorého advisor je CAROL (employee).
-    client_id = client_repo.create_client("Klient X", advisor_id=ids["carol"], email="x@x.sk")
+    client_id = client_repo.create_client(
+        "Klient X", advisor_id=ids["carol"], organization_id=org_id, email="x@x.sk"
+    )
 
     return {
         "ids": ids,

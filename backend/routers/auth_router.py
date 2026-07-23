@@ -7,7 +7,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from backend.auth import create_access_token
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import get_current_user, require_manager_or_admin, current_org_id
 from logic.passwords import hash_password
 from repositories import user_repo
 
@@ -45,6 +45,7 @@ def login(form: OAuth2PasswordRequestForm = Depends()):
         "id": user["id"],
         "username": user["username"],
         "role": user["role"],
+        "org_id": user.get("organization_id"),
     })
     return TokenResponse(
         access_token=token,
@@ -81,8 +82,9 @@ def register(
         )
     manager_id = current_user["id"] if current_user.get("role") == "manager" else req.manager_id
     hashed = hash_password(req.password)
+    # Nový používateľ vždy patrí do organizácie toho, kto ho vytvára.
     ok, msg = user_repo.create_user(
-        req.username, hashed, req.full_name, requested_role, manager_id
+        req.username, hashed, req.full_name, requested_role, manager_id, current_org_id(current_user)
     )
     if not ok:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)

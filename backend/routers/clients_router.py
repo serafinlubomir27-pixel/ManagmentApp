@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, assert_client_access
+from backend.deps import get_current_user, assert_client_access, current_org_id
 from repositories import client_repo
 
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -66,19 +66,19 @@ class DealUpdate(BaseModel):
 
 @router.get("/pipeline/all")
 def get_all_pipeline(current_user: dict = Depends(get_current_user)):
-    """Full pipeline board — all deals grouped by stage."""
+    """Full pipeline board — all deals grouped by stage (v rámci vlastnej organizácie)."""
+    org_id = current_org_id(current_user)
     if current_user["role"] in ("admin", "manager"):
-        deals = client_repo.get_all_deals_for_advisor()
-    else:
-        deals = client_repo.get_all_deals_for_advisor(advisor_id=current_user["id"])
-    return deals
+        return client_repo.get_all_deals_for_advisor(org_id)
+    return client_repo.get_all_deals_for_advisor(org_id, advisor_id=current_user["id"])
 
 
 @router.get("/")
 def list_clients(current_user: dict = Depends(get_current_user)):
+    org_id = current_org_id(current_user)
     if current_user["role"] in ("admin", "manager"):
-        return client_repo.get_clients()
-    return client_repo.get_clients(advisor_id=current_user["id"])
+        return client_repo.get_clients(org_id)
+    return client_repo.get_clients(org_id, advisor_id=current_user["id"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -89,6 +89,7 @@ def create_client(
     client_id = client_repo.create_client(
         name=body.name,
         advisor_id=current_user["id"],
+        organization_id=current_org_id(current_user),
         email=body.email,
         phone=body.phone,
         category=body.category,

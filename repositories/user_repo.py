@@ -63,14 +63,18 @@ def get_team_by_manager(manager_id):
         conn.close()
 
 
-def create_user(username, password, full_name, role, manager_id):
-    """Insert a new user.  Returns (True, 'ok') or (False, error_message)."""
+def create_user(username, password, full_name, role, manager_id, organization_id):
+    """Insert a new user into an organization. Returns (True, 'ok') or (False, error_message).
+
+    organization_id je povinné — používateľ bez organizácie by obišiel izoláciu dát.
+    """
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (username, password, full_name, role, manager_id) VALUES (?, ?, ?, ?, ?)",
-            (username, password, full_name, role, manager_id),
+            "INSERT INTO users (username, password, full_name, role, manager_id, organization_id)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (username, password, full_name, role, manager_id, organization_id),
         )
         conn.commit()
         return True, "Uzivatel vytvoreny"
@@ -92,12 +96,20 @@ def username_exists(username):
         conn.close()
 
 
-def get_all_users() -> list[dict]:
-    """Return all users (for admin views)."""
+def get_all_users(organization_id: int) -> list[dict]:
+    """Return all users OF THE GIVEN ORGANIZATION (for admin views).
+
+    organization_id je povinné — predtým tento dopyt vracal používateľov naprieč
+    všetkými organizáciami, čo je pri multi-tenancy únik dát.
+    """
     conn = get_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, username, full_name, role, manager_id, created_at FROM users ORDER BY role, username")
+        cursor.execute(
+            "SELECT id, username, full_name, role, manager_id, organization_id, created_at"
+            " FROM users WHERE organization_id = ? ORDER BY role, username",
+            (organization_id,),
+        )
         return rows_to_dicts(cursor.fetchall())
     finally:
         conn.close()

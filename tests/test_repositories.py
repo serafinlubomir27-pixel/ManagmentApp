@@ -9,12 +9,23 @@ import pytest
 
 import repositories.base_repo as base_repo
 
+# Default organizácia sa v fixture vkladá ako prvá → AUTOINCREMENT id 1.
+TEST_ORG_ID = 1
+
 
 # ---------------------------------------------------------------------------
 # In-memory DB fixture using shared-cache URI so conn.close() doesn't destroy it
 # ---------------------------------------------------------------------------
 
 SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS organizations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    plan TEXT NOT NULL DEFAULT 'free',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -22,6 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT,
     role TEXT DEFAULT 'employee',
     manager_id INTEGER,
+    organization_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (manager_id) REFERENCES users(id)
 );
@@ -33,6 +45,7 @@ CREATE TABLE IF NOT EXISTS projects (
     description TEXT,
     status TEXT DEFAULT 'active',
     is_template BOOLEAN DEFAULT 0,
+    organization_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -134,11 +147,15 @@ def db(monkeypatch):
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA_SQL)
 
-    # Seed admin user
+    # Seed default organization (multi-tenancy koreň) + admin v nej
+    conn.execute(
+        "INSERT INTO organizations (name, slug, plan) VALUES (?, ?, ?)",
+        ("Default", "default", "free"),
+    )
     pw = hashlib.sha256(b"admin123").hexdigest()
     conn.execute(
-        "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)",
-        ("admin", pw, "Admin User", "admin"),
+        "INSERT INTO users (username, password, full_name, role, organization_id) VALUES (?, ?, ?, ?, ?)",
+        ("admin", pw, "Admin User", "admin", TEST_ORG_ID),
     )
     conn.commit()
 
@@ -166,7 +183,8 @@ def _user_id(conn, username="admin"):
 
 def _project_id(conn, user_id, name="Test Project"):
     conn.execute(
-        "INSERT INTO projects (user_id, name) VALUES (?, ?)", (user_id, name)
+        "INSERT INTO projects (user_id, name, organization_id) VALUES (?, ?, ?)",
+        (user_id, name, TEST_ORG_ID),
     )
     conn.commit()
     return conn.execute(
@@ -221,23 +239,23 @@ class TestUserRepo:
 
     def test_get_all_users(self, db):
         from repositories.user_repo import get_all_users
-        users = get_all_users()
+        users = get_all_users(TEST_ORG_ID)
         assert len(users) >= 1
         assert any(u["username"] == "admin" for u in users)
 
     def test_create_user_and_retrieve(self, db):
         from repositories.user_repo import create_user, get_all_users
         pw = hashlib.sha256(b"secret").hexdigest()
-        ok, msg = create_user("alice", pw, "Alice Smith", "employee", None)
+        ok, msg = create_user("alice", pw, "Alice Smith", "employee", None, TEST_ORG_ID)
         assert ok
-        users = get_all_users()
+        users = get_all_users(TEST_ORG_ID)
         assert any(u["username"] == "alice" for u in users)
 
     def test_create_user_duplicate_fails(self, db):
         from repositories.user_repo import create_user
         pw = hashlib.sha256(b"pw").hexdigest()
-        ok1, _ = create_user("bob", pw, "Bob", "employee", None)
-        ok2, msg = create_user("bob", pw, "Bob2", "employee", None)
+        ok1, _ = create_user("bob", pw, "Bob", "employee", None, TEST_ORG_ID)
+        ok2, msg = create_user("bob", pw, "Bob2", "employee", None, TEST_ORG_ID)
         assert ok1
         assert not ok2
         assert "UNIQUE" in msg or "unique" in msg.lower()
@@ -283,7 +301,7 @@ class TestProjectRepo:
     def test_create_and_get_projects(self, db):
         from repositories.project_repo import create_project, get_user_projects
         uid = _user_id(db)
-        create_project(uid, "Alpha", "Desc", "active")
+        create_project(uid, "Alpha", "Desc", TEST_ORG_ID, "active")
         projects = get_user_projects(uid)
         assert any(p["name"] == "Alpha" for p in projects)
 
@@ -291,18 +309,18 @@ class TestProjectRepo:
         from repositories.project_repo import create_project, get_user_projects
         from repositories.user_repo import create_user
         pw = hashlib.sha256(b"pw").hexdigest()
-        create_user("bob", pw, "Bob", "employee", None)
+        create_user("bob", pw, "Bob", "employee", None, TEST_ORG_ID)
         bob_id = _user_id(db, "bob")
         admin_id = _user_id(db)
-        create_project(admin_id, "Admin Project", "", "active")
-        create_project(bob_id, "Bob Project", "", "active")
+        create_project(admin_id, "Admin Project", "", TEST_ORG_ID, "active")
+        create_project(bob_id, "Bob Project", "", TEST_ORG_ID, "active")
         admin_projects = get_user_projects(admin_id)
         assert all(p["name"] != "Bob Project" for p in admin_projects)
 
     def test_get_project_by_id(self, db):
         from repositories.project_repo import create_project, get_project_by_id
         uid = _user_id(db)
-        pid = create_project(uid, "Beta", "Desc", "active")
+        pid = create_project(uid, "Beta", "Desc", TEST_ORG_ID, "active")
         project = get_project_by_id(pid)
         assert project is not None
         assert project["name"] == "Beta"
@@ -314,7 +332,7 @@ class TestProjectRepo:
     def test_update_project_status(self, db):
         from repositories.project_repo import create_project, update_project_status, get_project_by_id
         uid = _user_id(db)
-        pid = create_project(uid, "Gamma", "", "active")
+        pid = create_project(uid, "Gamma", "", TEST_ORG_ID, "active")
         update_project_status(pid, "completed")
         project = get_project_by_id(pid)
         assert project["status"] == "completed"
@@ -322,17 +340,17 @@ class TestProjectRepo:
     def test_count_active_projects(self, db):
         from repositories.project_repo import create_project, count_active_projects_for_user
         uid = _user_id(db)
-        create_project(uid, "P1", "", "active")
-        create_project(uid, "P2", "", "active")
-        create_project(uid, "P3", "", "completed")
+        create_project(uid, "P1", "", TEST_ORG_ID, "active")
+        create_project(uid, "P2", "", TEST_ORG_ID, "active")
+        create_project(uid, "P3", "", TEST_ORG_ID, "completed")
         count = count_active_projects_for_user(uid)
         assert count == 2
 
     def test_templates(self, db):
         from repositories.project_repo import create_project, get_templates
         uid = _user_id(db)
-        create_project(uid, "Template A", "", "active", is_template=True)
-        create_project(uid, "Regular", "", "active", is_template=False)
+        create_project(uid, "Template A", "", TEST_ORG_ID, "active", is_template=True)
+        create_project(uid, "Regular", "", TEST_ORG_ID, "active", is_template=False)
         templates = get_templates(uid)
         assert len(templates) == 1
         assert templates[0]["name"] == "Template A"

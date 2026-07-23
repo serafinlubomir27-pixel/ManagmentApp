@@ -19,6 +19,19 @@ def create_database():
 
     print(f"[DB] Pracujem s databazou na ceste: {db_path}")
 
+    # --- 0. ORGANIZÁCIE (multi-tenancy koreň) ---
+    # Každý používateľ, projekt a klient patrí práve jednej organizácii.
+    # Izolácia dát medzi organizáciami sa vynucuje v backend/deps.py.
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS organizations (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL,
+        slug       TEXT UNIQUE NOT NULL,
+        plan       TEXT NOT NULL DEFAULT 'free',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # --- 1. TABUĽKA UŽÍVATEĽOV (Hierarchia + Roly) ---
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
@@ -306,6 +319,11 @@ def create_database():
         "ALTER TABLE task_attachments ADD COLUMN visibility TEXT NOT NULL DEFAULT 'team'",
         # Client relationship
         "ALTER TABLE projects ADD COLUMN client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL",
+        # Multi-tenancy — organization_id na koreňových entitách
+        "ALTER TABLE users ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
+        "ALTER TABLE projects ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
+        "ALTER TABLE clients ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
+        "ALTER TABLE invite_tokens ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
     ]:
         try:
             cursor.execute(column_sql)
@@ -316,12 +334,24 @@ def create_database():
     # Beží len pre SQLite (lokál). V produkcii (Postgres) sa default admin neseeduje
     # (supabase_schema.sql) — použi scripts/create_admin.py s vlastným heslom.
     # Heslo sa dá prepísať cez SEED_ADMIN_PASSWORD.
+    # Default organizácia — existujúce dáta (a lokálny admin) do nej spadnú.
+    cursor.execute("SELECT id FROM organizations ORDER BY id LIMIT 1")
+    _org_row = cursor.fetchone()
+    if _org_row is None:
+        cursor.execute(
+            "INSERT INTO organizations (name, slug, plan) VALUES (?, ?, ?)",
+            ("Default", "default", "free"),
+        )
+        default_org_id = cursor.lastrowid
+    else:
+        default_org_id = _org_row[0]
+
     seed_pw = os.environ.get("SEED_ADMIN_PASSWORD", "admin123")
     try:
         admin_password_hash = hashlib.sha256(seed_pw.encode()).hexdigest()
         cursor.execute(
-            "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)",
-            ('admin', admin_password_hash, 'Hlavný Admin', 'admin'),
+            "INSERT INTO users (username, password, full_name, role, organization_id) VALUES (?, ?, ?, ?, ?)",
+            ('admin', admin_password_hash, 'Hlavný Admin', 'admin', default_org_id),
         )
         if seed_pw == "admin123":
             print("[DB] VAROVANIE: admin/admin123 je LEN pre lokálny vývoj — zmeň heslo a nikdy nepoužívaj v produkcii!")
@@ -329,6 +359,13 @@ def create_database():
             print("[DB] Vytvoreny admin s heslom zo SEED_ADMIN_PASSWORD.")
     except sqlite3.IntegrityError:
         print("[DB] Admin uz existuje, preskakujem vytvaranie.")
+
+    # --- Multi-tenancy backfill: existujúce riadky bez organizácie → default org ---
+    for _table in ("users", "projects", "clients", "invite_tokens"):
+        cursor.execute(
+            f"UPDATE {_table} SET organization_id = ? WHERE organization_id IS NULL",
+            (default_org_id,),
+        )
 
     # --- Migrácia: zahashuj plaintext heslá (dlzka != 64 = nie je SHA-256 hash) ---
     plain_users = cursor.execute(

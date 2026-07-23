@@ -10,7 +10,9 @@ import hashlib
 
 # DB pripraví conftest.py (spoločná testová SQLite DB).
 from logic.passwords import hash_password, verify_password, needs_rehash
-from repositories import user_repo
+from repositories import user_repo, org_repo
+
+_ORG_ID = org_repo.get_organization_by_slug("default")["id"]
 
 
 def _sha(pwd: str) -> str:
@@ -43,7 +45,7 @@ def test_empty_stored_is_rejected():
 
 def test_login_migrates_sha256_to_bcrypt():
     # Vytvor používateľa priamo so starým SHA-256 hashom
-    user_repo.create_user("legacy", _sha("heslo123"), "Legacy User", "employee", None)
+    user_repo.create_user("legacy", _sha("heslo123"), "Legacy User", "employee", None, _ORG_ID)
     before = user_repo.get_by_username("legacy")["password"]
     assert needs_rehash(before)          # uložený ako SHA-256
 
@@ -62,6 +64,6 @@ def test_login_migrates_sha256_to_bcrypt():
 
 
 def test_bcrypt_user_login():
-    user_repo.create_user("modern", hash_password("silne456"), "Modern User", "employee", None)
+    user_repo.create_user("modern", hash_password("silne456"), "Modern User", "employee", None, _ORG_ID)
     assert user_repo.get_by_username_and_password("modern", "silne456") is not None
     assert user_repo.get_by_username_and_password("modern", "zle") is None

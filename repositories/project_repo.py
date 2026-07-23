@@ -23,17 +23,17 @@ def get_user_projects(user_id):
         conn.close()
 
 
-def create_project(user_id, name, description, status="active", is_template=False):
-    """Insert a new project and return its id."""
+def create_project(user_id, name, description, organization_id, status="active", is_template=False):
+    """Insert a new project into an organization and return its id."""
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO projects (user_id, name, description, status, is_template)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO projects (user_id, name, description, status, is_template, organization_id)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (user_id, name, description, status, bool(is_template)),
+            (user_id, name, description, status, bool(is_template), organization_id),
         )
         conn.commit()
         return cursor.lastrowid

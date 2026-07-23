@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import get_current_user, require_manager_or_admin, current_org_id
 from repositories import notification_repo
 
 router = APIRouter(tags=["notifications"])
@@ -54,5 +54,8 @@ def check_deadlines(
     Obmedzené na manager/admin — skenuje globálne, nemá ho spúšťať hocikto (spam/DoS).
     Ideálne volať naplánovane (cron / Supabase Edge Function), nie z klienta.
     """
-    created = notification_repo.check_and_create_deadline_notifications(days_ahead=[1, 3, 7])
+    created = notification_repo.check_and_create_deadline_notifications(
+        days_ahead=[1, 3, 7],
+        organization_id=current_org_id(current_user),
+    )
     return {"detail": f"Vytvorených {created} nových notifikácií o deadlinoch"}

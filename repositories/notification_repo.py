@@ -89,10 +89,15 @@ def create_notification(
         conn.close()
 
 
-def check_and_create_deadline_notifications(days_ahead: list[int] | None = None) -> int:
+def check_and_create_deadline_notifications(
+    days_ahead: list[int] | None = None,
+    organization_id: int | None = None,
+) -> int:
     """Scan tasks with upcoming due_date and create deadline_warning notifications.
 
     Skips tasks where a warning for the same day-threshold already exists.
+    Ak je zadané organization_id, skenuje len projekty danej organizácie
+    (endpoint ho posiela, aby admin nespúšťal sken naprieč celým systémom).
     Returns the number of new notifications created.
     """
     if days_ahead is None:
@@ -112,7 +117,9 @@ def check_and_create_deadline_notifications(days_ahead: list[int] | None = None)
             WHERE t.assigned_to IS NOT NULL
               AND t.due_date IS NOT NULL
               AND t.status NOT IN ('completed')
+              AND (? IS NULL OR p.organization_id = ?)
             """,
+            (organization_id, organization_id),
         )
         tasks = rows_to_dicts(cursor.fetchall())
 

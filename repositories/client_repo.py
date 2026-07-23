@@ -7,6 +7,7 @@ from repositories.base_repo import get_connection, rows_to_dicts, row_to_dict
 def create_client(
     name: str,
     advisor_id: int,
+    organization_id: int,
     email: str | None = None,
     phone: str | None = None,
     category: str = "retail",
@@ -16,8 +17,9 @@ def create_client(
     conn = get_connection()
     try:
         cur = conn.execute(
-            "INSERT INTO clients (name, email, phone, category, risk_profile, advisor_id, notes) VALUES (?,?,?,?,?,?,?)",
-            (name, email, phone, category, risk_profile, advisor_id, notes),
+            "INSERT INTO clients (name, email, phone, category, risk_profile, advisor_id, notes, organization_id)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (name, email, phone, category, risk_profile, advisor_id, notes, organization_id),
         )
         conn.commit()
         return cur.lastrowid
@@ -25,18 +27,19 @@ def create_client(
         conn.close()
 
 
-def get_clients(advisor_id: int | None = None) -> list[dict]:
-    """Return clients. If advisor_id given, filter by it (for employee role)."""
+def get_clients(organization_id: int, advisor_id: int | None = None) -> list[dict]:
+    """Return clients OF THE GIVEN ORGANIZATION. If advisor_id given, filter by it too."""
     conn = get_connection()
     try:
         if advisor_id:
             rows = conn.execute(
-                "SELECT * FROM clients WHERE archived = 0 AND advisor_id = ? ORDER BY name",
-                (advisor_id,),
+                "SELECT * FROM clients WHERE archived = 0 AND organization_id = ? AND advisor_id = ? ORDER BY name",
+                (organization_id, advisor_id),
             ).fetchall()
         else:
             rows = conn.execute(
-                "SELECT * FROM clients WHERE archived = 0 ORDER BY name"
+                "SELECT * FROM clients WHERE archived = 0 AND organization_id = ? ORDER BY name",
+                (organization_id,),
             ).fetchall()
         return rows_to_dicts(rows)
     finally:
@@ -286,8 +289,8 @@ def upsert_deal(
         conn.close()
 
 
-def get_all_deals_for_advisor(advisor_id: int | None = None) -> list[dict]:
-    """Return all deals joined with client info for pipeline view."""
+def get_all_deals_for_advisor(organization_id: int, advisor_id: int | None = None) -> list[dict]:
+    """Return deals (joined with client info) for the pipeline view, scoped to one organization."""
     conn = get_connection()
     try:
         if advisor_id:
@@ -296,10 +299,10 @@ def get_all_deals_for_advisor(advisor_id: int | None = None) -> list[dict]:
                 SELECT ds.*, c.name AS client_name, c.category, c.email
                 FROM deal_stages ds
                 JOIN clients c ON ds.client_id = c.id
-                WHERE c.advisor_id = ? AND c.archived = 0
+                WHERE c.organization_id = ? AND c.advisor_id = ? AND c.archived = 0
                 ORDER BY ds.updated_at DESC
                 """,
-                (advisor_id,),
+                (organization_id, advisor_id),
             ).fetchall()
         else:
             rows = conn.execute(
@@ -307,9 +310,10 @@ def get_all_deals_for_advisor(advisor_id: int | None = None) -> list[dict]:
                 SELECT ds.*, c.name AS client_name, c.category, c.email
                 FROM deal_stages ds
                 JOIN clients c ON ds.client_id = c.id
-                WHERE c.archived = 0
+                WHERE c.organization_id = ? AND c.archived = 0
                 ORDER BY ds.updated_at DESC
                 """,
+                (organization_id,),
             ).fetchall()
         return rows_to_dicts(rows)
     finally:

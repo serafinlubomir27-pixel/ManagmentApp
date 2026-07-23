@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
 from backend.auth import decode_token
-from repositories import project_repo, task_repo, client_repo
+from repositories import project_repo, task_repo, client_repo, user_repo
 from logic.hierarchy import get_full_tree
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -41,18 +41,39 @@ def require_manager_or_admin(current_user: dict = Depends(get_current_user)) -> 
     return current_user
 
 
-# ── Object-level authorization (BOLA/IDOR ochrana) ───────────────────────────
-# Tieto helpery vynucujú, že používateľ má prístup ku KONKRÉTNEMU objektu —
-# nie len že objekt existuje. Bez nich vie ktokoľvek prihlásený čítať/meniť
-# cudzie projekty, úlohy a klientov len uhádnutím ID.
+# ── Object-level authorization + izolácia organizácií ────────────────────────
+# Tieto helpery vynucujú DVE veci naraz:
+#   1. objekt patrí do ROVNAKEJ organizácie ako prihlásený používateľ (multi-tenancy),
+#   2. používateľ má na objekt reálne právo (vlastník / priradený / admin).
+#
+# Cross-org prístup vracia 404 (nie 403), aby neprezradil, že objekt v cudzej
+# organizácii vôbec existuje. Poradie je dôležité: org sa kontroluje PRED rolou —
+# inak by admin organizácie A videl dáta organizácie B.
+
+def current_org_id(current_user: dict) -> int:
+    """Organizácia prihláseného používateľa. Token bez org_id (starý) → 401, nech sa preloguje."""
+    org_id = current_user.get("org_id")
+    if org_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token neobsahuje organizáciu — prihlás sa znova",
+        )
+    return org_id
+
+
+def _in_same_org(entity: dict, current_user: dict) -> bool:
+    """True ak entita patrí do organizácie prihláseného používateľa."""
+    return entity.get("organization_id") == current_org_id(current_user)
+
 
 def assert_project_access(project_id: int, current_user: dict) -> dict:
     """Vráti projekt ak naň má používateľ prístup, inak 404/403.
 
-    Prístup má: admin, vlastník projektu, alebo osoba s priradenou úlohou v ňom.
+    Prístup má: admin TEJ ISTEJ organizácie, vlastník projektu, alebo osoba
+    s priradenou úlohou v ňom.
     """
     project = project_repo.get_project_by_id(project_id)
-    if not project:
+    if not project or not _in_same_org(project, current_user):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projekt nenájdený")
     if current_user.get("role") == "admin":
         return project
@@ -64,7 +85,11 @@ def assert_project_access(project_id: int, current_user: dict) -> dict:
 
 
 def assert_task_access(task_id: int, current_user: dict) -> dict:
-    """Vráti úlohu ak má používateľ prístup k jej projektu, inak 404/403."""
+    """Vráti úlohu ak má používateľ prístup k jej projektu, inak 404/403.
+
+    Úloha nemá vlastné organization_id — príslušnosť dedí cez projekt, ktorý
+    kontroluje assert_project_access.
+    """
     task = task_repo.get_task_by_id(task_id)
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha nenájdená")
@@ -75,10 +100,10 @@ def assert_task_access(task_id: int, current_user: dict) -> dict:
 def assert_client_access(client_id: int, current_user: dict) -> dict:
     """Vráti klienta ak má používateľ prístup, inak 404/403.
 
-    Prístup má: admin/manager (vidia všetkých klientov), alebo advisor daného klienta.
+    Prístup má: admin/manager TEJ ISTEJ organizácie, alebo advisor daného klienta.
     """
     client = client_repo.get_client_by_id(client_id)
-    if not client or client.get("archived"):
+    if not client or client.get("archived") or not _in_same_org(client, current_user):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Klient nenájdený")
     if current_user.get("role") in ("admin", "manager"):
         return client
@@ -88,13 +113,17 @@ def assert_client_access(client_id: int, current_user: dict) -> dict:
 
 
 def assert_can_view_user(target_user_id: int, current_user: dict) -> None:
-    """Povolené: admin (ktokoľvek), používateľ sám seba, manažér svojich (aj nepriamych) podriadených."""
+    """Povolené: admin vlastnej organizácie, používateľ sám seba, manažér svojich
+    (aj nepriamych) podriadených — vždy v rámci tej istej organizácie."""
+    target = user_repo.get_user_by_id(target_user_id)
+    if not target or not _in_same_org(target, current_user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Používateľ nenájdený")
     if current_user.get("role") == "admin":
         return
     if target_user_id == current_user["id"]:
         return
     if current_user.get("role") == "manager":
-        subordinate_ids = {m["id"] for m in get_full_tree(current_user["id"])}
+        subordinate_ids = {m["id"] for m in get_full_tree(current_user["id"], current_org_id(current_user))}
         if target_user_id in subordinate_ids:
             return
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáš prístup k tomuto používateľovi")

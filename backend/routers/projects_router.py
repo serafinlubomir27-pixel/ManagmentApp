@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin, assert_project_access
+from backend.deps import get_current_user, require_manager_or_admin, assert_project_access, current_org_id
 from repositories import project_repo, task_repo
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -43,6 +43,7 @@ def create_project(
         user_id=current_user["id"],
         name=body.name,
         description=body.description,
+        organization_id=current_org_id(current_user),
         status=body.status,
         is_template=body.is_template,
     )
