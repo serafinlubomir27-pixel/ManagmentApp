@@ -8,8 +8,11 @@ DB_NAME = "my_project_app.db"
 def create_database():
     # Zabezpečíme, aby sa databáza vytvorila v hlavnom priečinku projektu,
     # nie vo vnútri priečinka database/
+    # Cesta k DB je jednotná s repositories/base_repo (rovnaká SQLITE_PATH env
+    # premenná) — inak by setup vytvoril tabuľky v inom súbore, než z ktorého
+    # potom repozitáre čítajú (rozbíja to testy aj custom cesty).
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db_path = os.path.join(base_dir, DB_NAME)
+    db_path = os.path.join(base_dir, os.environ.get("SQLITE_PATH", DB_NAME))
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()

@@ -9,7 +9,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from backend.auth import create_access_token
-from backend.deps import get_current_user
+from backend.deps import get_current_user, require_manager_or_admin
 from repositories import user_repo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -57,16 +57,33 @@ def login(form: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register(req: RegisterRequest):
-    """Registrácia nového používateľa (verejná — pre onboarding)."""
+def register(
+    req: RegisterRequest,
+    current_user: dict = Depends(require_manager_or_admin),
+):
+    """Vytvorenie používateľa. CHRÁNENÉ — len manager/admin.
+
+    Onboarding externých používateľov ide cez /invites/{token}/accept (rola z pozvánky).
+    Predtým bol tento endpoint verejný a bral ľubovoľnú rolu → ktokoľvek sa vedel
+    spraviť adminom (privilege escalation). Teraz:
+      - manager smie vytvárať len 'employee' a automaticky ich priradí pod seba,
+      - iba admin smie vytvárať 'manager' alebo 'admin'.
+    """
+    requested_role = req.role if req.role in ("employee", "manager", "admin") else "employee"
+    if requested_role in ("manager", "admin") and current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Len admin môže vytvárať používateľov s rolou manager alebo admin",
+        )
     if user_repo.username_exists(req.username):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Používateľ '{req.username}' už existuje",
         )
+    manager_id = current_user["id"] if current_user.get("role") == "manager" else req.manager_id
     hashed = hashlib.sha256(req.password.encode()).hexdigest()
     ok, msg = user_repo.create_user(
-        req.username, hashed, req.full_name, req.role, req.manager_id
+        req.username, hashed, req.full_name, requested_role, manager_id
     )
     if not ok:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)

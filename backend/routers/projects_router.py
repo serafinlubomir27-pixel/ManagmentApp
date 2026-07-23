@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin
+from backend.deps import get_current_user, require_manager_or_admin, assert_project_access
 from repositories import project_repo, task_repo
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -55,10 +55,7 @@ def get_project(
     current_user: dict = Depends(get_current_user),
 ):
     """Detail jedného projektu."""
-    project = project_repo.get_project_by_id(project_id)
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projekt nenájdený")
-    return project
+    return assert_project_access(project_id, current_user)
 
 
 @router.patch("/{project_id}")
@@ -68,9 +65,7 @@ def update_project(
     current_user: dict = Depends(require_manager_or_admin),
 ):
     """Aktualizovať stav / názov projektu."""
-    project = project_repo.get_project_by_id(project_id)
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Projekt nenájdený")
+    assert_project_access(project_id, current_user)
     if body.status:
         project_repo.update_project_status(project_id, body.status)
     return {"detail": "Projekt aktualizovaný"}
