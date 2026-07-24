@@ -1,7 +1,13 @@
 """AI-CPM Parser — natural language project description → structured tasks with CPM data.
 
-Uses OpenAI GPT-4o-mini when OPENAI_API_KEY is set.
-Falls back to rule-based heuristics if no API key is available or call fails.
+Provider-agnostický: použije prvého poskytovateľa, ktorého API kľúč je nastavený,
+v poradí GEMINI → ANTHROPIC (Claude) → OPENAI. Ak nie je žiadny kľúč (alebo volanie
+zlyhá), spadne na rule-based heuristiku. Appka teda funguje aj bez AI kľúča.
+
+ENV:
+  GEMINI_API_KEY     + voliteľne GEMINI_MODEL     (default gemini-2.0-flash) — free tier
+  ANTHROPIC_API_KEY  + voliteľne ANTHROPIC_MODEL  (default claude-haiku-4-5-20251001)
+  OPENAI_API_KEY     + voliteľne OPENAI_MODEL     (default gpt-4o-mini)
 
 Output format:
   {
@@ -14,16 +20,19 @@ Output format:
         "priority": str,        # low | medium | high | critical
       }
     ],
-    "source": "openai" | "heuristic"
+    "source": "gemini" | "anthropic" | "openai" | "heuristic"
   }
 """
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 
-# ── OpenAI system prompt ──────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
+
+# ── Spoločný system prompt pre všetkých poskytovateľov ────────────────────────
 
 _SYSTEM_PROMPT = """Si expert na projektový manažment a CPM (Critical Path Method).
 Dostaneš popis projektu v prirodzenom jazyku (slovensky alebo anglicky).
@@ -42,52 +51,106 @@ Formát odpovede:
 
 
 def parse_project(description: str) -> dict:
-    """Parse natural language project description into structured task list."""
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    """Parse natural language project description into a structured task list.
 
-    if api_key:
+    Skúša poskytovateľov v poradí (podľa prítomného API kľúča); pri chybe skúsi
+    ďalšieho, nakoniec heuristiku. `source` v návratovej hodnote hovorí, kto to spracoval.
+    """
+    providers = (
+        ("gemini", "GEMINI_API_KEY", _parse_with_gemini),
+        ("anthropic", "ANTHROPIC_API_KEY", _parse_with_anthropic),
+        ("openai", "OPENAI_API_KEY", _parse_with_openai),
+    )
+    for name, env_key, fn in providers:
+        api_key = os.environ.get(env_key, "").strip()
+        if not api_key:
+            continue
         try:
-            return _parse_with_openai(description, api_key)
-        except Exception as e:
-            print(f"[AI] OpenAI call failed: {e} — falling back to heuristics")
+            return fn(description, api_key)
+        except Exception as exc:
+            logger.warning("[AI] provider '%s' zlyhal (%s) — skúšam ďalší / heuristiku", name, exc)
 
     return _parse_heuristic(description)
 
 
-def _parse_with_openai(description: str, api_key: str) -> dict:
-    """Call OpenAI API to parse project description."""
+def _http_post_json(url: str, headers: dict, body: dict) -> dict:
+    """POST JSON a vráť dekódovanú JSON odpoveď (urllib, bez extra závislostí)."""
     import urllib.request
-    import urllib.error
-
-    payload = json.dumps({
-        "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": description[:4000]},  # Limit input tokens
-        ],
-        "temperature": 0.2,
-        "max_tokens": 2000,
-        "response_format": {"type": "json_object"},
-    }).encode("utf-8")
 
     req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
+        url, data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json", **headers}, method="POST",
     )
-
     with urllib.request.urlopen(req, timeout=30) as response:
-        result = json.loads(response.read().decode("utf-8"))
+        return json.loads(response.read().decode("utf-8"))
 
+
+def _extract_json(text: str) -> dict:
+    """Vytiahne JSON objekt z odpovede modelu — znesie aj markdown ```json fence."""
+    text = (text or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text.strip())
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        text = text[start:end + 1]
+    return json.loads(text)
+
+
+def _parse_with_gemini(description: str, api_key: str) -> dict:
+    """Google Gemini (AI Studio) — má free tier. Kľúč ide v hlavičke, nie v URL."""
+    model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    result = _http_post_json(
+        url,
+        {"x-goog-api-key": api_key},
+        {
+            "system_instruction": {"parts": [{"text": _SYSTEM_PROMPT}]},
+            "contents": [{"parts": [{"text": description[:4000]}]}],
+            "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"},
+        },
+    )
+    content = result["candidates"][0]["content"]["parts"][0]["text"]
+    return {"tasks": _normalize_tasks(_extract_json(content).get("tasks", [])), "source": "gemini"}
+
+
+def _parse_with_anthropic(description: str, api_key: str) -> dict:
+    """Anthropic Claude (Messages API)."""
+    model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+    result = _http_post_json(
+        "https://api.anthropic.com/v1/messages",
+        {"x-api-key": api_key, "anthropic-version": "2023-06-01"},
+        {
+            "model": model,
+            "max_tokens": 2000,
+            "temperature": 0.2,
+            "system": _SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": description[:4000]}],
+        },
+    )
+    content = result["content"][0]["text"]
+    return {"tasks": _normalize_tasks(_extract_json(content).get("tasks", [])), "source": "anthropic"}
+
+
+def _parse_with_openai(description: str, api_key: str) -> dict:
+    """OpenAI Chat Completions (JSON mode)."""
+    model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    result = _http_post_json(
+        "https://api.openai.com/v1/chat/completions",
+        {"Authorization": f"Bearer {api_key}"},
+        {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": _SYSTEM_PROMPT},
+                {"role": "user", "content": description[:4000]},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 2000,
+            "response_format": {"type": "json_object"},
+        },
+    )
     content = result["choices"][0]["message"]["content"]
-    parsed = json.loads(content)
-    tasks = parsed.get("tasks", [])
-
-    return {"tasks": _normalize_tasks(tasks), "source": "openai"}
+    return {"tasks": _normalize_tasks(_extract_json(content).get("tasks", [])), "source": "openai"}
 
 
 def _normalize_tasks(tasks: list[dict]) -> list[dict]:
