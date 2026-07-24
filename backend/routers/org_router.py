@@ -50,3 +50,33 @@ def change_plan(body: ChangePlanRequest, current_user: dict = Depends(require_ad
         raise HTTPException(status_code=400, detail=f"Neplatný plán. Platné: {list(plans.PLAN_LIMITS)}")
     org_repo.update_plan(current_org_id(current_user), body.plan)
     return {"detail": f"Plán zmenený na {plans.PLAN_LABELS.get(body.plan, body.plan)}"}
+
+
+# ── GDPR — práva dotknutej osoby ────────────────────────────────────────────
+
+@router.get("/export")
+def export_data(current_user: dict = Depends(require_admin)):
+    """GDPR právo na prístup/prenositeľnosť — kompletný export dát organizácie (JSON).
+    Len admin (obsahuje dáta celej organizácie). Heslá a tokeny sa neexportujú."""
+    return org_repo.export_organization(current_org_id(current_user))
+
+
+class DeleteOrgRequest(BaseModel):
+    confirm: str  # musí byť presný názov organizácie
+
+
+@router.post("/delete")
+def delete_organization(body: DeleteOrgRequest, current_user: dict = Depends(require_admin)):
+    """GDPR právo na výmaz — NENÁVRATNE zmaže organizáciu a všetky jej dáta.
+
+    Vyžaduje potvrdenie presným názvom organizácie (ochrana proti omylu). Len admin.
+    (POST nie DELETE, aby sa dal poslať potvrdzovací názov v tele.)
+    """
+    org_id = current_org_id(current_user)
+    org = org_repo.get_organization(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organizácia nenájdená")
+    if body.confirm.strip() != org["name"]:
+        raise HTTPException(status_code=400, detail="Potvrdenie sa nezhoduje s názvom organizácie")
+    org_repo.delete_organization_cascade(org_id)
+    return {"detail": "Organizácia a všetky jej dáta boli nenávratne zmazané."}

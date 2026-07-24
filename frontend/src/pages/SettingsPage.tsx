@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Lock, User, CheckCircle2, Palette, Globe, CalendarDays, Link2 } from 'lucide-react'
+import { Lock, User, CheckCircle2, Palette, Globe, CalendarDays, Link2, Download, Trash2, AlertTriangle } from 'lucide-react'
 import { authApi, calendarApi, api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { useQuery } from '@tanstack/react-query'
@@ -44,8 +45,42 @@ function getInitials(name: string) {
 }
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, logout } = useAuth()
+  const navigate = useNavigate()
   const qc = useQueryClient()
+  const isAdmin = user?.role === 'admin'
+
+  // ── Organizácia (pre GDPR sekcie) ─────────────────────────────────────────
+  const { data: org } = useQuery<{ name: string }>({
+    queryKey: ['organization'],
+    queryFn: () => api.get('/organization').then(r => r.data),
+    enabled: isAdmin,
+  })
+
+  const [exporting, setExporting] = useState(false)
+  async function exportData() {
+    setExporting(true)
+    try {
+      const res = await api.get('/organization/export')
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `nodus-export-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const [delConfirm, setDelConfirm] = useState('')
+  const [delErr, setDelErr] = useState('')
+  const deleteOrgMutation = useMutation({
+    mutationFn: () => api.post('/organization/delete', { confirm: delConfirm }),
+    onSuccess: () => { logout(); navigate('/') },
+    onError: (e: any) => setDelErr(e.response?.data?.detail ?? 'Zmazanie zlyhalo'),
+  })
 
   // ── Profile form ─────────────────────────────────────────────────────────
   const [profileForm, setProfileForm] = useState({
@@ -324,6 +359,60 @@ export default function SettingsPage() {
           </button>
         )}
       </div>
+
+      {/* ── Export dát (GDPR) ─────────────────────────────────────────────── */}
+      {isAdmin && (
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <Download size={18} className="text-brand-500" />
+            <h2 className="font-semibold text-gray-900 dark:text-white">Export dát</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Stiahni kompletné dáta svojej organizácie (projekty, úlohy, klienti…) ako JSON.
+            Právo na prístup a prenositeľnosť podľa GDPR.
+          </p>
+          <div className="flex justify-end">
+            <button className="btn-primary text-sm flex items-center gap-2" onClick={exportData} disabled={exporting}>
+              <Download size={14} /> {exporting ? 'Pripravujem…' : 'Stiahnuť export (JSON)'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Nebezpečná zóna (GDPR výmaz) ──────────────────────────────────── */}
+      {isAdmin && (
+        <div className="card p-6 space-y-4 border-red-300 dark:border-red-900/60">
+          <div className="flex items-center gap-3">
+            <AlertTriangle size={18} className="text-red-500" />
+            <h2 className="font-semibold text-red-600 dark:text-red-400">Nebezpečná zóna</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Zmazanie organizácie <strong>nenávratne</strong> odstráni všetkých používateľov,
+            projekty, úlohy aj klientov. Túto akciu nemožno vrátiť.
+          </p>
+          <div>
+            <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+              Pre potvrdenie napíš názov organizácie{org?.name ? <> (<strong>{org.name}</strong>)</> : ''}:
+            </label>
+            <input
+              className="input"
+              placeholder={org?.name ?? 'Názov organizácie'}
+              value={delConfirm}
+              onChange={e => { setDelConfirm(e.target.value); setDelErr('') }}
+            />
+          </div>
+          {delErr && <p className="text-sm text-red-500">{delErr}</p>}
+          <div className="flex justify-end">
+            <button
+              onClick={() => deleteOrgMutation.mutate()}
+              disabled={deleteOrgMutation.isPending || !delConfirm || (!!org?.name && delConfirm !== org.name)}
+              className="text-sm flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Trash2 size={14} /> {deleteOrgMutation.isPending ? 'Mažem…' : 'Nenávratne zmazať organizáciu'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

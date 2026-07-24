@@ -8,6 +8,7 @@ export default function SignupPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ full_name: '', organization_name: '', email: '', password: '' })
+  const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -16,6 +17,10 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (!consent) {
+      setError('Pre registráciu musíš súhlasiť s podmienkami a spracovaním údajov.')
+      return
+    }
     setError('')
     setLoading(true)
     try {
@@ -58,11 +63,26 @@ export default function SignupPage() {
             <input type="password" className="input" value={form.password} onChange={set('password')} placeholder="min. 8 znakov" minLength={8} required />
           </div>
 
+          <label className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5 accent-brand-500"
+            />
+            <span>
+              Súhlasím s{' '}
+              <Link to="/podmienky" target="_blank" className="text-brand-600 dark:text-brand-400 hover:underline">podmienkami používania</Link>
+              {' '}a so{' '}
+              <Link to="/ochrana-osobnych-udajov" target="_blank" className="text-brand-600 dark:text-brand-400 hover:underline">spracovaním osobných údajov</Link>.
+            </span>
+          </label>
+
           {error && (
             <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">{error}</p>
           )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center flex items-center gap-2 disabled:opacity-60">
+          <button type="submit" disabled={loading || !consent} className="btn-primary w-full justify-center flex items-center gap-2 disabled:opacity-60">
             {loading ? 'Vytváram…' : 'Vytvoriť účet'}
           </button>
         </form>

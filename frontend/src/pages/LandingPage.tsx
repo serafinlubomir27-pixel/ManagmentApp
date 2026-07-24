@@ -156,7 +156,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
           <NodusLogo variant="wordmark" size={22} />
           <p>© {new Date().getFullYear()} Nodus — projektový manažment na kritickej ceste</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link to="/podmienky" className="hover:text-brand-500">Podmienky</Link>
+            <Link to="/ochrana-osobnych-udajov" className="hover:text-brand-500">Ochrana údajov</Link>
             <Link to="/login" className="hover:text-brand-500">Prihlásiť sa</Link>
             <Link to="/signup" className="hover:text-brand-500">Registrácia</Link>
           </div>
