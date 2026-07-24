@@ -30,6 +30,7 @@ class AcceptInviteRequest(BaseModel):
     username: str
     password: str
     full_name: str
+    email: str | None = None
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,10 +125,15 @@ def accept_invite(token: str, body: AcceptInviteRequest):
     if user_repo.username_exists(username):
         raise HTTPException(status_code=409, detail=f"Používateľ '{username}' už existuje")
 
+    email = (body.email or "").strip().lower() or None
+    if email and user_repo.get_by_email(email):
+        raise HTTPException(status_code=409, detail=f"Účet s e-mailom '{email}' už existuje")
+
     hashed = hash_password(body.password)
     # Rola AJ organizácia pochádzajú z pozvánky — nie zo vstupu používateľa.
     ok, msg = user_repo.create_user(
-        username, hashed, body.full_name.strip(), invite["role"], None, invite["organization_id"]
+        username, hashed, body.full_name.strip(), invite["role"], None, invite["organization_id"],
+        email=email,
     )
     if not ok:
         raise HTTPException(status_code=400, detail=msg)

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS users (
     role TEXT DEFAULT 'employee',
     manager_id INTEGER,
     organization_id INTEGER,
+    email TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (manager_id) REFERENCES users(id)
 );

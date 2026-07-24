@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authApi } from '../api/client'
 import NodusLogo from '../components/NodusLogo'
@@ -42,22 +42,27 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Používateľské meno
+              E-mail alebo meno
             </label>
             <input
               className="input"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin"
+              placeholder="jan@acme.sk"
               autoFocus
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Heslo
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Heslo
+              </label>
+              <Link to="/forgot-password" className="text-xs text-brand-600 dark:text-brand-400 hover:underline">
+                Zabudnuté heslo?
+              </Link>
+            </div>
             <input
               type="password"
               className="input"
@@ -83,6 +88,10 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <p className="mt-6 text-sm text-center text-gray-500 dark:text-gray-400">
+          Nemáš účet?{' '}
+          <Link to="/signup" className="text-brand-600 dark:text-brand-400 font-medium hover:underline">Vytvoriť organizáciu</Link>
+        </p>
       </div>
     </div>
   )

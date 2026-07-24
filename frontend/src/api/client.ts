@@ -34,8 +34,13 @@ export const authApi = {
     api.post('/auth/login', new URLSearchParams({ username: username.trim(), password: password.trim() }), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     }),
-  register: (data: { username: string; password: string; full_name: string; role?: string }) =>
+  register: (data: { username: string; password: string; full_name: string; role?: string; email?: string }) =>
     api.post('/auth/register', data),
+  signup: (data: { email: string; password: string; full_name: string; organization_name: string }) =>
+    api.post('/auth/signup', data),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, new_password: string) =>
+    api.post('/auth/reset-password', { token, new_password }),
   me: () => api.get('/auth/me'),
   changePassword: (current_password: string, new_password: string) =>
     api.patch('/auth/me/password', { current_password, new_password }),

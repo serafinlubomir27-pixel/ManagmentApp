@@ -63,24 +63,62 @@ def get_team_by_manager(manager_id):
         conn.close()
 
 
-def create_user(username, password, full_name, role, manager_id, organization_id):
+def create_user(username, password, full_name, role, manager_id, organization_id, email=None):
     """Insert a new user into an organization. Returns (True, 'ok') or (False, error_message).
 
     organization_id je povinné — používateľ bez organizácie by obišiel izoláciu dát.
+    email je voliteľný (login identita); ak je NULL, používateľ sa prihlasuje cez username.
     """
     conn = get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (username, password, full_name, role, manager_id, organization_id)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
-            (username, password, full_name, role, manager_id, organization_id),
+            "INSERT INTO users (username, password, full_name, role, manager_id, organization_id, email)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (username, password, full_name, role, manager_id, organization_id, email),
         )
         conn.commit()
         return True, "Uzivatel vytvoreny"
     except Exception as exc:
         # Re-raise IntegrityError info as a plain string so callers don't need sqlite3
         return False, str(exc)
+    finally:
+        conn.close()
+
+
+def get_by_email(email):
+    """Return a user dict by e-mail (case-insensitive), or None."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE lower(email) = lower(?)", (email,))
+        return row_to_dict(cursor.fetchone())
+    finally:
+        conn.close()
+
+
+def get_by_login_and_password(login, password):
+    """Verify credentials by e-mail OR username. Returns user dict or None.
+
+    Podporuje starých používateľov (login cez username) aj nových (login cez e-mail).
+    Migrácia SHA-256 -> bcrypt prebehne rovnako ako v get_by_username_and_password.
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM users WHERE lower(email) = lower(?) OR username = ?",
+            (login, login),
+        )
+        row = row_to_dict(cursor.fetchone())
+        if not row or not verify_password(password, row.get("password") or ""):
+            return None
+        if needs_rehash(row["password"]):
+            new_hash = hash_password(password)
+            cursor.execute("UPDATE users SET password = ? WHERE id = ?", (new_hash, row["id"]))
+            conn.commit()
+            row["password"] = new_hash
+        return row
     finally:
         conn.close()
 

@@ -195,6 +195,18 @@ def create_database():
     )
     ''')
 
+    # --- PASSWORD RESETS (reset hesla cez e-mailový token) ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS password_resets (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token      TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL DEFAULT (datetime('now', '+1 hour')),
+        used_at    TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # --- 11. CALENDAR TOKENS (iCal feed) ---
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS calendar_tokens (
@@ -324,11 +336,19 @@ def create_database():
         "ALTER TABLE projects ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
         "ALTER TABLE clients ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
         "ALTER TABLE invite_tokens ADD COLUMN organization_id INTEGER REFERENCES organizations(id)",
+        # E-mailová identita (login cez e-mail; username ostáva ako display/legacy).
+        # UNIQUE sa nedá pridať cez ADD COLUMN → riešime partial unique indexom nižšie.
+        "ALTER TABLE users ADD COLUMN email TEXT",
     ]:
         try:
             cursor.execute(column_sql)
         except Exception:
             pass  # Stĺpec už existuje, preskakujeme
+
+    # E-mail je unikátny keď je vyplnený (viaceré NULL sú OK — starí používatelia bez e-mailu).
+    cursor.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email) WHERE email IS NOT NULL"
+    )
 
     # --- Vytvorenie prvého ADMINA pre LOKÁLNY vývoj ---
     # Beží len pre SQLite (lokál). V produkcii (Postgres) sa default admin neseeduje
