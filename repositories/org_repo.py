@@ -65,6 +65,16 @@ def unique_slug(name: str) -> str:
     return candidate
 
 
+def delete_organization(org_id: int) -> None:
+    """Zmaž organizáciu (kompenzačná akcia — napr. keď signup zlyhá po vytvorení org)."""
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM organizations WHERE id = ?", (org_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def update_plan(org_id: int, plan: str) -> bool:
     conn = get_connection()
     try:

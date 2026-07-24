@@ -119,3 +119,25 @@ def test_forgot_password_unknown_email_is_generic_200():
     # Neexistujúci e-mail → stále 200 (žiadna enumerácia účtov)
     r = client.post("/auth/forgot-password", json={"email": "nikto@nikde.sk"})
     assert r.status_code == 200
+
+
+def _org_count() -> int:
+    conn = get_connection()
+    try:
+        return conn.execute("SELECT count(*) AS c FROM organizations").fetchone()["c"]
+    finally:
+        conn.close()
+
+
+def test_signup_failure_does_not_orphan_org(monkeypatch):
+    # Ak vytvorenie používateľa zlyhá PO vytvorení organizácie, org sa musí zmazať.
+    before = _org_count()
+    monkeypatch.setattr(
+        "repositories.user_repo.create_user", lambda *a, **k: (False, "forced fail")
+    )
+    r = client.post("/auth/signup", json={
+        "email": "orphan@acme.sk", "password": "superheslo1",
+        "full_name": "O", "organization_name": "OrphanOrg",
+    })
+    assert r.status_code == 400
+    assert _org_count() == before  # žiadna osirelá organizácia

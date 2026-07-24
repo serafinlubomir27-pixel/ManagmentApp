@@ -120,7 +120,10 @@ def signup(request: Request, req: SignupRequest):
         email=req.email.lower(),
     )
     if not ok:
-        raise HTTPException(status_code=400, detail=msg)
+        # Kompenzácia — signup nie je jedna transakcia, tak po zlyhaní usera
+        # zmažeme práve vytvorenú organizáciu, nech neostane osirelá.
+        org_repo.delete_organization(org_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
     user = user_repo.get_by_email(req.email)
     token = create_access_token({
