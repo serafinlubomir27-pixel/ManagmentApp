@@ -45,7 +45,7 @@ export default function AttachmentSidebar({ projectId }: Props) {
   })
 
   return (
-    <div className="w-64 flex-shrink-0 border-l border-gray-100 dark:border-gray-800 pl-4 space-y-3">
+    <div className="w-full lg:w-64 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-gray-800 pt-4 lg:pt-0 lg:pl-4 space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Paperclip size={14} className="text-gray-400" />

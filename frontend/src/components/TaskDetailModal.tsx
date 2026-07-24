@@ -138,10 +138,10 @@ export default function TaskDetailModal({ taskId, teamMembers, onClose, onUpdate
         </div>
 
         {/* Two-column body */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col sm:flex-row flex-1 overflow-y-auto sm:overflow-hidden">
 
           {/* LEFT — task fields + attachments */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 border-r border-gray-100 dark:border-gray-800">
+          <div className="flex-1 sm:overflow-y-auto px-6 py-4 space-y-4 border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-800">
 
             {/* Status */}
             <div>
@@ -258,7 +258,7 @@ export default function TaskDetailModal({ taskId, teamMembers, onClose, onUpdate
           </div>
 
           {/* RIGHT — comments */}
-          <div className="w-80 flex-shrink-0 overflow-y-auto px-4 py-4">
+          <div className="w-full sm:w-80 flex-shrink-0 sm:overflow-y-auto px-4 py-4">
             <CommentSection taskId={taskId} />
           </div>
         </div>

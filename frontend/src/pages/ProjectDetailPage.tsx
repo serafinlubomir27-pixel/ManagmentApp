@@ -411,7 +411,7 @@ export default function ProjectDetailPage() {
 
       {/* Tabuľka úloh + prílohy */}
       {tab === 'tasks' && (
-        <div className="flex gap-4 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-start">
           <div className="flex-1 min-w-0 space-y-3">
             <div className="card overflow-hidden">
               <table className="w-full text-sm">
