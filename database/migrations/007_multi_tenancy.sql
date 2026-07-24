@@ -35,8 +35,10 @@ ALTER TABLE invite_tokens
     ADD COLUMN IF NOT EXISTS organization_id BIGINT REFERENCES organizations(id) ON DELETE CASCADE;
 
 -- ── Backfill: existujúce dáta spadnú do jednej "Default" organizácie ────────
+-- Default org drží backfillnuté single-tenant dáta → BEZ limitov (enterprise),
+-- inak by existujúce nasadenie zrazu narazilo na free-tier caps.
 INSERT INTO organizations (name, slug, plan)
-SELECT 'Default', 'default', 'free'
+SELECT 'Default', 'default', 'enterprise'
 WHERE NOT EXISTS (SELECT 1 FROM organizations);
 
 UPDATE users         SET organization_id = (SELECT id FROM organizations ORDER BY id LIMIT 1) WHERE organization_id IS NULL;

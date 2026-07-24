@@ -161,6 +161,20 @@ def delete_project(project_id: int) -> bool:
         conn.close()
 
 
+def count_projects_for_org(organization_id) -> int:
+    """Počet reálnych projektov organizácie (bez šablón) — pre vynútenie limitov plánu."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM projects WHERE organization_id = ? AND is_template = 0",
+            (organization_id,),
+        )
+        return cursor.fetchone()["cnt"]
+    finally:
+        conn.close()
+
+
 def get_project_by_id(project_id):
     """Return a single project dict or None."""
     conn = get_connection()

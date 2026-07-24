@@ -6,8 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 
 from backend.auth import decode_token
-from repositories import project_repo, task_repo, client_repo, user_repo
+from repositories import project_repo, task_repo, client_repo, user_repo, org_repo
 from logic.hierarchy import get_full_tree
+from logic import plans
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -110,6 +111,43 @@ def assert_client_access(client_id: int, current_user: dict) -> dict:
     if client.get("advisor_id") == current_user["id"]:
         return client
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáš prístup k tomuto klientovi")
+
+
+# ── Vynútenie limitov cenového plánu ─────────────────────────────────────────
+# Vráti 402 (Payment Required) keď organizácia dosiahla limit svojho plánu —
+# frontend na to môže naviazať upgrade CTA.
+
+def _org_plan(org_id: int) -> str:
+    org = org_repo.get_organization(org_id)
+    return (org or {}).get("plan") or "free"
+
+
+def assert_org_can_add_project(org_id: int) -> None:
+    plan = _org_plan(org_id)
+    if not plans.can_add_project(plan, project_repo.count_projects_for_org(org_id)):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Dosiahol si limit projektov pre plán {plans.PLAN_LABELS.get(plan, plan)}. "
+                   f"Prejdi na vyšší plán a pridaj viac projektov.",
+        )
+
+
+def assert_org_can_add_user(org_id: int) -> None:
+    plan = _org_plan(org_id)
+    if not plans.can_add_user(plan, user_repo.count_users_for_org(org_id)):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Dosiahol si limit členov tímu pre plán {plans.PLAN_LABELS.get(plan, plan)}. "
+                   f"Prejdi na vyšší plán a pozvi viac ľudí.",
+        )
+
+
+def assert_can_add_project(current_user: dict) -> None:
+    assert_org_can_add_project(current_org_id(current_user))
+
+
+def assert_can_add_user(current_user: dict) -> None:
+    assert_org_can_add_user(current_org_id(current_user))
 
 
 def assert_can_view_user(target_user_id: int, current_user: dict) -> None:

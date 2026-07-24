@@ -4,7 +4,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin, assert_project_access, current_org_id
+from backend.deps import (
+    get_current_user,
+    require_manager_or_admin,
+    assert_project_access,
+    current_org_id,
+    assert_can_add_project,
+)
 from repositories import project_repo, task_repo
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -39,6 +45,8 @@ def create_project(
     current_user: dict = Depends(require_manager_or_admin),
 ):
     """Vytvoriť nový projekt. Vyžaduje manager alebo admin."""
+    if not body.is_template:
+        assert_can_add_project(current_user)
     project_id = project_repo.create_project(
         user_id=current_user["id"],
         name=body.name,

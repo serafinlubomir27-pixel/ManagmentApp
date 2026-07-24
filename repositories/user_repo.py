@@ -201,6 +201,17 @@ def update_user_profile(user_id: int, fields: dict) -> None:
         conn.close()
 
 
+def count_users_for_org(organization_id: int) -> int:
+    """Počet používateľov organizácie — pre vynútenie limitov plánu."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) AS cnt FROM users WHERE organization_id = ?", (organization_id,))
+        return cursor.fetchone()["cnt"]
+    finally:
+        conn.close()
+
+
 def get_user_by_id(user_id: int) -> dict | None:
     """Return full user dict by id, or None."""
     conn = get_connection()

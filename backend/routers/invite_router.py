@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from backend.deps import get_current_user, require_manager_or_admin, current_org_id
+from backend.deps import get_current_user, require_manager_or_admin, current_org_id, assert_org_can_add_user
 from logic.passwords import hash_password
 from repositories import invite_repo, user_repo
 
@@ -128,6 +128,8 @@ def accept_invite(token: str, body: AcceptInviteRequest):
     email = (body.email or "").strip().lower() or None
     if email and user_repo.get_by_email(email):
         raise HTTPException(status_code=409, detail=f"Účet s e-mailom '{email}' už existuje")
+    # Limit členov tímu podľa plánu organizácie z pozvánky.
+    assert_org_can_add_user(invite["organization_id"])
 
     hashed = hash_password(body.password)
     # Rola AJ organizácia pochádzajú z pozvánky — nie zo vstupu používateľa.

@@ -358,9 +358,12 @@ def create_database():
     cursor.execute("SELECT id FROM organizations ORDER BY id LIMIT 1")
     _org_row = cursor.fetchone()
     if _org_row is None:
+        # Default org drží backfillnuté single-tenant dáta — musí byť BEZ limitov,
+        # inak by existujúce nasadenie zrazu narazilo na free-tier caps. Nové
+        # organizácie zo signupu dostávajú 'free'.
         cursor.execute(
             "INSERT INTO organizations (name, slug, plan) VALUES (?, ?, ?)",
-            ("Default", "default", "free"),
+            ("Default", "default", "enterprise"),
         )
         default_org_id = cursor.lastrowid
     else:

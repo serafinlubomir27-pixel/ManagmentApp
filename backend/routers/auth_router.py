@@ -9,7 +9,12 @@ from fastapi import Depends
 from pydantic import BaseModel
 
 from backend.auth import create_access_token
-from backend.deps import get_current_user, require_manager_or_admin, current_org_id
+from backend.deps import (
+    get_current_user,
+    require_manager_or_admin,
+    current_org_id,
+    assert_can_add_user,
+)
 from logic.passwords import hash_password
 from logic import mailer
 from repositories import user_repo, org_repo, password_reset_repo
@@ -204,6 +209,7 @@ def register(
         raise HTTPException(status_code=400, detail="Neplatný e-mail")
     if req.email and user_repo.get_by_email(req.email):
         raise HTTPException(status_code=409, detail="Účet s týmto e-mailom už existuje")
+    assert_can_add_user(current_user)
     manager_id = current_user["id"] if current_user.get("role") == "manager" else req.manager_id
     hashed = hash_password(req.password)
     # Nový používateľ vždy patrí do organizácie toho, kto ho vytvára.
