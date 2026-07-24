@@ -10,10 +10,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from backend.deps import get_current_user, require_manager_or_admin, current_org_id, assert_org_can_add_user
+from backend.ratelimit import limiter
 from logic.passwords import hash_password
 from repositories import invite_repo, user_repo
 
@@ -112,7 +113,8 @@ def get_invite_info(token: str):
 
 
 @router.post("/invites/{token}/accept", status_code=status.HTTP_201_CREATED)
-def accept_invite(token: str, body: AcceptInviteRequest):
+@limiter.limit("10/hour")
+def accept_invite(request: Request, token: str, body: AcceptInviteRequest):
     """Register a new user via invite link."""
     invite = _validate_invite(token)
 

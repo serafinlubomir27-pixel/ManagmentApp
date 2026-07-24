@@ -20,8 +20,11 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router, attachments_router, clients_router, org_router
+from backend.ratelimit import limiter
 from repositories.base_repo import get_backend
 
 # ── Inicializácia databázy ───────────────────────────────────────────────────
@@ -39,6 +42,10 @@ app = FastAPI(
     description="REST API pre ManagmentApp — projektový manažment s CPM.",
     version="1.2.0",
 )
+
+# Rate limiting (slowapi) — limiter je zdieľaný v backend/ratelimit.py
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — dev + produkčná Vercel URL cez env premenné
 _extra_origins = os.environ.get("CORS_ORIGINS", "")

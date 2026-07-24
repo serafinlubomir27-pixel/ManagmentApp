@@ -13,6 +13,9 @@ os.close(_db_fd)
 os.environ["DB_BACKEND"] = "sqlite"
 os.environ["SQLITE_PATH"] = _DB_PATH
 os.environ.setdefault("APP_AUTH_KEY", "test-only-secret-key-min-32-characters-xx")
+# Vypni rate limiting v testoch — stovky volaní /auth/login by inak narazili na limit.
+# Dedikovaný test (test_ratelimit.py) si limiter dočasne zapne za behu.
+os.environ.setdefault("RATE_LIMIT_ENABLED", "0")
 
 from database.setup import create_database  # noqa: E402
 

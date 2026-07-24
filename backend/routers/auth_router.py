@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import re
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Depends
 from pydantic import BaseModel
 
 from backend.auth import create_access_token
+from backend.ratelimit import limiter
 from backend.deps import (
     get_current_user,
     require_manager_or_admin,
@@ -59,7 +60,8 @@ class RegisterRequest(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(form: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("10/minute")
+def login(request: Request, form: OAuth2PasswordRequestForm = Depends()):
     """Prihlásenie cez e-mail ALEBO username + heslo (OAuth2 form). Vráti JWT."""
     user = user_repo.get_by_login_and_password(form.username, form.password)
     if not user:
@@ -93,7 +95,8 @@ class SignupRequest(BaseModel):
 
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def signup(req: SignupRequest):
+@limiter.limit("5/hour")
+def signup(request: Request, req: SignupRequest):
     """Verejná registrácia: založí NOVÚ organizáciu a v nej prvého používateľa ako admina.
 
     E-mail je login identita (globálne unikátny). Rovno vráti JWT, aby bol používateľ
@@ -137,7 +140,8 @@ class ForgotPasswordRequest(BaseModel):
 
 
 @router.post("/forgot-password")
-def forgot_password(req: ForgotPasswordRequest):
+@limiter.limit("5/hour")
+def forgot_password(request: Request, req: ForgotPasswordRequest):
     """Pošle e-mail s odkazom na reset hesla. Kvôli ochrane pred enumeráciou vždy
     vráti rovnakú odpoveď, bez ohľadu na to, či účet existuje."""
     user = user_repo.get_by_email(req.email) if _valid_email(req.email) else None
@@ -153,7 +157,8 @@ class ResetPasswordRequest(BaseModel):
 
 
 @router.post("/reset-password")
-def reset_password(req: ResetPasswordRequest):
+@limiter.limit("10/hour")
+def reset_password(request: Request, req: ResetPasswordRequest):
     """Nastaví nové heslo podľa jednorazového resetovacieho tokenu."""
     from datetime import datetime, timezone
 
