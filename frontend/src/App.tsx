@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
@@ -22,34 +23,39 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return token ? <>{children}</> : <Navigate to="/login" replace />
 }
 
+// Verejná domovská stránka: prihláseného pošli do appky, inak ukáž landing.
+function PublicHome() {
+  const { token } = useAuth()
+  return token ? <Navigate to="/dashboard" replace /> : <LandingPage />
+}
+
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<PublicHome />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
       <Route path="/invite/:token" element={<InvitePage />} />
       <Route
-        path="/"
         element={
           <PrivateRoute>
             <Layout />
           </PrivateRoute>
         }
       >
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:id" element={<ProjectDetailPage />} />
-        <Route path="team" element={<TeamPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
-        <Route path="portfolio" element={<PortfolioPage />} />
-        <Route path="clients" element={<ClientsPage />} />
-        <Route path="clients/:id" element={<ClientDetailPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/team" element={<TeamPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        <Route path="/clients" element={<ClientsPage />} />
+        <Route path="/clients/:id" element={<ClientDetailPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
