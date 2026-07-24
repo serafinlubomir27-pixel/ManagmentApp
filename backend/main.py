@@ -18,6 +18,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from dotenv import load_dotenv
 load_dotenv()
 
+# ── Sentry (observability) ────────────────────────────────────────────────────
+# Aktivuje sa len keď je nastavený SENTRY_DSN. Import je chránený, takže appka
+# funguje aj bez nainštalovaného sentry-sdk (napr. v testoch).
+_sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            environment=os.environ.get("SENTRY_ENV", os.environ.get("DB_BACKEND", "sqlite")),
+            send_default_pii=False,
+        )
+    except Exception as _exc:  # pragma: no cover — nezhadzuj štart appky
+        print(f"[Sentry] init preskočený: {_exc}")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded

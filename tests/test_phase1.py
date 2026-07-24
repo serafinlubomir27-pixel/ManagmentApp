@@ -83,6 +83,23 @@ def test_delete_project_cascades():
     assert client.get(f"/tasks/{tid}", headers=h).status_code == 404      # úloha tiež (cascade)
 
 
+# ── Manuálny prepočet CPM ────────────────────────────────────────────────────
+
+def test_recalculate_cpm_endpoint():
+    h = _admin()
+    pid = client.post("/projects/", json={"name": "Recalc proj"}, headers=h).json()["id"]
+    a = client.post(f"/projects/{pid}/tasks", json={"name": "A", "duration": 3}, headers=h).json()["id"]
+    b = client.post(f"/projects/{pid}/tasks", json={"name": "B", "duration": 4}, headers=h).json()["id"]
+    client.post(f"/tasks/{b}/dependencies", params={"depends_on": a}, headers=h)
+
+    r = client.post(f"/projects/{pid}/recalculate-cpm", headers=h)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ok"] is True
+    assert body["project_duration"] == 7   # A(3) → B(4)
+    assert body["critical_tasks"] >= 1
+
+
 # ── iCal DTEND — +1 deň aj cez koniec mesiaca (predtým bugnuté pre deň ≥ 28) ──
 
 def test_ical_dtend_next_day_month_end():

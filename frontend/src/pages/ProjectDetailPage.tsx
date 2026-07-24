@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown, Paperclip } from 'lucide-react'
+import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown, Paperclip, RefreshCw } from 'lucide-react'
 import { projectsApi, tasksApi, teamApi, attachmentsApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
@@ -150,6 +150,14 @@ export default function ProjectDetailPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
   })
 
+  const recalcMutation = useMutation({
+    mutationFn: () => tasksApi.recalculateCpm(projectId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      qc.invalidateQueries({ queryKey: ['project', projectId] })
+    },
+  })
+
   const subscriptionMutation = useMutation({
     mutationFn: ({ taskId, field, value }: { taskId: number; field: 'auto_notify' | 'auto_calendar'; value: boolean }) =>
       tasksApi.update(taskId, { [field]: value }),
@@ -276,6 +284,17 @@ export default function ProjectDetailPage() {
             className="btn-ghost flex items-center gap-2 text-sm border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
           >
             <Sparkles size={14} /> AI generátor
+          </button>
+        )}
+        {isManager && (
+          <button
+            onClick={() => recalcMutation.mutate()}
+            disabled={recalcMutation.isPending}
+            title="Prepočítať kritickú cestu (ES/EF/rezervy) pre celý projekt"
+            className="btn-ghost flex items-center gap-2 text-sm border border-gray-200 dark:border-gray-700 disabled:opacity-60"
+          >
+            <RefreshCw size={14} className={recalcMutation.isPending ? 'animate-spin' : ''} />
+            {recalcMutation.isPending ? 'Počítam…' : 'Prepočítať CPM'}
           </button>
         )}
         {isManager && (

@@ -8,6 +8,7 @@ python-dotenv>=1.0.0
 bcrypt>=4.0.0
 slowapi>=0.1.9
 httpx>=0.27.0
+sentry-sdk[fastapi]>=2.0.0
 
 # Desktop app (len lokálne — zakomentované pre Railway)
 # customtkinter>=5.2.0

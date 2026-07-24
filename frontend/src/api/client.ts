@@ -70,6 +70,7 @@ export const tasksApi = {
   getProjectDependencies: (projectId: number) => api.get(`/projects/${projectId}/dependencies`),
   addDependency: (taskId: number, dependsOn: number) =>
     api.post(`/tasks/${taskId}/dependencies?depends_on=${dependsOn}`),
+  recalculateCpm: (projectId: number) => api.post(`/projects/${projectId}/recalculate-cpm`),
 }
 
 // ── Comments ──────────────────────────────────────────────────────────────────

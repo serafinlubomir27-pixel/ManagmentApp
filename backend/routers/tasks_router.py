@@ -92,6 +92,26 @@ def create_task(
     return {"id": task_id, "detail": "Úloha vytvorená"}
 
 
+@router.post("/projects/{project_id}/recalculate-cpm")
+def recalculate_cpm(
+    project_id: int,
+    current_user: dict = Depends(require_manager_or_admin),
+):
+    """Vynúti prepočet CPM pre celý projekt — užitočné po hromadných zmenách alebo
+    po importe starých dát (ktoré mohli mať zastaralé CPM hodnoty)."""
+    assert_project_access(project_id, current_user)
+    result = cpm_manager.recalculate(project_id)
+    if result is None:
+        return {"ok": False, "detail": "CPM prepočet zlyhal — pozri logy servera"}
+    return {
+        "ok": True,
+        "detail": "CPM bolo prepočítané",
+        "project_duration": result.project_duration,
+        "critical_tasks": len(result.critical_path),
+        "is_valid": result.is_valid,
+    }
+
+
 @router.get("/tasks/{task_id}")
 def get_task_detail(
     task_id: int,
