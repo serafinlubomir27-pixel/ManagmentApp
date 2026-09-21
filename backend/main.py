@@ -39,7 +39,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
-from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router, attachments_router, clients_router, org_router
+from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router, attachments_router, clients_router, org_router, export_router
 from backend.ratelimit import limiter
 from repositories.base_repo import get_backend
 
@@ -96,6 +96,7 @@ app.include_router(ai_router.router, prefix="")
 app.include_router(attachments_router.router, prefix="")
 app.include_router(clients_router.router, prefix="")
 app.include_router(org_router.router)
+app.include_router(export_router.router)
 
 # ── Static files (uploaded attachments) ──────────────────────────────────────
 from fastapi.staticfiles import StaticFiles

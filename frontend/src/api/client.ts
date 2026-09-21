@@ -186,3 +186,33 @@ export const clientsApi = {
     api.patch(`/clients/${clientId}/pipeline`, data),
   getAllPipeline: () => api.get('/clients/pipeline/all'),
 }
+
+// ── Export ───────────────────────────────────────────────────────────────────
+export type ExportFormat = 'pdf' | 'csv' | 'xlsx'
+
+/** Prečíta názov súboru z Content-Disposition; uprednostní UTF-8 variant. */
+function filenameFrom(disposition: string | undefined, fallback: string): string {
+  if (!disposition) return fallback
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(disposition)
+  if (utf8) {
+    try { return decodeURIComponent(utf8[1]) } catch { /* padni na ASCII variant */ }
+  }
+  const ascii = /filename="([^"]+)"/i.exec(disposition)
+  return ascii ? ascii[1] : fallback
+}
+
+export const exportApi = {
+  /** Stiahne export projektu a spustí uloženie súboru v prehliadači. */
+  download: async (projectId: number, format: ExportFormat, projectName = 'projekt') => {
+    const res = await api.get(`/projects/${projectId}/export/${format}`, { responseType: 'blob' })
+    const name = filenameFrom(res.headers['content-disposition'], `${projectName}.${format}`)
+    const url = URL.createObjectURL(res.data as Blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  },
+}

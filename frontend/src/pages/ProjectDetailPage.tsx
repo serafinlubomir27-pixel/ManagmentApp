@@ -16,6 +16,7 @@ import RiskScoreWidget from '../components/RiskScoreWidget'
 import AttachmentSidebar from '../components/AttachmentSidebar'
 import AttachmentList, { AttachmentItem } from '../components/AttachmentList'
 import FileUploadDropzone from '../components/FileUploadDropzone'
+import ExportMenu from '../components/ExportMenu'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -297,6 +298,7 @@ export default function ProjectDetailPage() {
             {recalcMutation.isPending ? 'Počítam…' : 'Prepočítať CPM'}
           </button>
         )}
+        <ExportMenu projectId={projectId} projectName={project?.name ?? 'projekt'} />
         {isManager && (
           <button onClick={() => setShowCreate(true)} className="btn-primary flex items-center gap-2 text-sm">
             <Plus size={15} /> Nová úloha
