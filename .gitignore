@@ -30,3 +30,7 @@ config.json
 # Frontend build
 frontend/node_modules/
 frontend/dist/
+
+# Claude Code — lokálne artefakty (launch.json sa commituje)
+.claude/worktrees/
+.claude/settings.local.json
