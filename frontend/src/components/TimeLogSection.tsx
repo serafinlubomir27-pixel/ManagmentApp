@@ -75,16 +75,16 @@ export default function TimeLogSection({ taskId, estimatedHours }: Props) {
       {/* Header + stats */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
-          <Clock size={12} /> Time tracking
+          <Clock size={12} /> Evidencia času
         </div>
         <div className="flex items-center gap-3 text-xs">
           <span className={`font-mono font-bold ${overBudget ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
-            {total.toFixed(1)}h logged
+            {total.toFixed(1)}h odpracovaných
           </span>
           {estimated !== null && (
             <span className="text-gray-400">
-              / {estimated}h estimate
-              {overBudget && <span className="text-red-500 ml-1 flex items-center gap-0.5 inline-flex"><AlertCircle size={9} /> Over budget!</span>}
+              / {estimated}h odhad
+              {overBudget && <span className="text-red-500 ml-1 flex items-center gap-0.5 inline-flex"><AlertCircle size={9} /> Prekročený odhad!</span>}
             </span>
           )}
         </div>

@@ -55,10 +55,10 @@ interface Props {
 
 const LEVEL_META = {
   none:     { label: 'N/A',      bg: 'bg-gray-100 dark:bg-gray-800',  text: 'text-gray-500', ring: '#94a3b8', fill: '#94a3b8' },
-  low:      { label: 'Low',      bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-400', ring: '#22c55e', fill: '#22c55e' },
-  medium:   { label: 'Medium',   bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-400', ring: '#eab308', fill: '#eab308' },
-  high:     { label: 'High',     bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-400', ring: '#f97316', fill: '#f97316' },
-  critical: { label: 'Critical', bg: 'bg-red-50 dark:bg-red-950',    text: 'text-red-700 dark:text-red-400',    ring: '#ef4444', fill: '#ef4444' },
+  low:      { label: 'Nízke',    bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-400', ring: '#22c55e', fill: '#22c55e' },
+  medium:   { label: 'Stredné',  bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-400', ring: '#eab308', fill: '#eab308' },
+  high:     { label: 'Vysoké',   bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-400', ring: '#f97316', fill: '#f97316' },
+  critical: { label: 'Kritické', bg: 'bg-red-50 dark:bg-red-950',    text: 'text-red-700 dark:text-red-400',    ring: '#ef4444', fill: '#ef4444' },
 }
 
 /** SVG semicircle gauge (180°) */
@@ -172,26 +172,26 @@ export default function RiskScoreWidget({ projectId, variant = 'full' }: Props) 
           <div className="flex items-center gap-2">
             <ShieldAlert size={16} style={{ color: meta.ring }} />
             <span className={`text-sm font-semibold ${meta.text}`}>
-              {meta.label} Risk
+              Riziko: {meta.label}
             </span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-            Composite score based on PERT schedule uncertainty, overdue tasks,
-            and resource conflicts.
+            Súhrnné skóre z neistoty harmonogramu (PERT), úloh po termíne
+            a konfliktov v zdrojoch.
           </p>
 
           {/* Quick stats */}
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
             {c.overdue_tasks > 0 && (
-              <span className="text-red-500">⚠ {c.overdue_tasks} overdue</span>
+              <span className="text-red-500">⚠ {c.overdue_tasks} po termíne</span>
             )}
             {c.over_allocated_days > 0 && (
-              <span className="text-orange-500">⊕ {c.over_allocated_days} conflict days</span>
+              <span className="text-orange-500">⊕ {c.over_allocated_days} dní v konflikte</span>
             )}
             {hasPert && (
               <span className="text-gray-500">
                 <TrendingUp size={11} className="inline mr-0.5" />
-                {Math.round((c.prob_on_time ?? 0.5) * 100)}% on-time prob.
+                {Math.round((c.prob_on_time ?? 0.5) * 100)}% šanca na dodržanie termínu
               </span>
             )}
           </div>
@@ -201,7 +201,7 @@ export default function RiskScoreWidget({ projectId, variant = 'full' }: Props) 
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mt-1"
-          title="Show breakdown"
+          title="Zobraziť rozklad skóre"
         >
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
@@ -211,23 +211,23 @@ export default function RiskScoreWidget({ projectId, variant = 'full' }: Props) 
       {expanded && (
         <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-            Component breakdown
+            Rozklad skóre
           </p>
 
           <ComponentBar
-            label="PERT schedule uncertainty (40%)"
+            label="Neistota harmonogramu — PERT (40 %)"
             value={c.pert_risk}
             weight={40}
             color="#818cf8"
           />
           <ComponentBar
-            label="Overdue tasks (35%)"
+            label="Úlohy po termíne (35 %)"
             value={c.overdue_ratio}
             weight={35}
             color="#f87171"
           />
           <ComponentBar
-            label="Resource conflicts (25%)"
+            label="Konflikty zdrojov (25 %)"
             value={c.resource_ratio}
             weight={25}
             color="#fb923c"
@@ -236,15 +236,15 @@ export default function RiskScoreWidget({ projectId, variant = 'full' }: Props) 
           {/* PERT detail */}
           {hasPert && (
             <div className="text-xs text-gray-400 space-y-0.5 pt-1">
-              <div className="font-medium text-gray-500 dark:text-gray-300 mb-1">PERT details</div>
+              <div className="font-medium text-gray-500 dark:text-gray-300 mb-1">Detail PERT</div>
               <div className="grid grid-cols-2 gap-x-4">
-                <span>Expected duration</span>
+                <span>Očakávané trvanie</span>
                 <span className="font-mono text-gray-600 dark:text-gray-300">{c.expected_duration}d</span>
-                <span>Std deviation (σ)</span>
+                <span>Smerodajná odchýlka (σ)</span>
                 <span className="font-mono text-gray-600 dark:text-gray-300">±{c.std_dev}d</span>
-                <span>CPM duration</span>
+                <span>Trvanie podľa CPM</span>
                 <span className="font-mono text-gray-600 dark:text-gray-300">{c.cpm_duration}d</span>
-                <span>P(finish on time)</span>
+                <span>P(dodržanie termínu)</span>
                 <span className="font-mono text-gray-600 dark:text-gray-300">{Math.round((c.prob_on_time ?? 0) * 100)}%</span>
               </div>
             </div>

@@ -171,7 +171,7 @@ export default function PortfolioPage() {
           <Link
             key={p.id}
             to={`/projects/${p.id}`}
-            className={`card p-5 hover:shadow-md transition-shadow group ${
+            className={`card relative p-5 pr-9 hover:shadow-md transition-shadow group ${
               p.is_at_risk ? 'border-red-200 dark:border-red-900' : ''
             }`}
           >

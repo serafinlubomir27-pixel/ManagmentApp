@@ -28,6 +28,9 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Čaká', in_progress: 'Prebieha', completed: 'Hotová', blocked: 'Blokovaná',
 }
+const PRIORITY_LABEL: Record<string, string> = {
+  low: 'Nízka', medium: 'Stredná', high: 'Vysoká', critical: 'Kritická',
+}
 const PRIORITY_COLOR: Record<string, string> = {
   low:      'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   medium:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -469,7 +472,7 @@ export default function ProjectDetailPage() {
                               }
                             </div>
                             <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
-                              {t.priority}
+                              {PRIORITY_LABEL[t.priority] ?? t.priority}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">

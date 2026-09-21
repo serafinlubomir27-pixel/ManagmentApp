@@ -40,6 +40,9 @@ const STATUS_COLOR: Record<string, string> = {
   completed:   'bg-green-400',
   blocked:     'bg-red-400',
 }
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Čaká', in_progress: 'Prebieha', completed: 'Hotová', blocked: 'Blokovaná',
+}
 
 function getInitials(name: string) {
   return name.split(/[\s_]/).map(n => n[0]).slice(0, 2).join('').toUpperCase()
@@ -248,7 +251,7 @@ export default function ResourcePanel({ projectId }: Props) {
                     <td className="px-3 py-2 text-center font-mono text-gray-600 dark:text-gray-400">{t.duration}d</td>
                     <td className="px-3 py-2">
                       <span className={`inline-block w-2 h-2 rounded-full mr-1 ${STATUS_COLOR[t.status] ?? 'bg-gray-300'}`} />
-                      {t.status}
+                      {STATUS_LABEL[t.status] ?? t.status}
                     </td>
                   </tr>
                 ))}
