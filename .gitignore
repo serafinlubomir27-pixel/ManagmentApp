@@ -34,3 +34,13 @@ frontend/dist/
 # Claude Code — lokálne artefakty (launch.json sa commituje)
 .claude/worktrees/
 .claude/settings.local.json
+.superpowers/
+
+# Dočasné výstupy nástrojov a testov (regenerovateľné, nepatria do repa)
+Tempopenapi.json
+test_*.pdf
+*_b64_out.txt
+
+# Vedľajšie projekty uložené v tomto priečinku — nie sú súčasťou Nodusu
+/Claude projekt/
+/lovable projekt/
