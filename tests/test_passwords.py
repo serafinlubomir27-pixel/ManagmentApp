@@ -67,3 +67,38 @@ def test_bcrypt_user_login():
     user_repo.create_user("modern", hash_password("silne456"), "Modern User", "employee", None, _ORG_ID)
     assert user_repo.get_by_username_and_password("modern", "silne456") is not None
     assert user_repo.get_by_username_and_password("modern", "zle") is None
+
+
+# ── Regresia: create_database() nesmie poškodiť bcrypt hashe ─────────────────
+
+def test_create_database_preserves_bcrypt_passwords():
+    """create_database() beží pri KAŽDOM štarte na SQLite.
+
+    Jeho migrácia plaintextu kedysi rozhodovala podľa dĺžky ("!= 64 znamená
+    plaintext"). Bcrypt má 60 znakov, takže si ho vyhodnotila ako plaintext a
+    prepísala na sha256(bcrypt_hash) — používateľ sa už nikdy neprihlásil.
+    """
+    from database.setup import create_database
+
+    user_repo.create_user("restart", hash_password("preziRestart1"), "Restart User", "employee", None, _ORG_ID)
+    before = user_repo.get_by_username("restart")["password"]
+    assert before.startswith("$2")
+
+    create_database()          # simuluj reštart aplikácie
+
+    after = user_repo.get_by_username("restart")["password"]
+    assert after == before, "create_database() prepísal bcrypt hash"
+    assert user_repo.get_by_username_and_password("restart", "preziRestart1") is not None
+
+
+def test_create_database_preserves_legacy_sha256():
+    """Starý sha256 hash musí prejsť nedotknutý — inak by sa dvojito zahashoval."""
+    from database.setup import create_database
+
+    user_repo.create_user("stary", _sha("legacyHeslo"), "Stary User", "employee", None, _ORG_ID)
+    before = user_repo.get_by_username("stary")["password"]
+
+    create_database()
+
+    assert user_repo.get_by_username("stary")["password"] == before
+    assert user_repo.get_by_username_and_password("stary", "legacyHeslo") is not None

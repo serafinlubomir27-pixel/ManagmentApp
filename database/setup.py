@@ -390,13 +390,18 @@ def create_database():
             (default_org_id,),
         )
 
-    # --- Migrácia: zahashuj plaintext heslá (dlzka != 64 = nie je SHA-256 hash) ---
-    plain_users = cursor.execute(
-        "SELECT id, password FROM users WHERE length(password) != 64"
-    ).fetchall()
-    for uid, pwd in plain_users:
-        hashed = hashlib.sha256(pwd.encode()).hexdigest()
-        cursor.execute("UPDATE users SET password = ? WHERE id = ?", (hashed, uid))
+    # --- Migrácia: zahashuj heslá, ktoré sú v DB ešte v čistom texte ---
+    # Pozor: rozpoznávaj hash podľa tvaru, nie podľa dĺžky. Bcrypt má 60 znakov,
+    # takže podmienka "length != 64" ho kedysi považovala za plaintext a prehashovala
+    # na sha256(bcrypt_hash) — účet sa potom už nedal overiť žiadnym heslom.
+    from logic.passwords import hash_password, _is_legacy_sha256
+
+    for uid, pwd in cursor.execute("SELECT id, password FROM users").fetchall():
+        if not pwd or pwd.startswith("$2") or _is_legacy_sha256(pwd):
+            continue  # už je to bcrypt alebo starý sha256 — nechaj tak
+        cursor.execute(
+            "UPDATE users SET password = ? WHERE id = ?", (hash_password(pwd), uid)
+        )
 
     conn.commit()
     conn.close()
