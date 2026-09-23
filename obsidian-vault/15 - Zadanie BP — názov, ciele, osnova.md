@@ -325,17 +325,47 @@ a spôsob kontroly výstupov. Odporúča zachovať históriu commitov.
 > Nepriznané použitie, ktoré nahrádza vlastnú tvorivú činnosť, sa posudzuje
 > ako **plagiátorstvo**.
 
-Rozdelenie práce, ktoré treba popísať pravdivo:
+### Rozhodnutie o rozsahu deklarácie
+
+Súčasný `docs/bakalarska-praca.html` je **pracovný koncept, ktorý sa odovzdávať
+nebude** — finálny text vznikne nanovo podľa novej osnovy. Deklaruje sa to, čo je
+v **odovzdanej** práci, nie to, čo bolo v zahodenom koncepte. Deklarácia sa teda
+sústredí na **pomoc pri tvorbe softvéru**.
+
+### Kde presne vedie čiara
+
+Rozhoduje **pôvod obsahu v odovzdanom texte**, nie to, v ktorom súbore vznikol.
+
+| Situácia | Deklarovať? |
+|---|---|
+| Kód, testy, komentáre, refaktoring | **áno** — to je jadro deklarácie |
+| Koncept HTML, ktorý sa zahodí a nič z neho neprejde | nie |
+| Gramatika, štylistika, preklad | nie *(výslovná výnimka, čl. III ods. 4)* |
+| **Poznámky v Obsidiane → text práce** | **áno, ak z nich obsah prejde** |
+| Rešerš konkurencie → analýza v kap. 3 | **áno** — podklad má pôvod v AI |
+| Osnova, formulácia cieľov | **áno, ak sa prevezmú** |
+
+Posledné tri riadky sú tie, na ktoré sa ľahko zabudne. Poznámky 15 a 16 v tomto
+trezore sú výstup AI. Ak sa z nich niečo dostane do textu — aj preformulované —
+patrí to do deklarácie. Nie je to problém: priznané použitie je v poriadku,
+**nepriznané je plagiátorstvo** (čl. III ods. 5).
+
+Praktický test pred odovzdaním: *„Vedel by som pri tomto odseku povedať, odkiaľ
+pochádza a prečo tam je?"* Ak áno pri všetkom, deklarácia je úplná.
+
+### Rozdelenie práce
 
 | Oblasť | Podiel |
 |---|---|
-| Voľba témy, architektúry, dátového modelu | vlastné rozhodnutia |
-| CPM algoritmus — návrh a overenie správnosti | vlastné |
-| Generovanie boilerplate kódu, refaktoring, komentáre | s pomocou Claude Code |
+| Voľba témy a zadanie | konzultácie s praxou *(viď časť 4b)* |
+| Architektúra, dátový model, návrh CPM | vlastné rozhodnutia |
+| Overenie správnosti výpočtov | vlastné |
+| Generovanie kódu, refaktoring, komentáre | s pomocou Claude Code |
 | Automatizované testy | s pomocou Claude Code, kontrola spustením |
-| Technické poznámky v Obsidiane | s pomocou Claude Code |
-| Rešerš konkurencie (podklad) | s pomocou Claude Code |
-| **Spracovanie rešerše do analýzy, text práce** | **vlastné** |
+| Technické poznámky v trezore | s pomocou Claude Code |
+| Rešerš konkurencie *(podklad)* | s pomocou Claude Code |
+| **Spracovanie rešerše do analýzy** | **vlastné** |
+| **Text bakalárskej práce** | **vlastný** |
 | Zodpovednosť za správnosť | autor práce |
 
 **Konkrétny príklad kontroly výstupov**, ktorý sa hodí do kapitoly 4.8:
