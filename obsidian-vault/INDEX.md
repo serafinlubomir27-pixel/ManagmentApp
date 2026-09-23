@@ -17,6 +17,7 @@ Vitaj v trezore. Toto je vstupný bod.
 - [[10 - v1.1 Featury]] — unit testy, pytest, 64 testov
 - [[11 - Supabase Migrácia]] — PostgreSQL cloud, migrate_to_supabase.py
 - [[12 - Spustenie projektu]] — **príkazy na spustenie backendu a frontendu**
+- [[15 - Zadanie BP — názov, ciele, osnova]] — **podklad k prepracovaniu bakalárky** (názov, ciele, nová osnova, mapovanie starých kapitol)
 
 ## 🔍 Rýchle hľadanie podľa témy
 
