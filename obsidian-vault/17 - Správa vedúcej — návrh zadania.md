@@ -166,9 +166,10 @@ Doplním problematiku GDPR a uchovávania dokumentov.
    zodpovedať osnove v schválenom zadaní. Pri zmene názvu aj osnovy je teda zrejme
    potrebné upraviť zadanie v EDISONe — je to tak, a aký je postup a termín?
 
-2. V smernici sa uvádza, že fakultná šablóna je jej prílohou, ale v dokumente,
-   ktorý mám k dispozícii, som ju nenašiel. Viete mi, prosím, poslať aktuálnu
-   verziu alebo odkaz, kde je dostupná?
+2. Šablóna `Šablona BP_DP_2026.dotx` vyžaduje na titulnom liste aj **anglický
+   názov práce**. Navrhujem: *Design, Implementation and Evaluation of an
+   Information System for Project Management Using the Critical Path Method*.
+   Vyhovuje takto, alebo by ste formuláciu upravili?
 
 3. Keďže požiadavky vychádzajú z konzultácií s bývalým zamestnávateľom — je
    potrebné doložiť súhlas zástupcu spolupracujúcej osoby podľa čl. VI ods. 3,
@@ -205,4 +206,5 @@ si vyžadovala odpoveď v tomto e-maile.
 - [ ] Prejsť vlastnými slovami, nech to znie ako ty
 - [ ] Overiť presné znenie názvu v EDISONe
 - [ ] Rozhodnúť sa o podtitule s názvom Nodus
+- [ ] Skontrolovať navrhnutý anglický názov
 - [ ] **Neposielať zatiaľ žiadne kapitoly** — chce najprv schváliť vymedzenie

@@ -195,25 +195,64 @@ oslabí doloženie požiadaviek — rozhodnutie patrí vedúcej.
 
 ---
 
-## 9. Šablóna — kde ju hľadať
+## 9. Šablóna — `Šablona BP_DP_2026.dotx`
 
-Smernica hovorí *„šablona je přílohou této směrnice"* (čl. V, ods. 3), ale
-**v PDF, ktoré máme, šablóna nie je** — jeho jediná príloha je Príloha č. 1
-(súhlas spolupracujúcej osoby).
+Súbor je v `Downloads`. Je to **Word template (.dotx)** — otvoriť cez
+*Súbor → Nový → z tejto šablóny*, nie priamo dvojklikom, inak sa upravuje samotná
+šablóna namiesto dokumentu.
 
-Šablóna sa distribuuje zvlášť. Kde hľadať:
-1. **IS EDISON** — sekcia so záverečnými prácami
-2. **Web EkF VŠB-TUO** — študijné oddelenie / dokumenty ku záverečným prácam
-3. **Ústredná knižnica VŠB-TUO** — sekcia Podpora studia a výzkumu
-4. **Bakalársky seminár** — podľa čl. II ods. 12 sa konkrétne požiadavky na obsah
-   oznamujú práve tam
+### Nastavenie strany
+| | |
+|---|---|
+| Formát | A4 (21 × 29,7 cm) |
+| Okraje | 2,5 cm zo všetkých strán |
+| Hlavička / päta | 1,25 cm |
+| Písmo | Times New Roman |
 
-Ak sa nenájde, spýtať sa priamo vedúcej — v jej liste aj tak stojí, že text treba
-previesť do *aktuálnej fakultnej šablóny*, takže vie, ktorá to je.
+### Štýly, ktoré treba používať
+Ľavý stĺpec je názov, ktorý uvidíš v galérii štýlov vo Worde.
 
-Podľa histórie revízií pribudla **nová šablóna vo verzii M (15. 10. 2019)** a
-prílohy sa menili vo verziách N, R, S, T, U — takže je dôležité mať **aktuálnu**,
-nie nejakú staršiu stiahnutú kópiu.
+| Štýl | Na čo |
+|---|---|
+| `Nadpis 1` / `Nadpis 2` / `Nadpis 3` | číslované nadpisy kapitol a podkapitol |
+| `Nadpis bez čísla` | Seznam použité literatury, Seznam zkratek |
+| `Základní text` | bežné odstavce |
+| `Seznam s odrážkami` | odrážky |
+| `Číslovaný seznam` | číslované zoznamy |
+| `Titulek` | popisky obrázkov a tabuliek |
+| `Odstavec se seznamem` | položky v zozname literatúry |
+| `Zkratky` | položky v zozname skratiek |
+| `Titulní list názvy` / `Titulní list jména` | titulný list |
+| `Název česky na úvodní straně` / `Název anglicky na úvodní straně` | názov práce |
+
+> Smernica (čl. V ods. 3): **tieto štýly nie je prípustné upravovať.**
+
+### Štruktúra dokumentu v šablóne
+1. **Titulný list** — VYSOKÁ ŠKOLA BÁŇSKÁ – TECHNICKÁ UNIVERZITA OSTRAVA /
+   EKONOMICKÁ FAKULTA / `KATEDRA [NÁZEV KATEDRY]` / názov práce **česky aj
+   anglicky** / `Student:` / `Vedoucí bakalářské práce:` / `Ostrava [rok]`
+2. **Obsah** — automatické pole, generuje sa cez *Aktualizovať tabuľku*
+3. **Úvod**
+4. Kapitoly
+5. **Závěr**
+6. **Seznam použité literatury**
+7. **Seznam zkratek**
+8. **Seznam příloh**
+9. **Přílohy**
+
+### Čo z nej vyplýva navyše
+- **Názov práce treba aj v angličtine** — na titulnom liste sú oba
+- **Anotácia/abstrakt v dokumente nie je** — kľúčové slová a abstrakt (ČJ + AJ)
+  sa vypĺňajú ako **polia v EDISONe** (čl. VI ods. 2), nie ako strana v texte
+- Popisky: **obrázok → titulok POD obrázkom**, **tabuľka → titulok NAD tabuľkou**
+  *(doslovná inštrukcia v šablóne)*
+- Číslovanie popiskov je podľa kapitoly — `Obr. 3.1`, `Tab. 3.1`
+- Zoznam literatúry je v šablóne **abecedne** a vo formáte APA — vrátane vzoru
+  citácie AI nástroja:
+  `Google. (2025). Gemini 2.5 Flash [Large language model]. Dostupné z https://gemini.google.com`
+
+> **Anglický názov práce** je nová vec, ktorá z textu smernice priamo nevyplýva.
+> Preklad odsúhlasiť s vedúcou — musí sedieť so zadaním v EDISONe.
 
 ---
 
