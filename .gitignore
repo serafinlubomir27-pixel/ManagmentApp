@@ -44,3 +44,6 @@ test_*.pdf
 # Vedľajšie projekty uložené v tomto priečinku — nie sú súčasťou Nodusu
 /Claude projekt/
 /lovable projekt/
+
+# Zálohy databázy — obsahujú hashe hesiel, nepatria do repozitára
+backups/
