@@ -20,6 +20,7 @@ Vitaj v trezore. Toto je vstupný bod.
 - [[15 - Zadanie BP — názov, ciele, osnova]] — **podklad k prepracovaniu bakalárky** (názov, ciele, nová osnova, mapovanie starých kapitol)
 - [[16 - Smernica EkF — formálne požiadavky]] — rozsah, citácie APA, deklarácia AI, šablóna, odovzdanie do EDISONu
 - [[17 - Správa vedúcej — návrh zadania]] — návrh textu odpovede: názov, ciele, osnova, otázky
+- [[18 - Schválené zadanie a pripomienky k osnove]] — **názov a ciele schválené**; metodika pred analýzu, menej podkapitol, PERT overený
 
 ## 🔍 Rýchle hľadanie podľa témy
 
