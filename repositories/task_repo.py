@@ -223,7 +223,10 @@ def get_tasks_with_due_dates(user_id: int, only_auto_calendar: bool = False) -> 
                    p.name as project_name, p.user_id as project_owner
             FROM tasks t
             JOIN projects p ON t.project_id = p.id
-            WHERE t.due_date IS NOT NULL AND t.due_date != ''
+            -- due_date je v PostgreSQL typu date, takže priame porovnanie
+            -- s prázdnym reťazcom zlyhá; v SQLite je to text, kde prázdna
+            -- hodnota vzniknúť môže. CAST funguje na oboch.
+            WHERE t.due_date IS NOT NULL AND CAST(t.due_date AS TEXT) <> ''
               AND (t.assigned_to = ? OR p.user_id = ?)
               {calendar_filter}
             ORDER BY t.due_date

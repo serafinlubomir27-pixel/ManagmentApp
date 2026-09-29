@@ -52,6 +52,29 @@ def test_boolean_columns_are_not_compared_to_integers():
         'Použi TRUE/FALSE namiesto 1/0:\n  ' + '\n  '.join(hits))
 
 
+def test_date_columns_are_not_compared_to_empty_string():
+    """`due_date != ''` zlyhá v PostgreSQL, kde je stĺpec typu date.
+
+    V SQLite je to text a prázdna hodnota v ňom vzniknúť môže, preto sa
+    porovnanie nedá len vypustiť — musí ísť cez CAST.
+    """
+    date_columns = ['due_date', 'log_date', 'created_at', 'meeting_date']
+    pattern = re.compile(
+        r'\b(?<!AS TEXT\) )(' + '|'.join(date_columns) + r')\s*(!=|<>|=)\s*[\'"]{2}')
+    hits = []
+    for path in _python_files():
+        for lineno, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+            if line.lstrip().startswith('#') or 'CAST(' in line.upper():
+                continue
+            m = pattern.search(line)
+            if m:
+                hits.append(f'{path.relative_to(REPO)}:{lineno}: {m.group(0)}')
+
+    assert not hits, (
+        'Dátumový stĺpec sa porovnáva s prázdnym reťazcom — PostgreSQL to odmietne.\n'
+        'Použi CAST(stlpec AS TEXT) <> \'\':\n  ' + '\n  '.join(hits))
+
+
 def test_no_sqlite_only_functions():
     """Funkcie dostupné len v SQLite by v produkcii na PostgreSQL zlyhali."""
     forbidden = ['strftime(', 'datetime(', 'julianday(', 'ifnull(']
