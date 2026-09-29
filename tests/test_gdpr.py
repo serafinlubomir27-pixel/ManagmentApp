@@ -59,3 +59,29 @@ def test_delete_removes_all_org_data():
     # organizácia, jej používatelia aj projekty sú preč
     assert _count("SELECT count(*) c FROM organizations WHERE name = ?", ("GdprOrg3",)) == 0
     assert _count("SELECT count(*) c FROM users WHERE email = ?", ("gdpr3@acme.sk",)) == 0
+
+
+def test_delete_removes_crm_data_of_clients():
+    """Regresia: CRM tabuľky odkazujú na users, takže musia zmiznúť pred nimi.
+
+    Bez toho PostgreSQL zmazanie používateľa odmietne pre porušenie cudzieho
+    kľúča a právo na výmaz by sa nedalo uplatniť.
+    """
+    h = _signup("gdpr.crm@acme.sk", "GdprCrmOrg")
+    cid = client.post("/clients/", json={"name": "Klient s CRM"}, headers=h).json()["id"]
+
+    client.post(f"/clients/{cid}/activities",
+                json={"activity_type": "call", "subject": "hovor"}, headers=h)
+    client.post(f"/clients/{cid}/tasks", json={"title": "follow-up"}, headers=h)
+    client.patch(f"/clients/{cid}/pipeline", json={"stage": "contact"}, headers=h)
+
+    assert _count("SELECT COUNT(*) AS c FROM client_activities WHERE client_id = ?", (cid,)) > 0
+    assert _count("SELECT COUNT(*) AS c FROM client_tasks WHERE client_id = ?", (cid,)) == 1
+    assert _count("SELECT COUNT(*) AS c FROM deal_stage_history WHERE client_id = ?", (cid,)) == 1
+
+    r = client.post("/organization/delete", json={"confirm": "GdprCrmOrg"}, headers=h)
+    assert r.status_code == 200, r.text
+
+    for table in ("client_activities", "client_tasks", "deal_stage_history"):
+        assert _count(f"SELECT COUNT(*) AS c FROM {table} WHERE client_id = ?", (cid,)) == 0, \
+            f"{table} po zmazaní organizácie nezostáva prázdna"

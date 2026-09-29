@@ -149,7 +149,11 @@ def delete_organization_cascade(org_id: int) -> bool:
                 conn.execute(f"DELETE FROM {tbl} WHERE task_id IN ({ph})", task_ids)
         if client_ids:
             ph = ",".join("?" for _ in client_ids)
-            for tbl in ("client_meetings", "compliance_items", "deal_stages"):
+            # client_activities, client_tasks a deal_stage_history odkazujú aj na
+            # users, takže musia zmiznúť skôr než sa mažú používatelia — inak
+            # PostgreSQL zmazanie odmietne pre porušenie cudzieho kľúča.
+            for tbl in ("client_meetings", "compliance_items", "deal_stages",
+                        "client_activities", "client_tasks", "deal_stage_history"):
                 conn.execute(f"DELETE FROM {tbl} WHERE client_id IN ({ph})", client_ids)
         if user_ids:
             ph = ",".join("?" for _ in user_ids)
