@@ -167,7 +167,9 @@ def count_projects_for_org(organization_id) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT COUNT(*) AS cnt FROM projects WHERE organization_id = ? AND is_template = 0",
+            # is_template je BOOLEAN; porovnanie s 0 prejde v SQLite, ale PostgreSQL
+            # ho odmietne chybou „operator does not exist: boolean = integer“.
+            "SELECT COUNT(*) AS cnt FROM projects WHERE organization_id = ? AND is_template = FALSE",
             (organization_id,),
         )
         return cursor.fetchone()["cnt"]

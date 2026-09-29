@@ -33,7 +33,7 @@ def mark_read(notification_id: int, user_id: int) -> bool:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
+            "UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?",
             (notification_id, user_id),
         )
         conn.commit()
@@ -48,7 +48,7 @@ def mark_all_read(user_id: int) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0",
+            "UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND is_read = FALSE",
             (user_id,),
         )
         conn.commit()
