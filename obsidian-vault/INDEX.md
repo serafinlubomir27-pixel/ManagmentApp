@@ -21,6 +21,7 @@ Vitaj v trezore. Toto je vstupný bod.
 - [[16 - Smernica EkF — formálne požiadavky]] — rozsah, citácie APA, deklarácia AI, šablóna, odovzdanie do EDISONu
 - [[17 - Správa vedúcej — návrh zadania]] — návrh textu odpovede: názov, ciele, osnova, otázky
 - [[18 - Schválené zadanie a pripomienky k osnove]] — **názov a ciele schválené**; metodika pred analýzu, menej podkapitol, PERT overený
+- [[19 - Otázka na posilnenie ekonomickej línie]] — návrh mailu: doladiť dôraz bez zmeny schválenej témy
 
 ## 🔍 Rýchle hľadanie podľa témy
 
