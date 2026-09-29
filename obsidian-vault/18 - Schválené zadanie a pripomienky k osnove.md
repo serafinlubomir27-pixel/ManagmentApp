@@ -117,3 +117,34 @@ A na záver:
 > bakalářská práce, ve které na základě jasně popsaného problému a metodiky
 > navrhnete řešení, implementujete jeho podstatné části a následně objektivně
 > a kriticky vyhodnotíte, zda splňuje stanovené požadavky."*
+
+---
+
+## Tretie kolo — posilnenie ekonomického a manažérskeho kontextu
+
+Vedúca súhlasila s posilnením zamerania, ale **opravila formuláciu problému**:
+
+> *„Jen bych byla opatrná s označením samotné identifikace kritických činností jako
+> ekonomického problému. Vnímala bych jej spíše jako problém projektového řízení
+> a rozhodování, který má následně ekonomické důsledky — například z hlediska
+> termínů, využití zdrojů nebo dodatečných nákladů."*
+
+### Správny reťazec
+1. **Problém** je manažérsky a rozhodovací — vedúci projektu nevie určiť, ktoré
+   činnosti rozhodujú o termíne
+2. **Dôsledky** sú ekonomické — posun termínu, zle vynaložená kapacita, dodatočné
+   náklady na zrýchlenie prác
+3. **Informačný systém** je prostriedok riešenia, nie cieľ sám osebe
+
+Túto väzbu chce vidieť v úvode, vo formulácii problému **aj pri hodnotení prínosu**.
+
+### Dve obmedzenia
+- **Žiadny podnikateľský zámer, trhové prognózy ani príjmové projekcie** — odvádzalo
+  by to pozornosť od schváleného cieľa
+- Ekonomický kontext musí byť **priamo naviazaný na riešený problém**, nesmie sa stať
+  samostatnou všeobecnou teoretickou časťou o malých firmách
+
+### Zapracované
+- Kapitola 1.1 prepísaná — vedie od rozhodovacej situácie k jej ekonomickým dôsledkom
+- Kapitola 3.4 — prínosy odvodené priamo od dôsledkov z úvodu, s rozlíšením, ktorý
+  sa dá kvantifikovať a ktoré len opísať
