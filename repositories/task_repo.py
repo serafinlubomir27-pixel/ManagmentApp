@@ -405,7 +405,8 @@ def get_tasks_for_project_with_cpm(project_id: int) -> list[dict]:
             """
             SELECT t.id, t.name, t.description, t.status, t.due_date,
                    t.priority, t.estimated_hours,
-                   t.duration, t.delay_days, t.es, t.ef, t.ls, t.lf,
+                   t.duration, t.duration_optimistic, t.duration_pessimistic,
+                   t.delay_days, t.es, t.ef, t.ls, t.lf,
                    t.total_float, t.is_critical, t.category, t.notes,
                    t.sort_order, t.assigned_to, t.created_by,
                    u.username AS assigned_username

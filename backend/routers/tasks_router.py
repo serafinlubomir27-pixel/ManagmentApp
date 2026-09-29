@@ -78,13 +78,18 @@ def create_task(
         created_by=current_user["id"],
         due_date=body.due_date,
     )
-    # Aktualizuj ďalšie polia
+    # Aktualizuj ďalšie polia.
+    # duration_optimistic/pessimistic sem musia patriť tiež — formulár na vytvorenie
+    # úlohy ich posiela a bez nich by sa ticho zahodili, takže PERT by nemal z čoho
+    # počítať, kým používateľ úlohu znova neotvorí a neuloží.
     task_repo.update_task_fields(task_id, {
         "priority": body.priority,
         "duration": body.duration,
         "description": body.description,
         "category": body.category,
         "estimated_hours": body.estimated_hours,
+        "duration_optimistic": body.duration_optimistic,
+        "duration_pessimistic": body.duration_pessimistic,
         "auto_notify": body.auto_notify,
         "auto_calendar": body.auto_calendar,
     })
