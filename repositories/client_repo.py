@@ -318,3 +318,199 @@ def get_all_deals_for_advisor(organization_id: int, advisor_id: int | None = Non
         return rows_to_dicts(rows)
     finally:
         conn.close()
+
+
+# ── CRM: história interakcií ──────────────────────────────────────────────────
+
+ACTIVITY_TYPES = ["note", "call", "email", "meeting", "document", "other"]
+
+
+def add_activity(
+    client_id: int,
+    user_id: int,
+    activity_type: str = "note",
+    subject: str = "",
+    body: str = "",
+    occurred_at: str | None = None,
+) -> int:
+    """Zapíše interakciu s klientom. Bez occurred_at sa použije aktuálny čas."""
+    conn = get_connection()
+    try:
+        if occurred_at:
+            cur = conn.execute(
+                """INSERT INTO client_activities
+                   (client_id, user_id, activity_type, subject, body, occurred_at)
+                   VALUES (?,?,?,?,?,?)""",
+                (client_id, user_id, activity_type, subject, body, occurred_at),
+            )
+        else:
+            cur = conn.execute(
+                """INSERT INTO client_activities
+                   (client_id, user_id, activity_type, subject, body)
+                   VALUES (?,?,?,?,?)""",
+                (client_id, user_id, activity_type, subject, body),
+            )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_activities(client_id: int, limit: int = 100) -> list[dict]:
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT a.*, u.username, u.full_name
+            FROM client_activities a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.client_id = ?
+            ORDER BY a.occurred_at DESC, a.id DESC
+            LIMIT ?
+            """,
+            (client_id, limit),
+        ).fetchall()
+        return rows_to_dicts(rows)
+    finally:
+        conn.close()
+
+
+def delete_activity(activity_id: int, user_id: int) -> bool:
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            "DELETE FROM client_activities WHERE id = ? AND user_id = ?",
+            (activity_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ── CRM: naplánované úlohy ku klientovi ───────────────────────────────────────
+
+def add_client_task(
+    client_id: int,
+    created_by: int,
+    title: str,
+    due_date: str | None = None,
+    priority: str = "medium",
+    assigned_to: int | None = None,
+) -> int:
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            """INSERT INTO client_tasks
+               (client_id, created_by, title, due_date, priority, assigned_to)
+               VALUES (?,?,?,?,?,?)""",
+            (client_id, created_by, title, due_date or None, priority,
+             assigned_to if assigned_to else created_by),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_client_tasks(client_id: int, include_done: bool = True) -> list[dict]:
+    conn = get_connection()
+    try:
+        # `done` je BOOLEAN — porovnanie s 0 by v PostgreSQL zlyhalo.
+        where = "" if include_done else " AND t.done = FALSE"
+        rows = conn.execute(
+            f"""
+            SELECT t.*, u.username AS assignee_username, u.full_name AS assignee_name
+            FROM client_tasks t
+            LEFT JOIN users u ON t.assigned_to = u.id
+            WHERE t.client_id = ?{where}
+            ORDER BY t.done, t.due_date, t.id
+            """,
+            (client_id,),
+        ).fetchall()
+        return rows_to_dicts(rows)
+    finally:
+        conn.close()
+
+
+def set_client_task_done(task_id: int, done: bool) -> bool:
+    conn = get_connection()
+    try:
+        if done:
+            cur = conn.execute(
+                "UPDATE client_tasks SET done = TRUE, done_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (task_id,),
+            )
+        else:
+            cur = conn.execute(
+                "UPDATE client_tasks SET done = FALSE, done_at = NULL WHERE id = ?",
+                (task_id,),
+            )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def delete_client_task(task_id: int) -> bool:
+    conn = get_connection()
+    try:
+        cur = conn.execute("DELETE FROM client_tasks WHERE id = ?", (task_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def get_upcoming_client_tasks(organization_id: int, advisor_id: int | None = None) -> list[dict]:
+    """Nesplnené úlohy naprieč klientmi — podklad pre prehľad poradcu."""
+    conn = get_connection()
+    try:
+        sql = """
+            SELECT t.*, c.name AS client_name, c.id AS client_id
+            FROM client_tasks t
+            JOIN clients c ON t.client_id = c.id
+            WHERE c.organization_id = ? AND t.done = FALSE
+        """
+        params: list = [organization_id]
+        if advisor_id:
+            sql += " AND c.advisor_id = ?"
+            params.append(advisor_id)
+        sql += " ORDER BY t.due_date, t.id"
+        rows = conn.execute(sql, tuple(params)).fetchall()
+        return rows_to_dicts(rows)
+    finally:
+        conn.close()
+
+
+# ── CRM: história posunov obchodu ─────────────────────────────────────────────
+
+def add_stage_change(client_id: int, from_stage: str | None, to_stage: str, changed_by: int) -> int:
+    conn = get_connection()
+    try:
+        cur = conn.execute(
+            "INSERT INTO deal_stage_history (client_id, from_stage, to_stage, changed_by) VALUES (?,?,?,?)",
+            (client_id, from_stage, to_stage, changed_by),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_stage_history(client_id: int) -> list[dict]:
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT h.*, u.username, u.full_name
+            FROM deal_stage_history h
+            JOIN users u ON h.changed_by = u.id
+            WHERE h.client_id = ?
+            ORDER BY h.changed_at DESC, h.id DESC
+            """,
+            (client_id,),
+        ).fetchall()
+        return rows_to_dicts(rows)
+    finally:
+        conn.close()

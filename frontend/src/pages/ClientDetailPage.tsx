@@ -6,11 +6,12 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, FolderKanban, TrendingUp, Calendar, Shield } from 'lucide-react'
+import { ArrowLeft, FolderKanban, TrendingUp, Calendar, Shield, CalendarClock } from 'lucide-react'
 import { clientsApi, projectsApi } from '../api/client'
 import PipelineKanban from '../components/PipelineKanban'
 import ComplianceChecklist from '../components/ComplianceChecklist'
 import MeetingLog from '../components/MeetingLog'
+import ClientCrm from '../components/ClientCrm'
 
 const CATEGORY_LABEL: Record<string, string> = {
   retail: 'Retail', professional: 'Profesionálny', eligible_counterparty: 'Oprávnená protistrana',
@@ -24,13 +25,13 @@ const RISK_COLOR: Record<string, string> = {
   dynamic:      'text-orange-600 dark:text-orange-400',
 }
 
-type Tab = 'projects' | 'pipeline' | 'meetings' | 'compliance'
+type Tab = 'crm' | 'projects' | 'pipeline' | 'meetings' | 'compliance'
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const clientId = Number(id)
   const qc = useQueryClient()
-  const [tab, setTab] = useState<Tab>('projects')
+  const [tab, setTab] = useState<Tab>('crm')
   const [linkProjectId, setLinkProjectId] = useState('')
 
   const { data: client, isLoading } = useQuery({
@@ -58,6 +59,7 @@ export default function ClientDetailPage() {
   )
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'crm',        label: 'Prehľad',     icon: <CalendarClock size={15} /> },
     { key: 'projects',   label: 'Projekty',    icon: <FolderKanban size={15} /> },
     { key: 'pipeline',   label: 'Pipeline',    icon: <TrendingUp size={15} /> },
     { key: 'meetings',   label: 'Stretnutia',  icon: <Calendar size={15} /> },
@@ -117,6 +119,8 @@ export default function ClientDetailPage() {
       {/* Tab content */}
       <div className="card p-5">
         {/* Projects */}
+        {tab === 'crm' && <ClientCrm clientId={clientId} />}
+
         {tab === 'projects' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">

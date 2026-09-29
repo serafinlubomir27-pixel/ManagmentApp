@@ -185,6 +185,28 @@ export const clientsApi = {
   updatePipeline: (clientId: number, data: object) =>
     api.patch(`/clients/${clientId}/pipeline`, data),
   getAllPipeline: () => api.get('/clients/pipeline/all'),
+
+  // CRM — história interakcií
+  listActivities: (clientId: number) => api.get(`/clients/${clientId}/activities`),
+  addActivity: (clientId: number, data: {
+    activity_type: string; subject: string; body?: string; occurred_at?: string
+  }) => api.post(`/clients/${clientId}/activities`, data),
+  deleteActivity: (clientId: number, activityId: number) =>
+    api.delete(`/clients/${clientId}/activities/${activityId}`),
+
+  // CRM — úlohy ku klientovi
+  listClientTasks: (clientId: number) => api.get(`/clients/${clientId}/tasks`),
+  addClientTask: (clientId: number, data: {
+    title: string; due_date?: string | null; priority?: string; assigned_to?: number | null
+  }) => api.post(`/clients/${clientId}/tasks`, data),
+  setClientTaskDone: (clientId: number, taskId: number, done: boolean) =>
+    api.patch(`/clients/${clientId}/tasks/${taskId}`, { done }),
+  deleteClientTask: (clientId: number, taskId: number) =>
+    api.delete(`/clients/${clientId}/tasks/${taskId}`),
+  upcomingTasks: () => api.get('/clients/tasks/upcoming'),
+
+  // CRM — história posunov obchodu
+  stageHistory: (clientId: number) => api.get(`/clients/${clientId}/stage-history`),
 }
 
 // ── Export ───────────────────────────────────────────────────────────────────

@@ -240,6 +240,11 @@ def update_pipeline(
     assert_client_access(client_id, current_user)
     if body.stage not in client_repo.DEAL_STAGES:
         raise HTTPException(400, f"Neplatná fáza. Platné: {client_repo.DEAL_STAGES}")
+
+    # Pôvodnú fázu treba zistiť pred zápisom, inak sa posun nedá zaznamenať.
+    previous = client_repo.get_deal(client_id)
+    old_stage = (previous or {}).get("stage")
+
     client_repo.upsert_deal(
         client_id=client_id,
         stage=body.stage,
@@ -249,4 +254,147 @@ def update_pipeline(
         currency=body.currency,
         notes=body.notes,
     )
+
+    if old_stage != body.stage:
+        client_repo.add_stage_change(client_id, old_stage, body.stage, current_user["id"])
+        client_repo.add_activity(
+            client_id=client_id,
+            user_id=current_user["id"],
+            activity_type="note",
+            subject="Zmena fázy obchodu",
+            body=f"{old_stage or 'nezadaná'} → {body.stage}",
+        )
     return {"detail": "Pipeline aktualizovaná"}
+
+
+# ── CRM: história interakcií ──────────────────────────────────────────────────
+
+class ActivityCreate(BaseModel):
+    activity_type: str = "note"
+    subject: str = ""
+    body: str = ""
+    occurred_at: str | None = None
+
+
+@router.get("/{client_id}/activities")
+def list_activities(client_id: int, current_user: dict = Depends(get_current_user)):
+    """Časová os interakcií s klientom — hovory, e-maily, stretnutia, poznámky."""
+    assert_client_access(client_id, current_user)
+    return client_repo.get_activities(client_id)
+
+
+@router.post("/{client_id}/activities", status_code=status.HTTP_201_CREATED)
+def add_activity(
+    client_id: int,
+    body: ActivityCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    assert_client_access(client_id, current_user)
+    if body.activity_type not in client_repo.ACTIVITY_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Neznámy typ interakcie. Povolené: {', '.join(client_repo.ACTIVITY_TYPES)}",
+        )
+    activity_id = client_repo.add_activity(
+        client_id=client_id,
+        user_id=current_user["id"],
+        activity_type=body.activity_type,
+        subject=body.subject,
+        body=body.body,
+        occurred_at=body.occurred_at,
+    )
+    return {"id": activity_id, "detail": "Interakcia zaznamenaná"}
+
+
+@router.delete("/{client_id}/activities/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_activity(
+    client_id: int,
+    activity_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    assert_client_access(client_id, current_user)
+    if not client_repo.delete_activity(activity_id, current_user["id"]):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Záznam sa nenašiel alebo nepatrí tebe",
+        )
+
+
+# ── CRM: naplánované úlohy ku klientovi ───────────────────────────────────────
+
+class ClientTaskCreate(BaseModel):
+    title: str
+    due_date: str | None = None
+    priority: str = "medium"
+    assigned_to: int | None = None
+
+
+class ClientTaskUpdate(BaseModel):
+    done: bool
+
+
+@router.get("/{client_id}/tasks")
+def list_client_tasks(client_id: int, current_user: dict = Depends(get_current_user)):
+    """Úlohy naplánované ku klientovi. Nesúvisia s harmonogramom projektu."""
+    assert_client_access(client_id, current_user)
+    return client_repo.get_client_tasks(client_id)
+
+
+@router.post("/{client_id}/tasks", status_code=status.HTTP_201_CREATED)
+def add_client_task(
+    client_id: int,
+    body: ClientTaskCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    assert_client_access(client_id, current_user)
+    if not body.title.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Názov úlohy je povinný")
+    task_id = client_repo.add_client_task(
+        client_id=client_id,
+        created_by=current_user["id"],
+        title=body.title.strip(),
+        due_date=body.due_date,
+        priority=body.priority,
+        assigned_to=body.assigned_to,
+    )
+    return {"id": task_id, "detail": "Úloha vytvorená"}
+
+
+@router.patch("/{client_id}/tasks/{task_id}")
+def update_client_task(
+    client_id: int,
+    task_id: int,
+    body: ClientTaskUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    assert_client_access(client_id, current_user)
+    if not client_repo.set_client_task_done(task_id, body.done):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha sa nenašla")
+    return {"detail": "Hotovo" if body.done else "Označené ako nesplnené"}
+
+
+@router.delete("/{client_id}/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_client_task(
+    client_id: int,
+    task_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    assert_client_access(client_id, current_user)
+    if not client_repo.delete_client_task(task_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Úloha sa nenašla")
+
+
+@router.get("/tasks/upcoming")
+def upcoming_tasks(current_user: dict = Depends(get_current_user)):
+    """Nesplnené úlohy naprieč všetkými klientmi poradcu."""
+    advisor = None if current_user.get("role") == "admin" else current_user["id"]
+    return client_repo.get_upcoming_client_tasks(current_org_id(current_user), advisor)
+
+
+# ── CRM: história posunov obchodu ─────────────────────────────────────────────
+
+@router.get("/{client_id}/stage-history")
+def stage_history(client_id: int, current_user: dict = Depends(get_current_user)):
+    """Kedy obchod prešiel do ktorej fázy — podklad pre dĺžku obchodného cyklu."""
+    assert_client_access(client_id, current_user)
+    return client_repo.get_stage_history(client_id)

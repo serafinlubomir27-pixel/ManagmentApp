@@ -297,6 +297,50 @@ def create_database():
     )
     ''')
 
+    # --- CRM: história interakcií s klientom ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS client_activities (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id      INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        user_id        INTEGER NOT NULL REFERENCES users(id),
+        activity_type  TEXT NOT NULL DEFAULT 'note',
+        subject        TEXT NOT NULL DEFAULT '',
+        body           TEXT NOT NULL DEFAULT '',
+        occurred_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # --- CRM: naplánované úlohy ku klientovi ---
+    # Oddelené od tabuľky tasks zámerne — tá patrí projektom a vstupuje
+    # do výpočtu kritickej cesty. Úloha ku klientovi nemá trvanie ani závislosti.
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS client_tasks (
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id    INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        assigned_to  INTEGER REFERENCES users(id),
+        created_by   INTEGER NOT NULL REFERENCES users(id),
+        title        TEXT NOT NULL,
+        due_date     TEXT,
+        priority     TEXT NOT NULL DEFAULT 'medium',
+        done         BOOLEAN NOT NULL DEFAULT 0,
+        done_at      TIMESTAMP,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # --- CRM: história posunov obchodu medzi fázami ---
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS deal_stage_history (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id   INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        from_stage  TEXT,
+        to_stage    TEXT NOT NULL,
+        changed_by  INTEGER NOT NULL REFERENCES users(id),
+        changed_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # --- Bezpečná migrácia: nové stĺpce v tasks ---
     for column_sql in [
         "ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'",
