@@ -22,6 +22,8 @@ Vitaj v trezore. Toto je vstupný bod.
 - [[17 - Správa vedúcej — návrh zadania]] — návrh textu odpovede: názov, ciele, osnova, otázky
 - [[18 - Schválené zadanie a pripomienky k osnove]] — **názov a ciele schválené**; metodika pred analýzu, menej podkapitol, PERT overený
 - [[19 - Otázka na posilnenie ekonomickej línie]] — návrh mailu: doladiť dôraz bez zmeny schválenej témy
+- [[20 - Rešerš konkurencie a smer vzhľadu]] — porovnanie piatich nástrojov, medzera na trhu, obmedzenia Nodusu
+- [[21 - Mail pre garanta odboru]] — žiadosť o posúdenie funkčnosti pre prof. Zapletala
 
 ## 🔍 Rýchle hľadanie podľa témy
 
