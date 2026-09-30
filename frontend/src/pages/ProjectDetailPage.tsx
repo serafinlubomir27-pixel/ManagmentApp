@@ -17,7 +17,9 @@ import AttachmentSidebar from '../components/AttachmentSidebar'
 import AttachmentList, { AttachmentItem } from '../components/AttachmentList'
 import FileUploadDropzone from '../components/FileUploadDropzone'
 import ExportMenu from '../components/ExportMenu'
+import ScheduleFields from '../components/ScheduleFields'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
+import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending:     <Circle size={15} className="text-gray-400" />,
@@ -93,6 +95,8 @@ export default function ProjectDetailPage() {
   const projectId = Number(id)
   const qc = useQueryClient()
   const { isManager } = useAuth()
+  // Každá zmena, ktorá posunie harmonogram, musí obnoviť aj PERT, riziko a zdroje.
+  const refresh = useScheduleRefresh(projectId)
 
   const [tab, setTab] = useState<'tasks' | 'gantt' | 'network' | 'pert' | 'resources' | 'burndown'>('tasks')
   const [search, setSearch] = useState('')
@@ -136,7 +140,7 @@ export default function ProjectDetailPage() {
       duration_pessimistic: newTask.duration_pessimistic !== '' ? Number(newTask.duration_pessimistic) : null,
     }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      refresh()
       setShowCreate(false)
       setNewTask({ name: '', due_date: '', priority: 'medium', duration: 1, assigned_to: '', duration_optimistic: '', duration_pessimistic: '' })
     },
@@ -146,20 +150,17 @@ export default function ProjectDetailPage() {
   const updateStatusMutation = useMutation({
     mutationFn: ({ taskId, status }: { taskId: number; status: string }) =>
       tasksApi.update(taskId, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+    onSuccess: () => refresh(),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (taskId: number) => tasksApi.delete(taskId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+    onSuccess: () => refresh(),
   })
 
   const recalcMutation = useMutation({
     mutationFn: () => tasksApi.recalculateCpm(projectId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
-      qc.invalidateQueries({ queryKey: ['project', projectId] })
-    },
+    onSuccess: () => refresh(),
   })
 
   const subscriptionMutation = useMutation({
@@ -317,7 +318,7 @@ export default function ProjectDetailPage() {
 
       {/* Sieťový diagram */}
       {tab === 'network' && (
-        <NetworkDiagram tasks={tasks} dependencies={dependencies} teamMembers={teamMembers} />
+        <NetworkDiagram projectId={projectId} tasks={tasks} dependencies={dependencies} teamMembers={teamMembers} />
       )}
 
       {/* PERT analýza */}
@@ -341,7 +342,10 @@ export default function ProjectDetailPage() {
           projectId={projectId}
           onClose={() => setShowAiModal(false)}
           onCreated={() => {
-            qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+            // Parser zakladá úlohy aj závislosti medzi nimi, takže sa mení
+            // celá sieť — nestačí obnoviť zoznam úloh.
+            refresh()
+            qc.invalidateQueries({ queryKey: ['dependencies', projectId] })
             setShowAiModal(false)
           }}
         />
@@ -521,6 +525,18 @@ export default function ProjectDetailPage() {
                         {expandedTaskId === t.id && (
                           <tr className="bg-gray-50/50 dark:bg-gray-900/20">
                             <td colSpan={5} className="px-6 py-4 space-y-4">
+                              {/* Trvanie a trojbodový odhad */}
+                              <div className="pb-3 border-b border-gray-100 dark:border-gray-800">
+                                <ScheduleFields
+                                  taskId={t.id}
+                                  projectId={projectId}
+                                  duration={t.duration ?? 1}
+                                  optimistic={t.duration_optimistic}
+                                  pessimistic={t.duration_pessimistic}
+                                  disabled={!isManager}
+                                />
+                              </div>
+
                               {/* Time tracking */}
                               <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
 

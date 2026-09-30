@@ -49,6 +49,42 @@ class TaskUpdate(BaseModel):
     auto_calendar: bool | None = None
 
 
+# ── Validácia trvania ───────────────────────────────────────────────────────
+
+def _validate_schedule(duration: int | None,
+                       optimistic: int | None,
+                       pessimistic: int | None) -> None:
+    """Skontroluje trvanie a trojbodový odhad pred zápisom.
+
+    `pert_engine` počíta σ = (b − a) / 6 a nič si neoveruje — je to čistá funkcia
+    a kontrola vstupu patrí na hranicu API. Bez nej stačí zadať pesimistický odhad
+    menší než optimistický a σ vyjde záporná, čo potichu rozbije celú analýzu.
+    """
+    if duration is not None and duration < 1:
+        raise HTTPException(status_code=400, detail="Trvanie musí byť aspoň 1 deň")
+
+    for label, value in (("Optimistický", optimistic), ("Pesimistický", pessimistic)):
+        if value is not None and value < 1:
+            raise HTTPException(status_code=400, detail=f"{label} odhad musí byť aspoň 1 deň")
+
+    if optimistic is not None and pessimistic is not None and optimistic > pessimistic:
+        raise HTTPException(
+            status_code=400,
+            detail="Optimistický odhad nemôže byť väčší než pesimistický",
+        )
+    if duration is not None:
+        if optimistic is not None and optimistic > duration:
+            raise HTTPException(
+                status_code=400,
+                detail="Optimistický odhad nemôže byť väčší než najpravdepodobnejšie trvanie",
+            )
+        if pessimistic is not None and pessimistic < duration:
+            raise HTTPException(
+                status_code=400,
+                detail="Pesimistický odhad nemôže byť menší než najpravdepodobnejšie trvanie",
+            )
+
+
 # ── Endpointy ───────────────────────────────────────────────────────────────
 # Poznámka: prístup ku konkrétnemu projektu/úlohe rieši assert_project_access /
 # assert_task_access z backend.deps (kontrolujú vlastníctvo, nie len existenciu).
@@ -71,6 +107,7 @@ def create_task(
 ):
     """Vytvoriť úlohu v projekte. Po vytvorení spustí CPM prepočet."""
     assert_project_access(project_id, current_user)
+    _validate_schedule(body.duration, body.duration_optimistic, body.duration_pessimistic)
     task_id = task_repo.create_task(
         project_id=project_id,
         name=body.name,
@@ -132,12 +169,46 @@ def update_task(
     body: TaskUpdate,
     current_user: dict = Depends(get_current_user),
 ):
-    """Aktualizovať úlohu (status, assignee, dátumy...). Spustí CPM prepočet."""
+    """Aktualizovať úlohu (status, assignee, dátumy, trvanie...). Spustí CPM prepočet."""
     assert_task_access(task_id, current_user)
 
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
-    if not updates:
+    sent = body.model_dump(exclude_unset=True)
+    updates = {k: v for k, v in sent.items() if v is not None}
+
+    # Odhady sa musia dať aj odstrániť. Pri nich preto rozlišujeme „neposlané"
+    # od „poslané ako null" — pri ostatných poliach ostáva pôvodné správanie,
+    # kde None znamená „nemeň".
+    clears = [k for k in ("duration_optimistic", "duration_pessimistic")
+              if k in sent and sent[k] is None]
+
+    if not updates and not clears:
         return {"detail": "Nič na aktualizáciu"}
+
+    current = task_repo.get_task_by_id(task_id)
+    if not current:
+        raise HTTPException(status_code=404, detail="Úloha neexistuje")
+
+    # Trvanie a odhady prepisujú harmonogram celého projektu, nielen jednu úlohu —
+    # meniť ich smie len manažér alebo admin. Ostatné polia ostávajú ako doteraz.
+    schedule_fields = {"duration", "duration_optimistic", "duration_pessimistic"}
+    if schedule_fields & (updates.keys() | set(clears)) and current_user.get("role") not in ("admin", "manager"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Trvanie úlohy môže meniť len manager alebo admin",
+        )
+
+    # Validuj proti VÝSLEDNÉMU stavu — pri čiastočnej zmene (napr. len pesimistický
+    # odhad) sa musí porovnať s hodnotami, ktoré už v úlohe sú.
+    def _effective(field: str):
+        if field in clears:
+            return None
+        return updates.get(field, current.get(field))
+
+    _validate_schedule(
+        _effective("duration"),
+        _effective("duration_optimistic"),
+        _effective("duration_pessimistic"),
+    )
 
     if "status" in updates:
         task_repo.update_task_status(task_id, updates.pop("status"))
@@ -145,10 +216,13 @@ def update_task(
     if updates:
         task_repo.update_task_fields(task_id, updates)
 
-    # CPM prepočet — zistíme project_id z task
-    task = task_repo.get_task_by_id(task_id)
-    if task:
-        cpm_manager.recalculate(task["project_id"])
+    if clears:
+        task_repo.clear_task_fields(task_id, clears)
+
+    # CPM prepočet — es/ef/ls/lf/total_float/is_critical sú uložené v DB, takže po
+    # zmene trvania ich treba prepísať. PERT, rizikové skóre aj Gantt sa počítajú
+    # až pri čítaní, tie sa dotiahnu samy.
+    cpm_manager.recalculate(current["project_id"])
 
     return {"detail": "Úloha aktualizovaná"}
 

@@ -7,6 +7,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import TaskDetailModal from './TaskDetailModal'
+import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
 
 interface Task {
   id: number
@@ -26,6 +27,7 @@ interface Dependency {
 }
 
 interface Props {
+  projectId: number
   tasks: Task[]
   dependencies: Dependency[]
   teamMembers?: Array<{ id: number; username: string; full_name?: string }>
@@ -62,8 +64,9 @@ function computeLayout(tasks: Task[]) {
   return { positions, maxX, maxY }
 }
 
-export default function NetworkDiagram({ tasks, dependencies, teamMembers }: Props) {
+export default function NetworkDiagram({ projectId, tasks, dependencies, teamMembers }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const refresh = useScheduleRefresh(projectId)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
@@ -289,7 +292,7 @@ export default function NetworkDiagram({ tasks, dependencies, teamMembers }: Pro
         taskId={selectedTaskId}
         teamMembers={teamMembers ?? []}
         onClose={() => setSelectedTaskId(null)}
-        onUpdated={() => {}}
+        onUpdated={() => refresh(selectedTaskId)}
       />
     )}
     </>

@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext'
 import AttachmentList, { AttachmentItem } from './AttachmentList'
 import FileUploadDropzone from './FileUploadDropzone'
 import CommentSection from './CommentSection'
+import ScheduleFields from './ScheduleFields'
 
 interface Props {
   taskId: number
@@ -227,13 +228,34 @@ export default function TaskDetailModal({ taskId, teamMembers, onClose, onUpdate
               />
             </div>
 
-            {/* CPM read-only info */}
+            {/* Trvanie a trojbodový odhad */}
+            <div>
+              <ScheduleFields
+                taskId={taskId}
+                projectId={task.project_id}
+                duration={task.duration ?? 1}
+                optimistic={task.duration_optimistic}
+                pessimistic={task.duration_pessimistic}
+                disabled={!isManager}
+              />
+            </div>
+
+            {/* CPM — dopočítané hodnoty, meniť sa dá len trvanie vyššie */}
             {task.es != null && (
               <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 grid grid-cols-2 gap-2 text-xs">
                 <div><span className="text-gray-400">ES</span> <span className="font-mono font-bold text-gray-700 dark:text-gray-300 ml-1">{task.es}</span></div>
                 <div><span className="text-gray-400">EF</span> <span className="font-mono font-bold text-gray-700 dark:text-gray-300 ml-1">{task.ef}</span></div>
-                <div><span className="text-gray-400">Rezerva</span> <span className={`font-mono font-bold ml-1 ${task.total_float === 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>{task.total_float}d</span></div>
-                <div><span className="text-gray-400">Trvanie</span> <span className="font-mono font-bold text-gray-700 dark:text-gray-300 ml-1">{task.duration}d</span></div>
+                <div><span className="text-gray-400">LS</span> <span className="font-mono font-bold text-gray-700 dark:text-gray-300 ml-1">{task.ls}</span></div>
+                <div><span className="text-gray-400">LF</span> <span className="font-mono font-bold text-gray-700 dark:text-gray-300 ml-1">{task.lf}</span></div>
+                <div className="col-span-2">
+                  <span className="text-gray-400">Rezerva</span>{' '}
+                  <span className={`font-mono font-bold ml-1 ${task.total_float === 0 ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                    {task.total_float}d
+                  </span>
+                  {task.total_float === 0 && (
+                    <span className="text-red-500 ml-1.5">— na kritickej ceste</span>
+                  )}
+                </div>
               </div>
             )}
 

@@ -466,6 +466,27 @@ def update_task_fields(task_id: int, fields: dict) -> None:
         conn.close()
 
 
+def clear_task_fields(task_id: int, columns: list[str]) -> None:
+    """Nastaví vymenované stĺpce na NULL.
+
+    `update_task_fields` zahadzuje None (inak by každé čiastočné volanie prepísalo
+    nevyplnené polia na NULL), takže bez tejto funkcie sa hodnota dá zapísať, ale
+    už nie odstrániť — trojbodový odhad by bol zapísateľný len raz.
+    """
+    allowed = {"duration_optimistic", "duration_pessimistic", "due_date",
+               "assigned_to", "description", "category", "notes", "estimated_hours"}
+    safe = [c for c in columns if c in allowed]
+    if not safe:
+        return
+    set_clause = ", ".join(f"{c} = NULL" for c in safe)
+    conn = get_connection()
+    try:
+        conn.execute(f"UPDATE tasks SET {set_clause} WHERE id = ?", (task_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def delete_task(task_id: int) -> None:
     """Delete a task and its dependencies."""
     conn = get_connection()
