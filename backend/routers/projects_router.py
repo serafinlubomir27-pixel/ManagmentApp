@@ -12,6 +12,7 @@ from backend.deps import (
     assert_can_add_project,
 )
 from repositories import project_repo, task_repo
+from logic import cpm_manager
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -56,6 +57,59 @@ def create_project(
         is_template=body.is_template,
     )
     return {"id": project_id, "detail": "Projekt vytvorený"}
+
+
+# Malá sieť s dvoma vetvami — kritická cesta vedie cez dlhšiu z nich, takže na
+# nej vidno aj rezervu na tej kratšej. Formát: (názov, m, a, b, indexy predchodcov).
+DEMO_TASKS: list[tuple[str, int, int, int, list[int]]] = [
+    ("Zber požiadaviek",        4, 3,  8, []),
+    ("Návrh riešenia",          6, 4, 11, [0]),
+    ("Nákup vybavenia",         3, 2,  9, [0]),
+    ("Implementácia",           9, 7, 16, [1]),
+    ("Zaškolenie používateľov", 2, 1,  4, [2]),
+    ("Odovzdanie",              2, 1,  5, [3, 4]),
+]
+
+
+@router.post("/demo", status_code=status.HTTP_201_CREATED)
+def create_demo_project(current_user: dict = Depends(require_manager_or_admin)):
+    """Založí ukážkový projekt s hotovou sieťou úloh.
+
+    Je to jedno volanie zámerne — z prehliadača by to bolo trinásť volaní za
+    sebou a každé by spustilo vlastný CPM prepočet. Na bezplatnej úrovni, kde
+    sa server po nečinnosti budí, by prvé zoznámenie s nástrojom trvalo
+    desiatky sekúnd. Takto sa prepočíta raz na konci.
+    """
+    assert_can_add_project(current_user)
+
+    project_id = project_repo.create_project(
+        user_id=current_user["id"],
+        name="Ukážkový projekt",
+        description="Vytvorené pri uvedení — pokojne ho zmaž.",
+        organization_id=current_org_id(current_user),
+        status="active",
+    )
+
+    ids: list[int] = []
+    for name, duration, optimistic, pessimistic, deps in DEMO_TASKS:
+        task_id = task_repo.create_task(
+            project_id=project_id,
+            name=name,
+            assigned_to=None,
+            created_by=current_user["id"],
+        )
+        task_repo.update_task_fields(task_id, {
+            "duration": duration,
+            "duration_optimistic": optimistic,
+            "duration_pessimistic": pessimistic,
+            "priority": "medium",
+        })
+        ids.append(task_id)
+        for d in deps:
+            task_repo.add_dependency(task_id, ids[d])
+
+    cpm_manager.recalculate(project_id)
+    return {"id": project_id, "detail": "Ukážkový projekt vytvorený"}
 
 
 @router.get("/{project_id}")

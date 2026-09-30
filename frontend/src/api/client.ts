@@ -56,6 +56,8 @@ export const projectsApi = {
     api.patch(`/projects/${id}`, data),
   delete: (id: number) => api.delete(`/projects/${id}`),
   templates: () => api.get('/projects/templates/list'),
+  /** Ukážkový projekt s hotovou sieťou úloh — jedno volanie, nie trinásť. */
+  createDemo: () => api.post('/projects/demo'),
 }
 
 // ── Tasks ─────────────────────────────────────────────────────────────────────

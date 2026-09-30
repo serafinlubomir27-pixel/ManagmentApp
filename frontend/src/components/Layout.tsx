@@ -6,7 +6,9 @@ import { useDarkMode } from '../hooks/useDarkMode'
 import clsx from 'clsx'
 import NodusLogo from './NodusLogo'
 import NotificationBell from './NotificationBell'
+import OnboardingModal from './OnboardingModal'
 import { useRealtimeNotifications } from '../hooks/useRealtimeProject'
+import { useOnboarding } from '../hooks/useOnboarding'
 
 const nav = [
   { to: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
@@ -26,6 +28,9 @@ export default function Layout() {
 
   // Supabase Realtime — live notifikácie pre aktuálneho usera
   useRealtimeNotifications(user?.id ?? null)
+
+  // Uvedenie pri prvom prihlásení — ukáže sa len tomu, kto ešte nemá projekty
+  const onboarding = useOnboarding(user?.id)
 
   const handleLogout = () => {
     logout()
@@ -131,6 +136,8 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {onboarding.open && <OnboardingModal onClose={onboarding.close} />}
     </div>
   )
 }
