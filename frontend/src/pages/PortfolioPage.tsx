@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import { api } from '../api/client'
 import RiskScoreWidget from '../components/RiskScoreWidget'
+import { SkeletonCards, SkeletonList } from '../components/Skeleton'
+import EmptyState from '../components/EmptyState'
 
 interface ProjectHealth {
   id: number
@@ -85,9 +87,10 @@ export default function PortfolioPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto py-20 text-center text-gray-400">
-        <LayoutGrid size={32} className="mx-auto mb-3 opacity-30" />
-        Načítavam portfolio…
+      <div className="max-w-5xl mx-auto space-y-5">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Portfolio</h1>
+        <SkeletonCards count={3} />
+        <div className="card"><SkeletonList rows={4} /></div>
       </div>
     )
   }
@@ -96,9 +99,13 @@ export default function PortfolioPage() {
     return (
       <div className="max-w-5xl mx-auto space-y-5">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Portfolio</h1>
-        <div className="card py-20 text-center text-gray-400">
-          <LayoutGrid size={40} className="mx-auto mb-3 opacity-20" />
-          <p>Žiadne projekty v portfóliu</p>
+        <div className="card">
+          <EmptyState
+            icon={<LayoutGrid size={20} />}
+            title="Portfólio je prázdne"
+            hint="Porovnáva projekty vedľa seba — trvanie, kritické úlohy a rezervy. Naplní sa, len čo založíš prvý projekt."
+            action={<Link to="/projects" className="btn-primary text-xs py-1.5 px-3">Prejsť na projekty</Link>}
+          />
         </div>
       </div>
     )

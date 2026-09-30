@@ -12,6 +12,7 @@ import PipelineKanban from '../components/PipelineKanban'
 import ComplianceChecklist from '../components/ComplianceChecklist'
 import MeetingLog from '../components/MeetingLog'
 import ClientCrm from '../components/ClientCrm'
+import { Skeleton, SkeletonLines } from '../components/Skeleton'
 
 const CATEGORY_LABEL: Record<string, string> = {
   retail: 'Retail', professional: 'Profesionálny', eligible_counterparty: 'Oprávnená protistrana',
@@ -55,7 +56,16 @@ export default function ClientDetailPage() {
   })
 
   if (isLoading || !client) return (
-    <div className="max-w-4xl mx-auto py-20 text-center text-gray-400">Načítavam…</div>
+    <div className="max-w-4xl mx-auto space-y-5">
+      <div className="flex items-center gap-4">
+        <Skeleton className="w-12 h-12 rounded-xl" />
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+      <div className="card p-5"><SkeletonLines rows={5} /></div>
+    </div>
   )
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [

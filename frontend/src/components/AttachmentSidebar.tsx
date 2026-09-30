@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Paperclip } from 'lucide-react'
 import { attachmentsApi } from '../api/client'
+import { SkeletonLines } from './Skeleton'
 import AttachmentList, { AttachmentItem } from './AttachmentList'
 import FileUploadDropzone from './FileUploadDropzone'
 
@@ -59,7 +60,7 @@ export default function AttachmentSidebar({ projectId }: Props) {
 
       {/* File list */}
       {isLoading ? (
-        <p className="text-xs text-gray-400">Načítavam…</p>
+        <SkeletonLines rows={2} />
       ) : (
         <AttachmentList
           attachments={attachments}

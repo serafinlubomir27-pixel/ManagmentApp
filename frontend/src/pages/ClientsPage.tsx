@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Users, Plus, ChevronRight, User } from 'lucide-react'
 import { clientsApi } from '../api/client'
+import { SkeletonList } from '../components/Skeleton'
+import EmptyState from '../components/EmptyState'
 
 const CATEGORY_LABEL: Record<string, string> = {
   retail: 'Retail',
@@ -98,11 +100,15 @@ export default function ClientsPage() {
 
       {/* Client list */}
       {isLoading ? (
-        <p className="text-sm text-gray-400">Načítavam…</p>
+        <SkeletonList rows={4} />
       ) : clients.length === 0 ? (
         <div className="card py-16 text-center text-gray-400">
           <User size={32} className="mx-auto mb-3 opacity-20" />
-          <p>Žiadni klienti. Vytvor prvého klienta.</p>
+          <EmptyState
+            icon={<Users size={20} />}
+            title="Zatiaľ žiadni klienti"
+            hint="Ku klientovi si vedieš históriu stretnutí, naplánované kroky a stav v obchodnom lieviku."
+          />
         </div>
       ) : (
         <div className="space-y-2">

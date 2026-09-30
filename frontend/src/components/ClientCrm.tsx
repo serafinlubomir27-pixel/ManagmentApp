@@ -12,6 +12,7 @@ import {
   Plus, Trash2, Check, Circle, CalendarClock,
 } from 'lucide-react'
 import { clientsApi } from '../api/client'
+import { SkeletonLines } from './Skeleton'
 
 interface Props {
   clientId: number
@@ -182,7 +183,7 @@ export default function ClientCrm({ clientId }: Props) {
         </div>
 
         {loadingTasks ? (
-          <p className="text-xs text-gray-400">Načítavam…</p>
+          <SkeletonLines rows={3} />
         ) : tasks.length === 0 ? (
           <p className="text-xs text-gray-400 py-4 text-center">
             Zatiaľ žiadne úlohy. Naplánuj prvý krok voči klientovi.
@@ -277,7 +278,7 @@ export default function ClientCrm({ clientId }: Props) {
         {error && <p className="text-xs text-red-500">{error}</p>}
 
         {loadingActs ? (
-          <p className="text-xs text-gray-400">Načítavam…</p>
+          <SkeletonLines rows={4} />
         ) : activities.length === 0 ? (
           <p className="text-xs text-gray-400 py-4 text-center">
             Zatiaľ žiadne záznamy. Každý hovor či e-mail sa tu objaví v časovej osi.

@@ -1,3 +1,6 @@
+import { BarChart2 } from 'lucide-react'
+import EmptyState from './EmptyState'
+
 /**
  * GanttChart — jednoduchý Gantt diagram kreslený cez SVG.
  * Zobrazuje úlohy ako horizontálne pruhy podľa ES/EF hodnôt z CPM.
@@ -24,8 +27,14 @@ interface GanttChartProps {
 const BAR_HEIGHT = 28
 const BAR_GAP = 10
 const ROW_HEIGHT = BAR_HEIGHT + BAR_GAP
-const LABEL_WIDTH = 200
 const DAY_WIDTH = 36
+// Stĺpec s názvami bol pevných 200 px a názov sa orezal po 22 znakoch, takže
+// z „Elektroinštalácia a rozvody" ostalo „Elektroinštalácia a r…". Šírka sa
+// teraz odvíja od najdlhšieho názvu, v rozumných medziach.
+const LABEL_MIN = 150
+const LABEL_MAX = 300
+const CHAR_W = 6.6        // priemerná šírka znaku Inter pri 12 px, s rezervou
+const LABEL_PAD = 16
 const PADDING_TOP = 40
 const PADDING_BOTTOM = 20
 
@@ -34,14 +43,22 @@ export default function GanttChart({ tasks }: GanttChartProps) {
 
   if (validTasks.length === 0) {
     return (
-      <div className="py-10 text-center text-gray-400 text-sm">
-        CPM dáta nie sú dostupné — pridaj úlohy a závislosti
-      </div>
+      <EmptyState
+        icon={<BarChart2 size={20} />}
+        title="Gantt sa zatiaľ nedá zostaviť"
+        hint="Pridaj úlohy s trvaním a nastav medzi nimi závislosti — z nich vyjdú termíny aj kritická cesta."
+      />
     )
   }
 
   const maxDay = Math.max(...validTasks.map((t) => t.lf ?? t.ef))
   const totalDays = maxDay + 2
+
+  const longest = Math.max(...validTasks.map((t) => t.name.length))
+  const LABEL_WIDTH = Math.min(LABEL_MAX, Math.max(LABEL_MIN, longest * CHAR_W + LABEL_PAD))
+  // Koľko znakov sa do stĺpca ešte zmestí; zvyšok sa oreže a celý názov
+  // ostane dostupný cez natívny tooltip.
+  const maxChars = Math.floor((LABEL_WIDTH - LABEL_PAD) / CHAR_W)
 
   const svgWidth = LABEL_WIDTH + totalDays * DAY_WIDTH + 20
   const svgHeight = PADDING_TOP + validTasks.length * ROW_HEIGHT + PADDING_BOTTOM
@@ -64,7 +81,8 @@ export default function GanttChart({ tasks }: GanttChartProps) {
             y={PADDING_TOP + i * ROW_HEIGHT}
             width={svgWidth}
             height={ROW_HEIGHT}
-            fill={i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.02)'}
+            // rgba(0,0,0,0.02) bolo v tmavom režime neviditeľné
+            className={i % 2 === 0 ? 'fill-transparent' : 'fill-black/[0.025] dark:fill-white/[0.04]'}
           />
         ))}
 
@@ -129,7 +147,10 @@ export default function GanttChart({ tasks }: GanttChartProps) {
                 fontSize={12}
                 className="dark:fill-gray-300"
               >
-                {task.name.length > 22 ? task.name.slice(0, 21) + '…' : task.name}
+                {task.name.length > maxChars
+                  ? task.name.slice(0, maxChars - 1).trimEnd() + '…'
+                  : task.name}
+                <title>{task.name}</title>
               </text>
 
               {/* Float / rezerva (LS→LF) */}

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { Plus, FolderKanban, ChevronRight, Search } from 'lucide-react'
 import { projectsApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { SkeletonList } from '../components/Skeleton'
+import EmptyState from '../components/EmptyState'
 
 export default function ProjectsPage() {
   const { isManager } = useAuth()
@@ -97,11 +99,23 @@ export default function ProjectsPage() {
       {/* Zoznam */}
       <div className="card divide-y divide-gray-100 dark:divide-gray-800">
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400 text-sm">Načítavam…</div>
+          <SkeletonList rows={4} />
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-gray-400 text-sm">
-            {search ? 'Žiadne výsledky' : 'Žiadne projekty'}
-          </div>
+          search ? (
+            <EmptyState
+              icon={<Search size={20} />}
+              title={`Nič sa nezhoduje s „${search}"`}
+              hint="Skús kratší výraz alebo iné slovo z názvu projektu."
+            />
+          ) : (
+            <EmptyState
+              icon={<FolderKanban size={20} />}
+              title="Zatiaľ žiadne projekty"
+              hint="Projekt je priečinok na úlohy a závislosti medzi nimi. Z nich sa počíta kritická cesta."
+              actionLabel={isManager ? 'Vytvoriť prvý projekt' : undefined}
+              onAction={isManager ? () => setShowCreate(true) : undefined}
+            />
+          )
         ) : (
           filtered.map((p: any) => (
             <Link

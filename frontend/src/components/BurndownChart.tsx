@@ -7,6 +7,7 @@
  */
 import { useMemo } from 'react'
 import { TrendingDown, CheckCircle2, Circle, Clock } from 'lucide-react'
+import EmptyState from './EmptyState'
 
 interface Task {
   id: number
@@ -106,7 +107,11 @@ export default function BurndownChart({ tasks }: Props) {
     return (
       <div className="py-12 text-center text-gray-400 text-sm">
         <TrendingDown size={32} className="mx-auto mb-3 opacity-30" />
-        <p>Žiadne úlohy na burndown chart</p>
+        <EmptyState
+          icon={<TrendingDown size={20} />}
+          title="Nie je z čoho kresliť"
+          hint="Burndown porovnáva ideálne tempo so skutočným. Potrebuje úlohy s termínmi a stavom."
+        />
       </div>
     )
   }

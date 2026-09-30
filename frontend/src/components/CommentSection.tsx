@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2, Send, MessageSquare } from 'lucide-react'
 import { commentsApi } from '../api/client'
+import { SkeletonLines } from './Skeleton'
 import { useAuth } from '../contexts/AuthContext'
 
 interface Comment {
@@ -83,7 +84,7 @@ export default function CommentSection({ taskId }: Props) {
 
       {/* Comment list */}
       {isLoading ? (
-        <p className="text-xs text-gray-400 py-2">Načítavam…</p>
+        <SkeletonLines rows={2} />
       ) : comments.length === 0 ? (
         <p className="text-xs text-gray-400 py-2 italic">
           Zatiaľ žiadne komentáre. Buď prvý!

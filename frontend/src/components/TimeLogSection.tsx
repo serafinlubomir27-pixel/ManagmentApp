@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Clock, Plus, Trash2, AlertCircle } from 'lucide-react'
 import { api } from '../api/client'
+import { SkeletonLines } from './Skeleton'
 
 interface TimeLog {
   id: number
@@ -151,7 +152,7 @@ export default function TimeLogSection({ taskId, estimatedHours }: Props) {
 
       {/* Log list */}
       {isLoading ? (
-        <p className="text-xs text-gray-400">Načítavam…</p>
+        <SkeletonLines rows={2} />
       ) : (data?.logs ?? []).length > 0 ? (
         <div className="space-y-1">
           {(data?.logs ?? []).slice(0, 8).map(log => (

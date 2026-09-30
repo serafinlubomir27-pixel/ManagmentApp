@@ -10,6 +10,7 @@ import {
   CheckCircle2, Clock, AlertCircle, Circle, Link2, RefreshCw, Copy, Check,
 } from 'lucide-react'
 import { api } from '../api/client'
+import { Skeleton } from '../components/Skeleton'
 
 interface CalendarTask {
   id: number
@@ -207,7 +208,14 @@ export default function CalendarPage() {
 
           {/* Day cells */}
           {isLoading ? (
-            <div className="py-20 text-center text-sm text-gray-400">Načítavam…</div>
+            <div className="grid grid-cols-7">
+              {Array.from({ length: 35 }).map((_, i) => (
+                <div key={i} className="min-h-[72px] border-b border-r border-gray-50 dark:border-gray-800/50 p-1.5">
+                  <Skeleton className="h-3 w-4 mb-1.5" />
+                  {i % 4 === 0 && <Skeleton className="h-3 w-full" />}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-7">
               {grid.map((date, idx) => {

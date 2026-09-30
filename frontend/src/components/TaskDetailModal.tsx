@@ -16,6 +16,7 @@ import AttachmentList, { AttachmentItem } from './AttachmentList'
 import FileUploadDropzone from './FileUploadDropzone'
 import CommentSection from './CommentSection'
 import ScheduleFields from './ScheduleFields'
+import { Skeleton, SkeletonLines } from './Skeleton'
 
 interface Props {
   taskId: number
@@ -107,7 +108,13 @@ export default function TaskDetailModal({ taskId, teamMembers, onClose, onUpdate
   if (isLoading || !task) {
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-        <div className="bg-white dark:bg-surface-dark rounded-2xl p-8 text-gray-400">Načítavam…</div>
+        <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 w-full max-w-lg space-y-4">
+          <Skeleton className="h-5 w-2/3" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-7 w-20 rounded-lg" />)}
+          </div>
+          <SkeletonLines rows={4} />
+        </div>
       </div>
     )
   }

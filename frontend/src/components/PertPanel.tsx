@@ -6,6 +6,8 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { TrendingUp, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { SkeletonCards, SkeletonLines } from './Skeleton'
+import EmptyState from './EmptyState'
 
 interface PertTask {
   task_id: number
@@ -92,17 +94,23 @@ export default function PertPanel({ projectId }: Props) {
   })
 
   if (isLoading) {
-    return <div className="py-12 text-center text-gray-400 text-sm">Počítam PERT analýzu…</div>
+    return (
+      <div className="space-y-4">
+        <SkeletonCards count={3} />
+        <div className="card p-5"><SkeletonLines rows={6} /></div>
+      </div>
+    )
   }
   if (error || !data) {
     return <div className="py-12 text-center text-red-400 text-sm">Chyba pri načítaní PERT dát</div>
   }
   if (data.pert_tasks.length === 0) {
     return (
-      <div className="py-12 text-center text-gray-400 text-sm">
-        <TrendingUp size={32} className="mx-auto mb-3 opacity-30" />
-        <p>Pridaj úlohy s PERT odhadmi (optimistický / pesimistický)</p>
-      </div>
+      <EmptyState
+        icon={<TrendingUp size={20} />}
+        title="PERT nemá z čoho počítať"
+        hint="Založ úlohy a pri každej doplň optimistické a pesimistické trvanie. Z trojbodového odhadu vyjde očakávaný termín aj pravdepodobnosť jeho dodržania."
+      />
     )
   }
 
@@ -118,7 +126,9 @@ export default function PertPanel({ projectId }: Props) {
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 flex items-start gap-2">
           <AlertTriangle size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-amber-700 dark:text-amber-400">
-            Žiadna úloha nemá nastavené optimistické/pesimistické odhady.
+            Žiadna úloha nemá trojbodový odhad. Rozbaľ úlohu v záložke Úlohy
+            a doplň optimistické a pesimistické trvanie — PERT z nich spočíta
+            očakávaný termín a pravdepodobnosť, že ho stihneš.
             Pridaj ich pri vytváraní/editácii úlohy pre presnejšiu PERT analýzu.
             Aktuálne sa používa <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">a = m = b = trvanie</code>.
           </p>

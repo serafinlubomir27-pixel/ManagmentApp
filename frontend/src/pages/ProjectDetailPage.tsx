@@ -18,8 +18,10 @@ import AttachmentList, { AttachmentItem } from '../components/AttachmentList'
 import FileUploadDropzone from '../components/FileUploadDropzone'
 import ExportMenu from '../components/ExportMenu'
 import ScheduleFields from '../components/ScheduleFields'
+import { SkeletonTableRows } from '../components/Skeleton'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
+import EmptyState from '../components/EmptyState'
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending:     <Circle size={15} className="text-gray-400" />,
@@ -454,9 +456,19 @@ export default function ProjectDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {isLoading ? (
-                    <tr><td colSpan={5} className="py-8 text-center text-gray-400">Načítavam…</td></tr>
+                    <SkeletonTableRows rows={5} cols={5} />
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={5} className="py-8 text-center text-gray-400">Žiadne úlohy</td></tr>
+                    <tr><td colSpan={5}>
+                      <EmptyState
+                        icon={<List size={20} />}
+                        title={search ? 'Žiadna úloha sa nezhoduje' : 'Projekt zatiaľ nemá úlohy'}
+                        hint={search
+                          ? 'Skús iné slovo z názvu úlohy.'
+                          : 'Pridaj úlohy, nastav medzi nimi závislosti a Nodus dopočíta termíny, rezervy aj kritickú cestu.'}
+                        actionLabel={!search && isManager ? 'Pridať prvú úlohu' : undefined}
+                        onAction={!search && isManager ? () => setShowCreate(true) : undefined}
+                      />
+                    </td></tr>
                   ) : (
                     filtered.map((t: any) => (
                       <Fragment key={t.id}>

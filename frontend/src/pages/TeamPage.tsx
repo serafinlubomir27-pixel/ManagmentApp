@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Users, UserPlus, ChevronRight, Pencil, X, Check, Link2, Copy, Trash2 } from 'lucide-react'
 import { teamApi, authApi, invitesApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { SkeletonList } from '../components/Skeleton'
+import EmptyState from '../components/EmptyState'
 
 const ROLE_COLOR: Record<string, string> = {
   admin:    'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
@@ -177,9 +179,14 @@ export default function TeamPage() {
       {/* Zoznam členov */}
       <div className="card divide-y divide-gray-100 dark:divide-gray-800">
         {isLoading ? (
-          <div className="py-10 text-center text-gray-400 text-sm">Načítavam…</div>
+          <SkeletonList rows={4} />
         ) : team.length === 0 ? (
-          <div className="py-10 text-center text-gray-400 text-sm">Žiadni členovia tímu</div>
+          <EmptyState
+            icon={<Users size={20} />}
+            title="Zatiaľ nikto ďalší"
+            hint="Pozvánkou pridáš kolegov do organizácie. Úlohy sa potom dajú priraďovať menovite."
+            size="inline"
+          />
         ) : (
           team.map((member: any) => (
             editId === member.id ? (
@@ -305,7 +312,7 @@ function InviteSection() {
 
         {/* Invite list */}
         {invites.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Žiadne aktívne pozvánky</p>
+          <EmptyState title="Žiadne čakajúce pozvánky" size="inline" />
         ) : (
           <div className="space-y-2">
             {invites.map((inv: any) => {

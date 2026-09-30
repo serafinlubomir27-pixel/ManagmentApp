@@ -3,6 +3,7 @@ import { FolderKanban, CheckSquare, Clock, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { projectsApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { SkeletonCards, SkeletonList } from '../components/Skeleton'
 
 const DAYS = ['Nedeľa', 'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Sobota']
 const MONTHS = ['januára', 'februára', 'marca', 'apríla', 'mája', 'júna',
@@ -25,7 +26,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const today = new Date()
 
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: () => projectsApi.list().then((r) => r.data),
   })
@@ -47,6 +48,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat karty */}
+      {isLoading ? <SkeletonCards count={3} /> : (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={<FolderKanban size={22} />}
@@ -70,6 +72,7 @@ export default function DashboardPage() {
           iconColor="text-orange-500"
         />
       </div>
+      )}
 
       {/* Posledné projekty */}
       <div className="card p-5">
@@ -80,7 +83,9 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {projects.length === 0 ? (
+        {isLoading ? (
+          <SkeletonList rows={3} className="divide-y-0" />
+        ) : projects.length === 0 ? (
           <div className="py-8 text-center">
             <FolderKanban size={32} className="mx-auto text-gray-300 dark:text-gray-700 mb-2" />
             <p className="text-sm text-gray-400">Zatiaľ žiadne projekty</p>

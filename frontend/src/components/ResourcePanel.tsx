@@ -6,6 +6,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
 import { Users, AlertTriangle, CheckCircle2, BarChart2 } from 'lucide-react'
+import { SkeletonCards, SkeletonChart } from './Skeleton'
+import EmptyState from './EmptyState'
 
 interface TaskAlloc {
   id: number
@@ -102,18 +104,23 @@ export default function ResourcePanel({ projectId }: Props) {
   })
 
   if (isLoading) {
-    return <div className="py-12 text-center text-gray-400 text-sm">Načítavam resource data…</div>
+    return (
+      <div className="space-y-4">
+        <SkeletonCards count={3} />
+        <SkeletonChart height="h-56" />
+      </div>
+    )
   }
   if (error || !data) {
     return <div className="py-12 text-center text-red-400 text-sm">Chyba pri načítaní zdrojov</div>
   }
   if (data.people.length === 0) {
     return (
-      <div className="py-12 text-center text-gray-400 text-sm">
-        <Users size={32} className="mx-auto mb-3 opacity-30" />
-        <p>Žiadne priradené úlohy s CPM dátami</p>
-        <p className="text-xs mt-1 text-gray-300">Pridaj závislosti medzi úlohami pre výpočet ES/EF</p>
-      </div>
+      <EmptyState
+        icon={<Users size={20} />}
+        title="Žiadne pridelené úlohy"
+        hint="Vyťaženosť sa počíta z úloh, ktoré majú prideleného človeka a vypočítané CPM termíny — teda aj nastavené závislosti."
+      />
     )
   }
 
