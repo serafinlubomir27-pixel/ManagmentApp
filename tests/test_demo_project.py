@@ -69,6 +69,35 @@ def test_demo_project_counts_towards_plan_limit():
     assert client.post("/projects/demo", headers=h).status_code == 402
 
 
+def test_showcase_numbers_match_landing_page():
+    """Landing page kreslí túto sieť s konkrétnymi číslami.
+
+    `frontend/src/components/CpmShowcase.tsx` má ES/EF a rezervy napísané ako
+    konštanty. Keby sa zmenilo DEMO_TASKS a nikto si na showcase nespomenul,
+    stránka by verejne ukazovala výpočet, ktorý nástroj nerobí. Tento test to
+    zachytí — keď spadne, oprav aj CpmShowcase.tsx.
+    """
+    h = _admin()
+    pid = client.post("/projects/demo", headers=h).json()["id"]
+    tasks = {t["name"]: t for t in client.get(f"/projects/{pid}/tasks", headers=h).json()}
+
+    showcase = {
+        "Zber požiadaviek":        (0,  4,  0),
+        "Návrh riešenia":          (4,  10, 0),
+        "Nákup vybavenia":         (4,  7,  10),
+        "Implementácia":           (10, 19, 0),
+        "Zaškolenie používateľov": (7,  9,  10),
+        "Odovzdanie":              (19, 21, 0),
+    }
+
+    for name, (es, ef, float_) in showcase.items():
+        t = tasks[name]
+        assert (t["es"], t["ef"], t["total_float"]) == (es, ef, float_), (
+            f"{name}: motor počíta {t['es']}–{t['ef']} rez={t['total_float']}, "
+            f"ale CpmShowcase.tsx ukazuje {es}–{ef} rez={float_}"
+        )
+
+
 def test_demo_project_requires_manager_or_admin():
     r = client.post("/auth/signup", json={
         "email": "demo.role@acme.sk", "password": "superheslo1",

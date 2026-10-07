@@ -4,35 +4,82 @@
 
 @layer base {
   body {
-    @apply bg-bg text-gray-900 font-sans antialiased;
+    @apply bg-bg text-ink-900 font-sans antialiased;
   }
 
   .dark body {
-    @apply bg-bg-dark text-gray-100;
+    @apply bg-bg-dark text-ink-100;
+  }
+
+  /* Viditeľné zameranie klávesnicou na všetkom, čo sa dá ovládať. Myšou sa
+     neukáže, takže to nič nekazí a klávesnicou sa dá appka prejsť. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-bg dark:ring-offset-bg-dark;
+  }
+
+  /* Kto má v systéme obmedzený pohyb, nech ho nedostane ani tu. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
+  /* Tieň v tmavom režime nevidno, preto tam výšku nad plochou nesie svetlý okraj. */
   .card {
-    @apply bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm;
+    @apply bg-white dark:bg-surface-dark rounded-card
+           border border-ink-200 dark:border-white/[0.07]
+           shadow-card dark:shadow-none;
+  }
+
+  /* Karta, ktorá reaguje na kurzor — zoznamy, dlaždice, odkazy. */
+  .card-interactive {
+    @apply card transition duration-base ease-out
+           hover:shadow-raised hover:-translate-y-0.5
+           dark:hover:border-white/[0.12];
   }
 
   .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-600 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+    @apply inline-flex items-center justify-center gap-2
+           bg-brand-500 hover:bg-brand-600 active:bg-brand-700
+           text-white font-medium px-4 py-2 rounded-control
+           transition duration-fast ease-out
+           disabled:opacity-60 disabled:pointer-events-none;
   }
 
   .btn-ghost {
-    @apply hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-lg transition-colors;
+    @apply inline-flex items-center justify-center gap-2
+           hover:bg-ink-100 dark:hover:bg-white/[0.06]
+           text-ink-700 dark:text-ink-300 font-medium px-4 py-2 rounded-control
+           transition duration-fast ease-out
+           disabled:opacity-60 disabled:pointer-events-none;
+  }
+
+  /* Tlačidlo s obrysom — pre druhoradú akciu, ktorá má mať aj tak váhu. */
+  .btn-outline {
+    @apply btn-ghost border border-ink-200 dark:border-white/[0.12];
   }
 
   .input {
-    @apply w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2
-           bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+    @apply w-full border border-ink-300 dark:border-white/[0.12] rounded-control px-3 py-2
+           bg-white dark:bg-ink-900 text-ink-900 dark:text-ink-100
            focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
-           placeholder-gray-400 text-sm;
+           placeholder-ink-400 text-sm
+           transition duration-fast ease-out;
   }
 
   .badge {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Plocha nad plochou — dropdown, modál, popover. */
+  .overlay {
+    @apply bg-white dark:bg-surface-raised-dark rounded-modal
+           border border-ink-200 dark:border-white/[0.1]
+           shadow-overlay;
   }
 }
