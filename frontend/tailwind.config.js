@@ -111,9 +111,27 @@ export default {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to:   { opacity: '1', transform: 'none' },
         },
+        'fade-in': {
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
+        },
+        // Modály a rozbaľovacie ponuky — mierne priblíženie pôsobí, akoby
+        // vyrástli z miesta, nie akoby na obsah spadli.
+        'pop-in': {
+          from: { opacity: '0', transform: 'scale(0.97) translateY(6px)' },
+          to:   { opacity: '1', transform: 'none' },
+        },
+        // Pulz pre hodnoty, ktoré sa práve prepočítali.
+        'flash': {
+          '0%':   { backgroundColor: 'rgb(75 127 255 / 0.18)' },
+          '100%': { backgroundColor: 'transparent' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'fade-in': 'fade-in 180ms ease-out both',
+        'pop-in':  'pop-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        'flash':   'flash 900ms ease-out',
       },
     },
   },

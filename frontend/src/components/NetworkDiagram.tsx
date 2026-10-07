@@ -1,12 +1,17 @@
 /**
- * NetworkDiagram — interaktívny CPM sieťový diagram.
- * - Zoom kolieskom myši
- * - Pan (ťahanie myšou)
- * - Tlačidlá +/- a Fit (prispôsob celú schému)
+ * NetworkDiagram — sieťový diagram CPM.
+ *
+ * Plátno, nie obrázok v rámčeku: bodková mriežka, ovládanie pláva nad plochou,
+ * uzly sa dajú chytiť a presunúť. Koliesko približuje k miestu, kde je kurzor.
+ *
+ * Rozmiestnenie sa počíta z ES. Keď si ho používateľ poprehadzuje, posuny sa
+ * pamätajú v prehliadači — je to osobný pracovný pohľad, nie vlastnosť projektu,
+ * takže kolegom sa diagram nepremiestni pod rukami.
  */
-import { useRef, useState, useCallback, useEffect } from 'react'
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
+import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Network } from 'lucide-react'
 import TaskDetailModal from './TaskDetailModal'
+import EmptyState from './EmptyState'
 import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
 
 interface Task {
@@ -33,13 +38,33 @@ interface Props {
   teamMembers?: Array<{ id: number; username: string; full_name?: string }>
 }
 
-const NODE_W = 164
-const NODE_H = 76
-const H_GAP = 90
-const V_GAP = 44
-const PAD = 48
+const NODE_W = 172
+const NODE_H = 80
+const H_GAP = 96
+const V_GAP = 48
+const PAD = 56
+const MIN_ZOOM = 0.2
+const MAX_ZOOM = 2.5
 
-// ── Layout: rozmiestni uzly do stĺpcov podľa ES ─────────────────────────────
+type Offsets = Record<number, { dx: number; dy: number }>
+
+const storageKey = (projectId: number) => `nodus.network.layout.${projectId}`
+
+function loadOffsets(projectId: number): Offsets {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey(projectId)) ?? '{}')
+  } catch {
+    return {}   // súkromné okno alebo zakázané úložisko — len sa nič nepamätá
+  }
+}
+
+function saveOffsets(projectId: number, offsets: Offsets) {
+  try {
+    localStorage.setItem(storageKey(projectId), JSON.stringify(offsets))
+  } catch { /* nevadí */ }
+}
+
+/** Základné rozmiestnenie: stĺpec podľa ES, v stĺpci pod sebou. */
 function computeLayout(tasks: Task[]) {
   const columns = new Map<number, Task[]>()
   for (const t of tasks) {
@@ -47,254 +72,406 @@ function computeLayout(tasks: Task[]) {
     if (!columns.has(col)) columns.set(col, [])
     columns.get(col)!.push(t)
   }
-  const sortedCols = Array.from(columns.keys()).sort((a, b) => a - b)
   const positions = new Map<number, { x: number; y: number }>()
   let xCursor = PAD
-  for (const col of sortedCols) {
-    const colTasks = columns.get(col)!
+  for (const col of Array.from(columns.keys()).sort((a, b) => a - b)) {
     let yCursor = PAD
-    for (const t of colTasks) {
+    for (const t of columns.get(col)!) {
       positions.set(t.id, { x: xCursor, y: yCursor })
       yCursor += NODE_H + V_GAP
     }
     xCursor += NODE_W + H_GAP
   }
-  const maxX = xCursor - H_GAP + PAD
-  const maxY = Math.max(...Array.from(positions.values()).map(p => p.y)) + NODE_H + PAD
-  return { positions, maxX, maxY }
+  return positions
 }
 
 export default function NetworkDiagram({ projectId, tasks, dependencies, teamMembers }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const refresh = useScheduleRefresh(projectId)
+
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [smooth, setSmooth] = useState(false)
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
-  const dragging = useRef(false)
-  const lastMouse = useRef({ x: 0, y: 0 })
+  const [hoverId, setHoverId] = useState<number | null>(null)
+  const [offsets, setOffsets] = useState<Offsets>(() => loadOffsets(projectId))
 
-  const valid = tasks.filter(t => t.es != null)
-  if (valid.length === 0) {
-    return (
-      <div className="py-10 text-center text-gray-400 text-sm">
-        CPM dáta nie sú dostupné — pridaj úlohy a závislosti
-      </div>
-    )
-  }
+  // Ťahanie: buď plátno (pan), alebo konkrétny uzol.
+  const drag = useRef<
+    | { kind: 'pan'; lastX: number; lastY: number }
+    | { kind: 'node'; id: number; lastX: number; lastY: number; moved: boolean }
+    | null
+  >(null)
 
-  const { positions, maxX, maxY } = computeLayout(valid)
-  const taskMap = new Map(valid.map(t => [t.id, t]))
+  // Zoom a pan čítajú obslužné rutiny mimo Reactu, preto si ich držíme aj v refe.
+  const view = useRef({ zoom: 1, pan: { x: 0, y: 0 } })
+  useEffect(() => { view.current = { zoom, pan } }, [zoom, pan])
 
-  // ── Fit to screen ──────────────────────────────────────────────────────────
+  const valid = useMemo(() => tasks.filter(t => t.es != null), [tasks])
+
+  const basePositions = useMemo(() => computeLayout(valid), [valid])
+
+  /** Rozmiestnenie po započítaní ručných posunov. */
+  const positions = useMemo(() => {
+    const out = new Map<number, { x: number; y: number }>()
+    basePositions.forEach((p, id) => {
+      const o = offsets[id]
+      out.set(id, o ? { x: p.x + o.dx, y: p.y + o.dy } : p)
+    })
+    return out
+  }, [basePositions, offsets])
+
+  const bounds = useMemo(() => {
+    const pts = Array.from(positions.values())
+    if (pts.length === 0) return { w: 1, h: 1 }
+    return {
+      w: Math.max(...pts.map(p => p.x)) + NODE_W + PAD,
+      h: Math.max(...pts.map(p => p.y)) + NODE_H + PAD,
+    }
+  }, [positions])
+
+  const taskMap = useMemo(() => new Map(valid.map(t => [t.id, t])), [valid])
+
   const fitToScreen = useCallback(() => {
-    if (!containerRef.current) return
-    const { width, height } = containerRef.current.getBoundingClientRect()
-    const scaleX = (width - 32) / maxX
-    const scaleY = (height - 32) / maxY
-    const newZoom = Math.min(scaleX, scaleY, 1)
-    setZoom(newZoom)
-    setPan({ x: 0, y: 0 })
-  }, [maxX, maxY])
+    const el = containerRef.current
+    if (!el) return
+    const { width, height } = el.getBoundingClientRect()
+    const next = Math.min((width - 48) / bounds.w, (height - 48) / bounds.h, 1)
+    setSmooth(true)
+    setZoom(next)
+    setPan({
+      x: (width - bounds.w * next) / 2,
+      y: (height - bounds.h * next) / 2,
+    })
+  }, [bounds])
 
-  useEffect(() => { fitToScreen() }, [fitToScreen])
+  // Prispôsob len pri prvom vykreslení projektu. Pôvodne to bežalo pri každej
+  // zmene údajov, takže pri úprave úlohy odskočil pohľad naspäť a používateľ
+  // prišiel o priblíženie, ktoré si nastavil.
+  const fittedFor = useRef<number | null>(null)
+  useEffect(() => {
+    if (valid.length === 0) return
+    if (fittedFor.current === projectId) return
+    fittedFor.current = projectId
+    fitToScreen()
+  }, [projectId, valid.length, fitToScreen])
 
-  // ── Zoom koliesko — natívny listener (passive: false) ─────────────────────
-  // React onWheel je passive by default (Chrome 51+), preventDefault sa ignoruje.
-  // Priame addEventListener s { passive: false } zaistí že stránka nescrolluje.
+  // Koliesko. React onWheel je passive, preventDefault by sa ignoroval, preto
+  // natívny listener. Približuje sa k bodu pod kurzorom — doteraz sa škálovalo
+  // od ľavého horného rohu, takže si musel po každom priblížení doposúvať.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
-      const delta = e.deltaY > 0 ? 0.9 : 1.1
-      setZoom(z => Math.min(Math.max(z * delta, 0.15), 3))
+      const rect = el.getBoundingClientRect()
+      const mx = e.clientX - rect.left
+      const my = e.clientY - rect.top
+
+      const { zoom: z, pan: p } = view.current
+      const factor = e.deltaY > 0 ? 0.88 : 1.14
+      const next = Math.min(Math.max(z * factor, MIN_ZOOM), MAX_ZOOM)
+      if (next === z) return
+
+      // Bod pod kurzorom v súradniciach obsahu musí ostať na mieste.
+      const cx = (mx - p.x) / z
+      const cy = (my - p.y) / z
+      setSmooth(false)
+      setZoom(next)
+      setPan({ x: mx - cx * next, y: my - cy * next })
     }
+
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
   }, [])
 
-  // ── Pan myšou ─────────────────────────────────────────────────────────────
-  const handleMouseDown = (e: React.MouseEvent) => {
-    dragging.current = true
-    lastMouse.current = { x: e.clientX, y: e.clientY }
+  const zoomBy = (factor: number) => {
+    const el = containerRef.current
+    if (!el) return
+    const { width, height } = el.getBoundingClientRect()
+    const { zoom: z, pan: p } = view.current
+    const next = Math.min(Math.max(z * factor, MIN_ZOOM), MAX_ZOOM)
+    // Tlačidlom sa približuje k stredu plochy, nie k rohu.
+    const cx = (width / 2 - p.x) / z
+    const cy = (height / 2 - p.y) / z
+    setSmooth(true)
+    setZoom(next)
+    setPan({ x: width / 2 - cx * next, y: height / 2 - cy * next })
   }
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging.current) return
-    const dx = e.clientX - lastMouse.current.x
-    const dy = e.clientY - lastMouse.current.y
-    lastMouse.current = { x: e.clientX, y: e.clientY }
-    setPan(p => ({ x: p.x + dx, y: p.y + dy }))
-  }
-  const handleMouseUp = () => { dragging.current = false }
 
-  // ── Šípky ─────────────────────────────────────────────────────────────────
-  const arrows = dependencies
+  // ── Ťahanie ────────────────────────────────────────────────────────────────
+  const onPointerDownCanvas = (e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    drag.current = { kind: 'pan', lastX: e.clientX, lastY: e.clientY }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
+  const onPointerDownNode = (e: React.PointerEvent, id: number) => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    drag.current = { kind: 'node', id, lastX: e.clientX, lastY: e.clientY, moved: false }
+    ;(e.currentTarget.closest('[data-canvas]') as HTMLElement)?.setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current
+    if (!d) return
+    const dx = e.clientX - d.lastX
+    const dy = e.clientY - d.lastY
+    d.lastX = e.clientX
+    d.lastY = e.clientY
+
+    if (d.kind === 'pan') {
+      setSmooth(false)
+      setPan(p => ({ x: p.x + dx, y: p.y + dy }))
+      return
+    }
+
+    // Pohyb myši o d pixelov na obrazovke je d/zoom v súradniciach obsahu.
+    if (Math.abs(dx) > 0 || Math.abs(dy) > 0) d.moved = true
+    const z = view.current.zoom
+    setOffsets(prev => {
+      const cur = prev[d.id] ?? { dx: 0, dy: 0 }
+      return { ...prev, [d.id]: { dx: cur.dx + dx / z, dy: cur.dy + dy / z } }
+    })
+  }
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const d = drag.current
+    drag.current = null
+    if (!d) return
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId) } catch { /* ignoruj */ }
+
+    if (d.kind === 'node') {
+      if (d.moved) setOffsets(prev => { saveOffsets(projectId, prev); return prev })
+      else setSelectedTaskId(d.id)   // klik bez posunu = otvor detail
+    }
+  }
+
+  const resetLayout = () => {
+    setOffsets({})
+    saveOffsets(projectId, {})
+    fitToScreen()
+  }
+
+  const hasManualLayout = Object.keys(offsets).length > 0
+
+  // ── Šípky ──────────────────────────────────────────────────────────────────
+  const arrows = useMemo(() => dependencies
     .filter(d => positions.has(d.depends_on_task_id) && positions.has(d.task_id))
     .map(d => {
       const from = positions.get(d.depends_on_task_id)!
       const to = positions.get(d.task_id)!
-      const x1 = from.x + NODE_W
-      const y1 = from.y + NODE_H / 2
-      const x2 = to.x
-      const y2 = to.y + NODE_H / 2
-      const isCrit = taskMap.get(d.depends_on_task_id)?.is_critical && taskMap.get(d.task_id)?.is_critical
-      return { x1, y1, x2, y2, isCrit }
-    })
+      const crit = !!taskMap.get(d.depends_on_task_id)?.is_critical
+        && !!taskMap.get(d.task_id)?.is_critical
+      const touched = hoverId === d.task_id || hoverId === d.depends_on_task_id
+      return {
+        key: `${d.depends_on_task_id}-${d.task_id}`,
+        x1: from.x + NODE_W, y1: from.y + NODE_H / 2,
+        x2: to.x,            y2: to.y + NODE_H / 2,
+        crit, touched,
+      }
+    }), [dependencies, positions, taskMap, hoverId])
+
+  // Prázdny stav ide až tu — hooky sa nesmú volať podmienene. Predtým bol
+  // `return` nad nimi, takže pridanie prvej úlohy menilo počet hookov a React
+  // spadol na „Rendered more hooks than during the previous render".
+  if (valid.length === 0) {
+    return (
+      <EmptyState
+        icon={<Network size={20} />}
+        title="Sieť sa zatiaľ nedá zostaviť"
+        hint="Pridaj úlohy a nastav medzi nimi závislosti — z nich vznikne sieť aj kritická cesta."
+      />
+    )
+  }
+
+  const btn = 'p-2 rounded-control text-gray-500 dark:text-gray-400 transition duration-fast ease-out ' +
+    'hover:bg-gray-100 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white ' +
+    'disabled:opacity-40 disabled:pointer-events-none'
 
   return (
     <>
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-dark overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-gray-800">
-        <span className="text-xs text-gray-400 mr-2">
-          Zoom: {Math.round(zoom * 100)}%
-        </span>
-        <button
-          onClick={() => setZoom(z => Math.min(z * 1.2, 3))}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
-          title="Priblíž"
-        >
-          <ZoomIn size={16} />
-        </button>
-        <button
-          onClick={() => setZoom(z => Math.max(z * 0.8, 0.15))}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
-          title="Oddiaľ"
-        >
-          <ZoomOut size={16} />
-        </button>
-        <button
-          onClick={fitToScreen}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
-          title="Prispôsob obrazovke"
-        >
-          <Maximize2 size={16} />
-        </button>
-        <div className="flex gap-1 ml-4 text-xs text-gray-400">
-          <span className="inline-flex items-center gap-1">
-            <span className="w-3 h-3 rounded border-2 border-red-500 inline-block" /> Kritická
-          </span>
-          <span className="inline-flex items-center gap-1 ml-3">
-            <span className="w-3 h-3 rounded border-2 border-brand-500 inline-block" /> Normálna
-          </span>
-          <span className="ml-3 hidden sm:inline">
-            ES = Early Start | EF = Early Finish | R = Rezerva
-          </span>
-        </div>
-        <span className="ml-auto text-xs text-gray-300 dark:text-gray-600 hidden sm:inline">
-          🖱 ťahaj pre posun · koliesko pre zoom
-        </span>
-      </div>
-
-      {/* Canvas */}
-      <div
-        ref={containerRef}
-        className="w-full overflow-hidden cursor-grab active:cursor-grabbing"
-        style={{ height: '520px' }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <svg
-          width={maxX}
-          height={maxY}
+      <div className="relative">
+        <div
+          ref={containerRef}
+          data-canvas
+          onPointerDown={onPointerDownCanvas}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="relative w-full h-[min(72vh,660px)] overflow-hidden rounded-card
+                     cursor-grab active:cursor-grabbing touch-none
+                     bg-gray-50 dark:bg-[#0c1223]
+                     border border-gray-200 dark:border-white/[0.07]"
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: '0 0',
-            transition: dragging.current ? 'none' : 'transform 0.05s',
+            // Bodková mriežka posúva a škáluje sa spolu s obsahom, takže plocha
+            // pôsobí ako plátno, nie ako obrázok v rámčeku.
+            backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
+            backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
+            color: 'rgb(148 163 184 / 0.28)',
           }}
-          className="font-sans select-none"
         >
-          <defs>
-            <marker id="arr-n" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="#9ca3af" />
-            </marker>
-            <marker id="arr-c" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="#ef4444" />
-            </marker>
-            {/* Drop shadow filter */}
-            <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.10" />
-            </filter>
-          </defs>
+          <svg
+            width={bounds.w}
+            height={bounds.h}
+            className="font-sans select-none absolute top-0 left-0"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: '0 0',
+              transition: smooth ? 'transform 180ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+            }}
+          >
+            <defs>
+              <marker id="arrow-normal" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" className="fill-gray-400" />
+              </marker>
+              <marker id="arrow-critical" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#ef4444" />
+              </marker>
+            </defs>
 
-          {/* Šípky */}
-          {arrows.map((a, i) => {
-            const cx1 = a.x1 + H_GAP * 0.45
-            const cx2 = a.x2 - H_GAP * 0.45
-            return (
-              <path
-                key={i}
-                d={`M${a.x1},${a.y1} C${cx1},${a.y1} ${cx2},${a.y2} ${a.x2},${a.y2}`}
-                fill="none"
-                stroke={a.isCrit ? '#ef4444' : '#9ca3af'}
-                strokeWidth={a.isCrit ? 2.5 : 1.5}
-                strokeDasharray={a.isCrit ? undefined : undefined}
-                markerEnd={a.isCrit ? 'url(#arr-c)' : 'url(#arr-n)'}
-                opacity={0.85}
-              />
-            )
-          })}
+            {arrows.map(a => {
+              const c1 = a.x1 + H_GAP * 0.5
+              const c2 = a.x2 - H_GAP * 0.5
+              return (
+                <path
+                  key={a.key}
+                  d={`M${a.x1},${a.y1} C${c1},${a.y1} ${c2},${a.y2} ${a.x2},${a.y2}`}
+                  fill="none"
+                  stroke={a.crit ? '#ef4444' : 'currentColor'}
+                  className={a.crit ? '' : 'text-gray-400 dark:text-gray-600'}
+                  strokeWidth={a.crit ? 2.5 : 1.5}
+                  markerEnd={a.crit ? 'url(#arrow-critical)' : 'url(#arrow-normal)'}
+                  opacity={hoverId === null ? 0.85 : a.touched ? 1 : 0.25}
+                  style={{ transition: 'opacity 120ms' }}
+                />
+              )
+            })}
 
-          {/* Uzly */}
-          {valid.map(t => {
-            const pos = positions.get(t.id)!
-            const border = t.is_critical ? '#ef4444' : '#4B7FFF'
-            const headerFill = t.is_critical ? '#fff5f5' : '#f0f4ff'
-            const short = t.name.length > 20 ? t.name.slice(0, 19) + '…' : t.name
+            {valid.map(t => {
+              const pos = positions.get(t.id)!
+              const dim = hoverId !== null && hoverId !== t.id
+                && !arrows.some(a => a.touched && a.key.split('-').includes(String(t.id)))
+              const short = t.name.length > 21 ? t.name.slice(0, 20) + '…' : t.name
 
-            return (
-              <g key={t.id} transform={`translate(${pos.x},${pos.y})`} filter="url(#shadow)" onClick={() => setSelectedTaskId(t.id)} style={{ cursor: 'pointer' }}>
-                {/* Telo */}
-                <rect width={NODE_W} height={NODE_H} rx={10}
-                  fill="white" stroke={border} strokeWidth={t.is_critical ? 2.5 : 1.5} />
+              return (
+                <g
+                  key={t.id}
+                  transform={`translate(${pos.x},${pos.y})`}
+                  onPointerDown={e => onPointerDownNode(e, t.id)}
+                  onPointerEnter={() => setHoverId(t.id)}
+                  onPointerLeave={() => setHoverId(null)}
+                  className="cursor-grab active:cursor-grabbing"
+                  opacity={dim ? 0.35 : 1}
+                  style={{ transition: 'opacity 120ms' }}
+                >
+                  <title>{t.name}</title>
 
-                {/* Header */}
-                <rect width={NODE_W} height={28} rx={10} fill={headerFill} />
-                <rect y={18} width={NODE_W} height={10} fill={headerFill} />
+                  <rect
+                    width={NODE_W} height={NODE_H} rx={12}
+                    className={`fill-white dark:fill-surface-raised-dark ${
+                      t.is_critical ? 'stroke-red-500' : 'stroke-brand-500'
+                    }`}
+                    strokeWidth={t.is_critical ? 2.5 : 1.5}
+                  />
 
-                {/* ES */}
-                <text x={10} y={19} fontSize={13} fontWeight={700} fill={border}>{t.es}</text>
-                {/* Názov */}
-                <text x={NODE_W / 2} y={19} textAnchor="middle" fontSize={10}
-                  fill={t.is_critical ? '#b91c1c' : '#374151'}>{short}</text>
-                {/* EF */}
-                <text x={NODE_W - 10} y={19} textAnchor="end" fontSize={13} fontWeight={700} fill={border}>{t.ef}</text>
+                  {/* hlavička */}
+                  <path
+                    d={`M0,12 A12,12 0 0 1 12,0 L${NODE_W - 12},0 A12,12 0 0 1 ${NODE_W},12 L${NODE_W},30 L0,30 Z`}
+                    className={t.is_critical
+                      ? 'fill-red-50 dark:fill-red-500/15'
+                      : 'fill-brand-50 dark:fill-brand-500/15'}
+                  />
 
-                {/* Oddeľovač */}
-                <line x1={0} y1={28} x2={NODE_W} y2={28} stroke={border} strokeWidth={1} opacity={0.3} />
-                <line x1={NODE_W / 2} y1={28} x2={NODE_W / 2} y2={NODE_H} stroke={border} strokeWidth={1} opacity={0.15} />
+                  <text x={10} y={20} fontSize={13} fontWeight={700}
+                    className={t.is_critical ? 'fill-red-500' : 'fill-brand-500'}>{t.es}</text>
+                  <text x={NODE_W / 2} y={20} textAnchor="middle" fontSize={10}
+                    className={t.is_critical
+                      ? 'fill-red-700 dark:fill-red-300'
+                      : 'fill-gray-700 dark:fill-gray-200'}>{short}</text>
+                  <text x={NODE_W - 10} y={20} textAnchor="end" fontSize={13} fontWeight={700}
+                    className={t.is_critical ? 'fill-red-500' : 'fill-brand-500'}>{t.ef}</text>
 
-                {/* LS */}
-                <text x={10} y={56} fontSize={13} fontWeight={600} fill="#6b7280">{t.ls}</text>
-                {/* Float */}
-                <text x={NODE_W / 2} y={56} textAnchor="middle" fontSize={11}
-                  fill={t.total_float === 0 ? '#ef4444' : '#f59e0b'}
-                  fontWeight={600}>
-                  R: {t.total_float}d
-                </text>
-                {/* LF */}
-                <text x={NODE_W - 10} y={56} textAnchor="end" fontSize={13} fontWeight={600} fill="#6b7280">{t.lf}</text>
+                  <line x1={0} y1={30} x2={NODE_W} y2={30}
+                    className={t.is_critical ? 'stroke-red-500' : 'stroke-brand-500'}
+                    strokeWidth={1} opacity={0.3} />
+                  <line x1={NODE_W / 2} y1={30} x2={NODE_W / 2} y2={NODE_H}
+                    className="stroke-gray-300 dark:stroke-white/10" strokeWidth={1} />
 
-                {/* Malé popisky */}
-                <text x={10} y={70} fontSize={8} fill="#d1d5db">ES / LS</text>
-                <text x={NODE_W / 2} y={70} textAnchor="middle" fontSize={8} fill="#d1d5db">Rezerva</text>
-                <text x={NODE_W - 10} y={70} textAnchor="end" fontSize={8} fill="#d1d5db">EF / LF</text>
-              </g>
-            )
-          })}
-        </svg>
+                  <text x={10} y={58} fontSize={13} fontWeight={600}
+                    className="fill-gray-500 dark:fill-gray-400">{t.ls}</text>
+                  <text x={NODE_W / 2} y={58} textAnchor="middle" fontSize={11} fontWeight={600}
+                    className={t.total_float === 0 ? 'fill-red-500' : 'fill-amber-500'}>
+                    R: {t.total_float}d
+                  </text>
+                  <text x={NODE_W - 10} y={58} textAnchor="end" fontSize={13} fontWeight={600}
+                    className="fill-gray-500 dark:fill-gray-400">{t.lf}</text>
+
+                  <text x={10} y={72} fontSize={8} className="fill-gray-300 dark:fill-gray-600">ES / LS</text>
+                  <text x={NODE_W / 2} y={72} textAnchor="middle" fontSize={8}
+                    className="fill-gray-300 dark:fill-gray-600">Rezerva</text>
+                  <text x={NODE_W - 10} y={72} textAnchor="end" fontSize={8}
+                    className="fill-gray-300 dark:fill-gray-600">EF / LF</text>
+                </g>
+              )
+            })}
+          </svg>
+
+          {/* Ovládanie pláva nad plochou — nie je to lišta, ktorá diagram odreže. */}
+          <div className="absolute top-3 right-3 flex items-center gap-0.5 p-1
+                          rounded-control bg-white/85 dark:bg-surface-raised-dark/85 backdrop-blur
+                          border border-gray-200 dark:border-white/[0.1] shadow-card">
+            <span className="px-2 text-xs tabular-nums text-gray-400 select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button onClick={() => zoomBy(1.2)} className={btn} title="Priblížiť" disabled={zoom >= MAX_ZOOM}>
+              <ZoomIn size={16} />
+            </button>
+            <button onClick={() => zoomBy(1 / 1.2)} className={btn} title="Oddialiť" disabled={zoom <= MIN_ZOOM}>
+              <ZoomOut size={16} />
+            </button>
+            <button onClick={fitToScreen} className={btn} title="Prispôsobiť obrazovke">
+              <Maximize2 size={16} />
+            </button>
+            {hasManualLayout && (
+              <button onClick={resetLayout} className={btn} title="Vrátiť pôvodné rozmiestnenie">
+                <RotateCcw size={16} />
+              </button>
+            )}
+          </div>
+
+          <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5
+                          rounded-control bg-white/85 dark:bg-surface-raised-dark/85 backdrop-blur
+                          border border-gray-200 dark:border-white/[0.1] shadow-card
+                          text-xs text-gray-500 dark:text-gray-400 select-none">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm border-2 border-red-500" /> Kritická
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm border-2 border-brand-500" /> Bežná
+            </span>
+            <span className="hidden sm:inline text-gray-400 dark:text-gray-500">
+              ES/LS · Rezerva · EF/LF
+            </span>
+          </div>
+
+          <p className="absolute bottom-3 right-3 text-xs text-gray-400 dark:text-gray-600 select-none hidden md:block">
+            Ťahaj úlohu pre presun · plochu pre posun · koliesko približuje ku kurzoru
+          </p>
+        </div>
       </div>
-    </div>
-    {selectedTaskId !== null && (
-      <TaskDetailModal
-        taskId={selectedTaskId}
-        teamMembers={teamMembers ?? []}
-        onClose={() => setSelectedTaskId(null)}
-        onUpdated={() => refresh(selectedTaskId)}
-      />
-    )}
+
+      {selectedTaskId !== null && (
+        <TaskDetailModal
+          taskId={selectedTaskId}
+          teamMembers={teamMembers ?? []}
+          onClose={() => setSelectedTaskId(null)}
+          onUpdated={() => refresh(selectedTaskId)}
+        />
+      )}
     </>
   )
 }

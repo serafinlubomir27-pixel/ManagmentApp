@@ -220,6 +220,7 @@ def get_tasks_with_due_dates(user_id: int, only_auto_calendar: bool = False) -> 
             f"""
             SELECT t.id, t.name, t.status, t.due_date, t.assigned_to,
                    t.priority, t.auto_notify, t.auto_calendar,
+                   t.project_id,
                    p.name as project_name, p.user_id as project_owner
             FROM tasks t
             JOIN projects p ON t.project_id = p.id

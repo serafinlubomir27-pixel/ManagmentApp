@@ -97,7 +97,7 @@ export default function ProjectsPage() {
       )}
 
       {/* Zoznam */}
-      <div className="card divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="card divide-y divide-gray-100 dark:divide-gray-800 stagger">
         {isLoading ? (
           <SkeletonList rows={4} />
         ) : filtered.length === 0 ? (

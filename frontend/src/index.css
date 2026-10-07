@@ -80,6 +80,27 @@
   .overlay {
     @apply bg-white dark:bg-surface-raised-dark rounded-modal
            border border-ink-200 dark:border-white/[0.1]
-           shadow-overlay;
+           shadow-overlay animate-pop-in;
   }
+
+  /* Riadok v zozname alebo tabuľke, na ktorý sa dá kliknúť. */
+  .row-interactive {
+    @apply transition duration-fast ease-out
+           hover:bg-ink-50 dark:hover:bg-white/[0.03];
+  }
+}
+
+@layer utilities {
+  /* Postupný nábeh položiek zoznamu. Bez neho sa celá tabuľka objaví naraz
+     a pôsobí to staticky; s ním je vidieť, že obsah dorazil. */
+  .stagger > * {
+    animation: fade-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms }
+  .stagger > *:nth-child(2) { animation-delay: 40ms }
+  .stagger > *:nth-child(3) { animation-delay: 80ms }
+  .stagger > *:nth-child(4) { animation-delay: 120ms }
+  .stagger > *:nth-child(5) { animation-delay: 160ms }
+  .stagger > *:nth-child(6) { animation-delay: 200ms }
+  .stagger > *:nth-child(n+7) { animation-delay: 240ms }
 }
