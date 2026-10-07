@@ -6,61 +6,49 @@ Súvisí s: [[18 - Schválené zadanie a pripomienky k osnove]] · [[20 - Rešer
 
 ---
 
-**Predmet:** Nodus — žiadosť o posúdenie funkčnosti (BP, Informatika v ekonomice)
+**Predmet:** Nodus — prosba o vyskúšanie (BP, Informatika v ekonomice)
 
 ---
 
 Dobrý deň, pán profesor,
 
-som študent bakalárskeho programu Informatika v ekonomice a v rámci záverečnej práce
-vyvíjam informačný systém na riadenie projektov s využitím metódy kritickej cesty.
-Vedúcou práce je pani doktorka Chytilová.
+volám sa Ľubomír Serafín a študujem Informatiku v ekonomice. Pod vedením pani
+doktorky Chytilovej robím bakalárku — informačný systém na riadenie projektov
+s metódou kritickej cesty.
 
-Rád by som Vás poprosil o posúdenie funkčnosti systému a o Váš názor, keby ste si
-našli chvíľu.
+Chcel by som Vás poprosiť, či by ste si to vyskúšali a povedali mi, čo na to hovoríte.
 
-**Odkaz:** https://managmentapp.surge.sh
+https://managmentapp.surge.sh
 
-Registrácia je otvorená, stačí zadať e-mail, heslo a názov organizácie. Vytvorí sa
-samostatný priestor, takže sa nedostanete k cudzím údajom ani nikto k Vašim.
+Zaregistrovať sa dá priamo tam, stačí e-mail, heslo a názov organizácie. Každý má
+vlastný priestor, takže sa k sebe navzájom nedostaneme.
 
-**Prosím o strpenie pri prvom načítaní.** Systém beží na bezplatnej úrovni cloudovej
-služby, ktorá server po dobe nečinnosti uspáva — prvá požiadavka preto trvá približne
-pol minúty, ďalšie už reagujú okamžite. Je to obmedzenie prevádzky, ktoré v práci
-uvádzam medzi limitmi riešenia.
+Jedna vec dopredu: prvé načítanie trvá asi pol minúty. Systém beží na bezplatnom
+serveri, ktorý sa po čase nečinnosti uspáva. Potom už reaguje normálne. V práci to
+uvádzam medzi obmedzeniami riešenia.
 
-**Čo si môžete vyskúšať**
+Ak by ste chceli vidieť to hlavné — založte projekt, pridajte pár úloh a nastavte
+medzi nimi závislosti. Systém dopočíta najskoršie a najneskoršie termíny, odvodí
+časové rezervy a označí kritickú cestu. Zobrazí to v Ganttovom aj v sieťovom diagrame
+a dá sa to exportovať do PDF.
 
-Po založení projektu a niekoľkých úloh stačí medzi nimi nastaviť závislosti. Systém
-sám vypočíta najskoršie a najneskoršie možné začiatky a konce, odvodí časové rezervy
-a označí kritickú cestu. Výsledok je zobrazený v Ganttovom aj v sieťovom diagrame
-a dá sa exportovať do PDF, Excelu alebo CSV.
+Práve tento výpočet je jadrom práce. Z nástrojov, ktoré som porovnával, ho rozšírené
+cloudové riešenia buď nemajú vôbec, alebo kritickú cestu len zafarbia bez uvedenia
+rezerv.
 
-Práve tento výpočet považujem za jadro práce. Z nástrojov, ktoré som porovnával,
-ho rozšírené cloudové riešenia neponúkajú vôbec alebo len ako farebné zvýraznenie
-bez uvedenia rezerv.
+S pani doktorkou máme dohodnutý názov, ciele aj osnovu. Podľa jej pripomienok som
+osnovu prepracoval — metodika ide pred analýzu, ubral som podkapitoly a dopísal
+metodickú časť. Dbám na to, aby systém v práci vystupoval ako prostriedok riešenia
+manažérskeho a rozhodovacieho problému s ekonomickými dôsledkami, nie ako cieľ sám
+osebe.
 
-**Stav konzultácií s vedúcou práce**
+Výpočet mám overený na referenčných príkladoch, ktoré som si prepočítal ručne.
+Ďalej ma čaká používateľské testovanie na vzorke 8 až 12 ľudí.
 
-S pani doktorkou Chytilovou máme dohodnuté vymedzenie práce. Schválený je názov
-„Návrh, implementace a vyhodnocení informačního systému pro řízení projektů
-s využitím metody kritické cesty", hlavný cieľ aj dielčie ciele a osnova.
+Budem rád za akýkoľvek názor — či to funguje, čo chýba, alebo či je zameranie práce
+v poriadku vzhľadom na náš program.
 
-Na jej pripomienky som osnovu prepracoval — metodiku som zaradil pred analýzu,
-výrazne som znížil počet podkapitol a doplnil chýbajúcu metodickú časť. Podľa jej
-odporúčania kladiem dôraz na to, aby bol informačný systém prezentovaný ako
-prostriedok riešenia manažérskeho a rozhodovacieho problému, ktorý má ekonomické
-dôsledky, nie ako cieľ práce sám osebe.
-
-Správnosť výpočtu je overená na referenčných príkladoch s hodnotami odvodenými ručne,
-nezávisle od implementácie. V ďalšom kroku ma čaká používateľské testovanie, pre ktoré
-mi pani doktorka odporučila vzorku 8 až 12 používateľov a dotazník System Usability
-Scale.
-
-Budem vďačný za akúkoľvek spätnú väzbu — či už k funkčnosti, k tomu, čo v systéme
-chýba, alebo k samotnému zameraniu práce vzhľadom na náš študijný program.
-
-Ďakujem za Váš čas a prajem pekný deň,
+Ďakujem za čas,
 
 Ľubomír Serafín
 
