@@ -12,6 +12,7 @@ import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Network } from 'lucide-react'
 import TaskDetailModal from './TaskDetailModal'
 import EmptyState from './EmptyState'
+import { TaskGroup, groupHex } from './groups'
 import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
 
 interface Task {
@@ -24,6 +25,7 @@ interface Task {
   total_float: number
   is_critical: boolean
   duration: number
+  group_id?: number | null
 }
 
 interface Dependency {
@@ -35,6 +37,7 @@ interface Props {
   projectId: number
   tasks: Task[]
   dependencies: Dependency[]
+  groups?: TaskGroup[]
   teamMembers?: Array<{ id: number; username: string; full_name?: string }>
 }
 
@@ -85,7 +88,7 @@ function computeLayout(tasks: Task[]) {
   return positions
 }
 
-export default function NetworkDiagram({ projectId, tasks, dependencies, teamMembers }: Props) {
+export default function NetworkDiagram({ projectId, tasks, dependencies, groups = [], teamMembers }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const refresh = useScheduleRefresh(projectId)
 
@@ -130,7 +133,34 @@ export default function NetworkDiagram({ projectId, tasks, dependencies, teamMem
     }
   }, [positions])
 
+
   const taskMap = useMemo(() => new Map(valid.map(t => [t.id, t])), [valid])
+
+  // Etapa sa v sieti kreslí ako obálka okolo svojich uzlov. Graf sa tým nemení —
+  // je to len rámec, aby bolo vidieť, čo patrí k sebe. Keď používateľ uzly
+  // poprehadzuje, obálka sa roztiahne za nimi.
+  const regions = useMemo(() => {
+    const PAD_R = 22
+    return groups.map(g => {
+      const pts = valid
+        .filter(t => t.group_id === g.id)
+        .map(t => positions.get(t.id))
+        .filter(Boolean) as Array<{ x: number; y: number }>
+      if (pts.length === 0) return null
+      const x = Math.min(...pts.map(p => p.x)) - PAD_R
+      const y = Math.min(...pts.map(p => p.y)) - PAD_R - 14   // miesto na názov
+      return {
+        id: g.id, name: g.name, hex: groupHex[g.color] ?? groupHex.brand,
+        done: g.done,
+        x, y,
+        w: Math.max(...pts.map(p => p.x)) + NODE_W + PAD_R - x,
+        h: Math.max(...pts.map(p => p.y)) + NODE_H + PAD_R - y,
+      }
+    }).filter(Boolean) as Array<{
+      id: number; name: string; hex: string; done: boolean
+      x: number; y: number; w: number; h: number
+    }>
+  }, [groups, valid, positions])
 
   const fitToScreen = useCallback(() => {
     const el = containerRef.current
@@ -332,6 +362,24 @@ export default function NetworkDiagram({ projectId, tasks, dependencies, teamMem
                 <path d="M0,0 L0,6 L8,3 z" fill="#ef4444" />
               </marker>
             </defs>
+
+            {/* Obálky etáp — pod šípkami aj uzlami, aby nič neprekryli. */}
+            {regions.map(r => (
+              <g key={`region-${r.id}`} style={{ pointerEvents: 'none' }}>
+                <rect
+                  x={r.x} y={r.y} width={r.w} height={r.h} rx={16}
+                  fill={r.hex} fillOpacity={0.06}
+                  stroke={r.hex} strokeOpacity={0.35} strokeWidth={1.5}
+                  strokeDasharray="6 4"
+                />
+                <text
+                  x={r.x + 12} y={r.y + 15}
+                  fontSize={11} fontWeight={600} fill={r.hex} fillOpacity={0.9}
+                >
+                  {r.name}{r.done ? ' ✓' : ''}
+                </text>
+              </g>
+            ))}
 
             {arrows.map(a => {
               const c1 = a.x1 + H_GAP * 0.5

@@ -164,6 +164,9 @@ def delete_organization_cascade(org_id: int) -> bool:
             conn.execute(f"DELETE FROM project_attachments WHERE project_id IN ({ph})", project_ids)
 
         conn.execute("DELETE FROM tasks WHERE project_id IN (SELECT id FROM projects WHERE organization_id = ?)", (org_id,))
+        # Etapy až po úlohách — tasks.group_id na ne odkazuje, takže opačné
+        # poradie by PostgreSQL odmietol pre porušenie cudzieho kľúča.
+        conn.execute("DELETE FROM task_groups WHERE project_id IN (SELECT id FROM projects WHERE organization_id = ?)", (org_id,))
         conn.execute("DELETE FROM clients WHERE organization_id = ?", (org_id,))
         conn.execute("DELETE FROM projects WHERE organization_id = ?", (org_id,))
         conn.execute("DELETE FROM invite_tokens WHERE organization_id = ?", (org_id,))

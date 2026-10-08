@@ -240,3 +240,19 @@ export const exportApi = {
     URL.revokeObjectURL(url)
   },
 }
+
+// ── Etapy (zoskupenie úloh) ───────────────────────────────────────────────────
+// Prehľadová vrstva nad úlohami. Do CPM nevstupuje — zaradenie do etapy
+// nemení trvanie ani závislosti, takže tieto volania neobnovujú harmonogram.
+export const groupsApi = {
+  list:    (projectId: number) => api.get(`/projects/${projectId}/groups`),
+  create:  (projectId: number, data: { name: string; task_ids?: number[] }) =>
+    api.post(`/projects/${projectId}/groups`, data),
+  update:  (groupId: number, data: { name?: string; color?: string }) =>
+    api.patch(`/groups/${groupId}`, data),
+  remove:  (groupId: number) => api.delete(`/groups/${groupId}`),
+  addTasks: (groupId: number, taskIds: number[]) =>
+    api.post(`/groups/${groupId}/tasks`, { task_ids: taskIds }),
+  ungroup: (projectId: number, taskIds: number[]) =>
+    api.post(`/projects/${projectId}/groups/ungroup`, { task_ids: taskIds }),
+}

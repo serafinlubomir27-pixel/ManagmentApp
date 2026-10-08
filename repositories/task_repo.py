@@ -409,7 +409,7 @@ def get_tasks_for_project_with_cpm(project_id: int) -> list[dict]:
                    t.duration, t.duration_optimistic, t.duration_pessimistic,
                    t.delay_days, t.es, t.ef, t.ls, t.lf,
                    t.total_float, t.is_critical, t.category, t.notes,
-                   t.sort_order, t.assigned_to, t.created_by,
+                   t.sort_order, t.assigned_to, t.created_by, t.group_id,
                    u.username AS assigned_username
             FROM tasks t
             LEFT JOIN users u ON t.assigned_to = u.id

@@ -85,3 +85,24 @@ def test_delete_removes_crm_data_of_clients():
     for table in ("client_activities", "client_tasks", "deal_stage_history"):
         assert _count(f"SELECT COUNT(*) AS c FROM {table} WHERE client_id = ?", (cid,)) == 0, \
             f"{table} po zmazaní organizácie nezostáva prázdna"
+
+
+def test_erasure_removes_task_groups():
+    """Etapy sú viazané na projekt — pri výmaze organizácie musia zmiznúť tiež.
+
+    Rovnaká pasca ako pri CRM tabuľkách: tasks.group_id na ne odkazuje, takže
+    nesprávne poradie by PostgreSQL odmietol a právo na výmaz by prestalo fungovať.
+    """
+    h = _signup("gdpr.groups@acme.sk", "GdprGroupsOrg")
+    pid = client.post("/projects/", json={"name": "S etapami"}, headers=h).json()["id"]
+    tid = client.post(f"/projects/{pid}/tasks", json={"name": "A", "duration": 2},
+                      headers=h).json()["id"]
+    gid = client.post(f"/projects/{pid}/groups",
+                      json={"name": "Etapa", "task_ids": [tid]}, headers=h).json()["id"]
+
+    assert _count("SELECT COUNT(*) AS c FROM task_groups WHERE id = ?", (gid,)) == 1
+
+    r = client.post("/organization/delete", json={"confirm": "GdprGroupsOrg"}, headers=h)
+    assert r.status_code in (200, 204), r.text
+
+    assert _count("SELECT COUNT(*) AS c FROM task_groups WHERE id = ?", (gid,)) == 0,         "etapa prežila výmaz organizácie"

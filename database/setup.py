@@ -297,6 +297,20 @@ def create_database():
     )
     ''')
 
+    # --- Etapy: zoskupenie úloh pre prehľad ---
+    # Skupina NEVSTUPUJE do CPM. Motor ďalej počíta s jednotlivými úlohami;
+    # postup a rozsah etapy sa odvodzujú z detí pri čítaní, nič sa neukladá.
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS task_groups (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        name        TEXT NOT NULL,
+        color       TEXT NOT NULL DEFAULT 'brand',
+        sort_order  INTEGER NOT NULL DEFAULT 0,
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
     # --- CRM: história interakcií s klientom ---
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS client_activities (
@@ -360,6 +374,8 @@ def create_database():
         # PERT columns
         "ALTER TABLE tasks ADD COLUMN duration_optimistic INTEGER",
         "ALTER TABLE tasks ADD COLUMN duration_pessimistic INTEGER",
+        # Zaradenie do etapy (len prehľad, CPM sa jej nedotýka)
+        "ALTER TABLE tasks ADD COLUMN group_id INTEGER REFERENCES task_groups(id) ON DELETE SET NULL",
         # User profile fields
         "ALTER TABLE users ADD COLUMN bio TEXT",
 

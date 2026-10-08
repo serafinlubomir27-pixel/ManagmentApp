@@ -2,7 +2,7 @@ import { useState, Fragment } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, CheckCircle2, Circle, Clock, AlertCircle, Trash2, Search, BarChart2, List, Network, TrendingUp, Users, ChevronDown, ChevronUp, Bell, BellOff, CalendarDays, Sparkles, TrendingDown, Paperclip, RefreshCw } from 'lucide-react'
-import { projectsApi, tasksApi, teamApi, attachmentsApi } from '../api/client'
+import { projectsApi, tasksApi, teamApi, attachmentsApi, groupsApi } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import GanttChart from '../components/GanttChart'
 import NetworkDiagram from '../components/NetworkDiagram'
@@ -18,6 +18,9 @@ import AttachmentList, { AttachmentItem } from '../components/AttachmentList'
 import FileUploadDropzone from '../components/FileUploadDropzone'
 import ExportMenu from '../components/ExportMenu'
 import ScheduleFields from '../components/ScheduleFields'
+import GroupHeaderRow from '../components/GroupHeaderRow'
+import SelectionBar from '../components/SelectionBar'
+import { TaskGroup } from '../components/groups'
 import { SkeletonTableRows } from '../components/Skeleton'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
 import { useScheduleRefresh } from '../hooks/useScheduleRefresh'
@@ -73,6 +76,7 @@ function TaskAttachmentSection({ taskId }: { taskId: number }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['task-attachments', taskId] }),
   })
 
+
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400">
@@ -113,6 +117,66 @@ export default function ProjectDetailPage() {
     duration_optimistic: '' as number | '', duration_pessimistic: '' as number | '',
   })
   const [createErr, setCreateErr] = useState('')
+
+  // ── Etapy ──────────────────────────────────────────────────────────────────
+  // Etapa je prehľadová vrstva: CPM o nej nevie, takže tieto zmeny neobnovujú
+  // harmonogram, len zoznam etáp a úloh.
+  const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [collapsed, setCollapsed] = useState<Set<number>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(`nodus.groups.collapsed.${projectId}`) ?? '[]')) }
+    catch { return new Set() }
+  })
+
+  const toggleCollapsed = (id: number) => {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      try { localStorage.setItem(`nodus.groups.collapsed.${projectId}`, JSON.stringify([...next])) }
+      catch { /* nevadí */ }
+      return next
+    })
+  }
+
+  const { data: groups = [] } = useQuery<TaskGroup[]>({
+    queryKey: ['groups', projectId],
+    queryFn: () => groupsApi.list(projectId).then(r => r.data),
+  })
+
+  const afterGroupChange = () => {
+    qc.invalidateQueries({ queryKey: ['groups', projectId] })
+    qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+    setSelected(new Set())
+  }
+
+  const createGroup = useMutation({
+    mutationFn: (name: string) =>
+      groupsApi.create(projectId, { name, task_ids: [...selected] }),
+    onSuccess: afterGroupChange,
+  })
+  const addToGroup = useMutation({
+    mutationFn: (groupId: number) => groupsApi.addTasks(groupId, [...selected]),
+    onSuccess: afterGroupChange,
+  })
+  const ungroup = useMutation({
+    mutationFn: () => groupsApi.ungroup(projectId, [...selected]),
+    onSuccess: afterGroupChange,
+  })
+  const renameGroup = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => groupsApi.update(id, { name }),
+    onSuccess: afterGroupChange,
+  })
+  const deleteGroup = useMutation({
+    mutationFn: (id: number) => groupsApi.remove(id),
+    onSuccess: afterGroupChange,
+  })
+
+  const toggleSelected = (id: number) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
@@ -180,6 +244,165 @@ export default function ProjectDetailPage() {
   )
 
   const criticalCount = tasks.filter((t: any) => t.is_critical).length
+
+  // Úlohy rozdelené podľa etáp; nezaradené idú nakoniec, aby boli etapy hore.
+  const sections = (() => {
+    const byGroup = new Map<number, any[]>()
+    const loose: any[] = []
+    for (const t of filtered) {
+      if (t.group_id) {
+        if (!byGroup.has(t.group_id)) byGroup.set(t.group_id, [])
+        byGroup.get(t.group_id)!.push(t)
+      } else loose.push(t)
+    }
+    const out: Array<{ key: string; group: TaskGroup | null; tasks: any[] }> = []
+    for (const g of groups) {
+      const items = byGroup.get(g.id) ?? []
+      // Pri hľadaní skry etapy, v ktorých nič nesedí — inak ostanú prázdne hlavičky.
+      if (search && items.length === 0) continue
+      out.push({ key: `g${g.id}`, group: g, tasks: items })
+    }
+    if (loose.length > 0) out.push({ key: 'loose', group: null, tasks: loose })
+    return out
+  })()
+
+  const selectedGrouped = [...selected].some(id =>
+    filtered.find((t: any) => t.id === id)?.group_id != null)
+
+  const renderTaskRow = (t: any) => (
+                      <Fragment key={t.id}>
+                        <tr
+                          className={`cursor-pointer group/row transition-colors duration-fast ${
+                            selected.has(t.id)
+                              ? 'bg-brand-50 dark:bg-brand-500/10'
+                              : t.is_critical
+                                ? 'bg-red-50/50 dark:bg-red-900/10'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'}`}
+                          onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}
+                        >
+                          <td className="w-10 pl-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            {isManager && (
+                              <input
+                                type="checkbox"
+                                checked={selected.has(t.id)}
+                                onChange={() => toggleSelected(t.id)}
+                                aria-label={`Vybrať úlohu ${t.name}`}
+                                className={`w-4 h-4 rounded accent-brand-500 cursor-pointer transition-opacity duration-fast
+                                  ${selected.size > 0 || selected.has(t.id) ? 'opacity-100' : 'opacity-0 group-hover/row:opacity-100 focus:opacity-100'}`}
+                              />
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              {t.is_critical && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                              )}
+                              <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
+                              {expandedTaskId === t.id
+                                ? <ChevronUp size={13} className="text-gray-400 flex-shrink-0" />
+                                : <ChevronDown size={13} className="text-gray-300 flex-shrink-0" />
+                              }
+                            </div>
+                            <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
+                              {PRIORITY_LABEL[t.priority] ?? t.priority}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+                            {t.assigned_username ?? '—'}
+                          </td>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            {isManager ? (
+                              <select
+                                className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
+                                value={t.status}
+                                onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
+                              >
+                                {Object.entries(STATUS_LABEL).map(([v, l]) => (
+                                  <option key={v} value={v}>{l}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                                {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            {t.es != null ? (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                ES {t.es} — EF {t.ef} | Float {t.total_float}d
+                                {t.duration_optimistic && (
+                                  <span className="ml-1 text-blue-400">PERT ✓</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-300">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            {isManager && (
+                              <button
+                                onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
+                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {expandedTaskId === t.id && (
+                          <tr className="bg-gray-50/50 dark:bg-gray-900/20">
+                            <td colSpan={6} className="px-6 py-4 space-y-4">
+                              {/* Trvanie a trojbodový odhad */}
+                              <div className="pb-3 border-b border-gray-100 dark:border-gray-800">
+                                <ScheduleFields
+                                  taskId={t.id}
+                                  projectId={projectId}
+                                  duration={t.duration ?? 1}
+                                  optimistic={t.duration_optimistic}
+                                  pessimistic={t.duration_pessimistic}
+                                  disabled={!isManager}
+                                />
+                              </div>
+
+                              {/* Time tracking */}
+                              <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
+
+                              {/* Task attachments */}
+                              <TaskAttachmentSection taskId={t.id} />
+
+                              {/* Subscription toggles */}
+                              <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>
+                                <button
+                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_notify', value: !t.auto_notify })}
+                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    t.auto_notify
+                                      ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                                  }`}
+                                >
+                                  {t.auto_notify ? <Bell size={11} /> : <BellOff size={11} />}
+                                  {t.auto_notify ? 'Notifikácie zapnuté' : 'Notifikácie vypnuté'}
+                                </button>
+                                <button
+                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_calendar', value: !t.auto_calendar })}
+                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                    t.auto_calendar
+                                      ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
+                                  }`}
+                                >
+                                  <CalendarDays size={11} />
+                                  {t.auto_calendar ? 'iCal feed aktívny' : 'iCal feed vypnutý'}
+                                </button>
+                              </div>
+                              <CommentSection taskId={t.id} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+  )
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -320,7 +543,7 @@ export default function ProjectDetailPage() {
 
       {/* Sieťový diagram */}
       {tab === 'network' && (
-        <NetworkDiagram projectId={projectId} tasks={tasks} dependencies={dependencies} teamMembers={teamMembers} />
+        <NetworkDiagram projectId={projectId} tasks={tasks} dependencies={dependencies} groups={groups} teamMembers={teamMembers} />
       )}
 
       {/* PERT analýza */}
@@ -336,6 +559,19 @@ export default function ProjectDetailPage() {
       {/* Burndown Chart */}
       {tab === 'burndown' && (
         <BurndownChart tasks={tasks} />
+      )}
+
+      {selected.size > 0 && (
+        <SelectionBar
+          count={selected.size}
+          groups={groups}
+          anyGrouped={selectedGrouped}
+          busy={createGroup.isPending || addToGroup.isPending || ungroup.isPending}
+          onGroup={name => createGroup.mutate(name)}
+          onAddToGroup={id => addToGroup.mutate(id)}
+          onUngroup={() => ungroup.mutate()}
+          onClear={() => setSelected(new Set())}
+        />
       )}
 
       {/* AI Parser Modal */}
@@ -447,6 +683,7 @@ export default function ProjectDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                    <th className="w-10 pl-4 py-3" />
                     <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Úloha</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400 hidden sm:table-cell">Priradený</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
@@ -456,9 +693,9 @@ export default function ProjectDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {isLoading ? (
-                    <SkeletonTableRows rows={5} cols={5} />
+                    <SkeletonTableRows rows={5} cols={6} />
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={5}>
+                    <tr><td colSpan={6}>
                       <EmptyState
                         icon={<List size={20} />}
                         title={search ? 'Žiadna úloha sa nezhoduje' : 'Projekt zatiaľ nemá úlohy'}
@@ -470,121 +707,19 @@ export default function ProjectDetailPage() {
                       />
                     </td></tr>
                   ) : (
-                    filtered.map((t: any) => (
-                      <Fragment key={t.id}>
-                        <tr
-                          className={`cursor-pointer ${t.is_critical ? 'bg-red-50/50 dark:bg-red-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'}`}
-                          onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              {t.is_critical && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                              )}
-                              <span className="font-medium text-gray-900 dark:text-white">{t.name}</span>
-                              {expandedTaskId === t.id
-                                ? <ChevronUp size={13} className="text-gray-400 flex-shrink-0" />
-                                : <ChevronDown size={13} className="text-gray-300 flex-shrink-0" />
-                              }
-                            </div>
-                            <span className={`badge mt-1 ${PRIORITY_COLOR[t.priority] ?? PRIORITY_COLOR.medium}`}>
-                              {PRIORITY_LABEL[t.priority] ?? t.priority}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
-                            {t.assigned_username ?? '—'}
-                          </td>
-                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                            {isManager ? (
-                              <select
-                                className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300"
-                                value={t.status}
-                                onChange={(e) => updateStatusMutation.mutate({ taskId: t.id, status: e.target.value })}
-                              >
-                                {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                                  <option key={v} value={v}>{l}</option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                                {STATUS_ICONS[t.status]} {STATUS_LABEL[t.status]}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
-                            {t.es != null ? (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                ES {t.es} — EF {t.ef} | Float {t.total_float}d
-                                {t.duration_optimistic && (
-                                  <span className="ml-1 text-blue-400">PERT ✓</span>
-                                )}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-gray-300">—</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                            {isManager && (
-                              <button
-                                onClick={() => { if (confirm('Zmazať úlohu?')) deleteMutation.mutate(t.id) }}
-                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                        {expandedTaskId === t.id && (
-                          <tr className="bg-gray-50/50 dark:bg-gray-900/20">
-                            <td colSpan={5} className="px-6 py-4 space-y-4">
-                              {/* Trvanie a trojbodový odhad */}
-                              <div className="pb-3 border-b border-gray-100 dark:border-gray-800">
-                                <ScheduleFields
-                                  taskId={t.id}
-                                  projectId={projectId}
-                                  duration={t.duration ?? 1}
-                                  optimistic={t.duration_optimistic}
-                                  pessimistic={t.duration_pessimistic}
-                                  disabled={!isManager}
-                                />
-                              </div>
-
-                              {/* Time tracking */}
-                              <TimeLogSection taskId={t.id} estimatedHours={t.estimated_hours} />
-
-                              {/* Task attachments */}
-                              <TaskAttachmentSection taskId={t.id} />
-
-                              {/* Subscription toggles */}
-                              <div className="flex items-center gap-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Upozornenia:</span>
-                                <button
-                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_notify', value: !t.auto_notify })}
-                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                                    t.auto_notify
-                                      ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
-                                  }`}
-                                >
-                                  {t.auto_notify ? <Bell size={11} /> : <BellOff size={11} />}
-                                  {t.auto_notify ? 'Notifikácie zapnuté' : 'Notifikácie vypnuté'}
-                                </button>
-                                <button
-                                  onClick={() => subscriptionMutation.mutate({ taskId: t.id, field: 'auto_calendar', value: !t.auto_calendar })}
-                                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                                    t.auto_calendar
-                                      ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                      : 'border-gray-200 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900'
-                                  }`}
-                                >
-                                  <CalendarDays size={11} />
-                                  {t.auto_calendar ? 'iCal feed aktívny' : 'iCal feed vypnutý'}
-                                </button>
-                              </div>
-                              <CommentSection taskId={t.id} />
-                            </td>
-                          </tr>
+                    sections.map(sec => (
+                      <Fragment key={sec.key}>
+                        {sec.group && (
+                          <GroupHeaderRow
+                            group={sec.group}
+                            collapsed={collapsed.has(sec.group.id)}
+                            canEdit={isManager}
+                            onToggle={() => toggleCollapsed(sec.group!.id)}
+                            onRename={name => renameGroup.mutate({ id: sec.group!.id, name })}
+                            onDelete={() => { if (confirm('Zrušiť etapu? Úlohy ostanú.')) deleteGroup.mutate(sec.group!.id) }}
+                          />
                         )}
+                        {(!sec.group || !collapsed.has(sec.group.id)) && sec.tasks.map(renderTaskRow)}
                       </Fragment>
                     ))
                   )}
