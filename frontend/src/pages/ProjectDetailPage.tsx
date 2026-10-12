@@ -20,6 +20,7 @@ import ExportMenu from '../components/ExportMenu'
 import ScheduleFields from '../components/ScheduleFields'
 import GroupHeaderRow from '../components/GroupHeaderRow'
 import SelectionBar from '../components/SelectionBar'
+import GroupSuggestion from '../components/GroupSuggestion'
 import { TaskGroup } from '../components/groups'
 import { SkeletonTableRows } from '../components/Skeleton'
 import { useRealtimeProject } from '../hooks/useRealtimeProject'
@@ -169,6 +170,18 @@ export default function ProjectDetailPage() {
     mutationFn: (id: number) => groupsApi.remove(id),
     onSuccess: afterGroupChange,
   })
+
+  // Tip na etapy. Hranica je zámerne vysoká — pri malom projekte by to bola
+  // otravná otázka. Odmietnutie si pamätá prehliadač, je to vec človeka.
+  const SUGGEST_FROM = 15
+  const [suggestionHidden, setSuggestionHidden] = useState(() => {
+    try { return localStorage.getItem(`nodus.groups.suggest.${projectId}`) === 'off' }
+    catch { return true }
+  })
+  const dismissSuggestion = () => {
+    setSuggestionHidden(true)
+    try { localStorage.setItem(`nodus.groups.suggest.${projectId}`, 'off') } catch { /* nevadí */ }
+  }
 
   const toggleSelected = (id: number) => {
     setSelected(prev => {
@@ -538,7 +551,7 @@ export default function ProjectDetailPage() {
 
       {/* Gantt záložka */}
       {tab === 'gantt' && (
-        <GanttChart tasks={tasks} />
+        <GanttChart tasks={tasks} groups={groups} />
       )}
 
       {/* Sieťový diagram */}
@@ -676,6 +689,14 @@ export default function ProjectDetailPage() {
       )}
 
       {/* Tabuľka úloh + prílohy */}
+      {tab === 'tasks' && !suggestionHidden && isManager
+        && tasks.filter((t: any) => !t.group_id).length >= SUGGEST_FROM && (
+        <GroupSuggestion
+          ungrouped={tasks.filter((t: any) => !t.group_id).length}
+          onDismiss={dismissSuggestion}
+        />
+      )}
+
       {tab === 'tasks' && (
         <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-start">
           <div className="flex-1 min-w-0 space-y-3">

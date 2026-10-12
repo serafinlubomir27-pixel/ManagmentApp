@@ -1,5 +1,6 @@
 import { BarChart2 } from 'lucide-react'
 import EmptyState from './EmptyState'
+import { TaskGroup, groupHex } from './groups'
 
 /**
  * GanttChart — jednoduchý Gantt diagram kreslený cez SVG.
@@ -18,10 +19,12 @@ interface Task {
   is_critical: boolean
   duration: number
   status: string
+  group_id?: number | null
 }
 
 interface GanttChartProps {
   tasks: Task[]
+  groups?: TaskGroup[]
 }
 
 const BAR_HEIGHT = 28
@@ -38,8 +41,17 @@ const LABEL_PAD = 16
 const PADDING_TOP = 40
 const PADDING_BOTTOM = 20
 
-export default function GanttChart({ tasks }: GanttChartProps) {
-  const validTasks = tasks.filter((t) => t.es != null && t.ef != null && t.ef > t.es)
+export default function GanttChart({ tasks, groups = [] }: GanttChartProps) {
+  const filtered = tasks.filter((t) => t.es != null && t.ef != null && t.ef > t.es)
+
+  // Úlohy sa zoradia podľa etáp, aby bol pruh etapy súvislý. Nezaradené idú
+  // nakoniec — v zozname úloh je to rovnako, nech sa pohľady zhodujú.
+  const order = new Map(groups.map((g, i) => [g.id, i]))
+  const validTasks = [...filtered].sort((a, b) => {
+    const ga = a.group_id != null ? order.get(a.group_id) ?? 1e6 : 1e6
+    const gb = b.group_id != null ? order.get(b.group_id) ?? 1e6 : 1e6
+    return ga - gb
+  })
 
   if (validTasks.length === 0) {
     return (
@@ -61,7 +73,33 @@ export default function GanttChart({ tasks }: GanttChartProps) {
   const maxChars = Math.floor((LABEL_WIDTH - LABEL_PAD) / CHAR_W)
 
   const svgWidth = LABEL_WIDTH + totalDays * DAY_WIDTH + 20
-  const svgHeight = PADDING_TOP + validTasks.length * ROW_HEIGHT + PADDING_BOTTOM
+  // Zoznam riadkov na vykreslenie: hlavička etapy, potom jej úlohy.
+  // Výška sa počíta priebežne, lebo hlavička je nižšia než riadok úlohy.
+  const GROUP_H = 24
+  type Row =
+    | { kind: 'group'; group: TaskGroup; y: number }
+    | { kind: 'task'; task: Task; y: number; group: TaskGroup | null }
+
+  const byId = new Map(groups.map(g => [g.id, g]))
+  const rows: Row[] = []
+  let cursor = PADDING_TOP
+  let lastGroup: number | null | undefined = undefined
+
+  for (const task of validTasks) {
+    const gid = task.group_id ?? null
+    if (gid !== lastGroup) {
+      lastGroup = gid
+      const g = gid != null ? byId.get(gid) : undefined
+      if (g) {
+        rows.push({ kind: 'group', group: g, y: cursor })
+        cursor += GROUP_H
+      }
+    }
+    rows.push({ kind: 'task', task, y: cursor, group: gid != null ? byId.get(gid) ?? null : null })
+    cursor += ROW_HEIGHT
+  }
+
+  const svgHeight = cursor + PADDING_BOTTOM
 
   // Dni na osi X
   const dayTicks = Array.from({ length: totalDays + 1 }, (_, i) => i)
@@ -74,16 +112,33 @@ export default function GanttChart({ tasks }: GanttChartProps) {
         className="font-sans text-xs select-none"
       >
         {/* Pozadie riadkov (zebra) */}
-        {validTasks.map((_, i) => (
+        {rows.map((r, i) => r.kind === 'task' && (
           <rect
-            key={i}
-            x={0}
-            y={PADDING_TOP + i * ROW_HEIGHT}
-            width={svgWidth}
-            height={ROW_HEIGHT}
+            key={`zebra-${i}`}
+            x={0} y={r.y} width={svgWidth} height={ROW_HEIGHT}
             // rgba(0,0,0,0.02) bolo v tmavom režime neviditeľné
             className={i % 2 === 0 ? 'fill-transparent' : 'fill-black/[0.025] dark:fill-white/[0.04]'}
           />
+        ))}
+
+        {/* Hlavičky etáp — rovnaké poradie aj farby ako v zozname úloh. */}
+        {rows.map((r, i) => r.kind === 'group' && (
+          <g key={`group-${r.group.id}`}>
+            <rect
+              x={0} y={r.y + 2} width={svgWidth} height={GROUP_H - 4} rx={4}
+              fill={groupHex[r.group.color]} fillOpacity={0.08}
+            />
+            <rect x={0} y={r.y + 2} width={3} height={GROUP_H - 4} rx={1.5}
+                  fill={groupHex[r.group.color]} />
+            <text
+              x={10} y={r.y + GROUP_H / 2 + 4}
+              fontSize={11} fontWeight={600}
+              fill={groupHex[r.group.color]}
+            >
+              {r.group.name}
+              {r.group.done ? ' ✓' : ` · ${Math.round(r.group.progress * 100)} %`}
+            </text>
+          </g>
         ))}
 
         {/* Vertikálne mriežkové čiary */}
@@ -122,22 +177,36 @@ export default function GanttChart({ tasks }: GanttChartProps) {
         </text>
 
         {/* Úlohy */}
-        {validTasks.map((task, i) => {
-          const y = PADDING_TOP + i * ROW_HEIGHT
+        {rows.map(r => {
+          if (r.kind !== 'task') return null
+          const task = r.task
+          const y = r.y
           const barX = LABEL_WIDTH + task.es * DAY_WIDTH
           const barW = Math.max((task.ef - task.es) * DAY_WIDTH, 4)
           const floatW = task.total_float > 0 ? task.total_float * DAY_WIDTH : 0
 
-          const barColor = task.is_critical
-            ? '#ef4444'   // červená — kritická
-            : task.status === 'completed'
+          // Hotová úloha má prednosť pred kritickou. Doteraz vyhrávala
+          // kritickosť, takže dokončená etapa mala všetky pruhy červené a
+          // vyzerala ako problém, hoci na nej už nie je čo riešiť. Že úloha
+          // leží na kritickej ceste, ostáva vidieť podľa bodky pred pruhom.
+          const barColor = task.status === 'completed'
             ? '#22c55e'   // zelená — hotová
+            : task.is_critical
+            ? '#ef4444'   // červená — kritická
             : '#4B7FFF'   // modrá — normálna
 
           const floatColor = 'rgba(251,191,36,0.35)'  // žltá — rezerva
 
           return (
             <g key={task.id}>
+              {/* Farba etapy — spojí riadok s hlavičkou, aj keď je mimo dohľadu */}
+              {r.group && (
+                <rect
+                  x={2} y={y + ROW_HEIGHT / 2 - 6} width={3} height={12} rx={1.5}
+                  fill={groupHex[r.group.color]}
+                />
+              )}
+
               {/* Popis úlohy */}
               <text
                 x={LABEL_WIDTH - 8}
