@@ -64,6 +64,25 @@
     @apply btn-ghost border border-ink-200 dark:border-white/[0.12];
   }
 
+  /* Pilulka pre výzvy na marketingovej stránke.
+     Zámerne nie je predvolená: v aplikácii sa tlačidlá vyskytujú husto vedľa
+     seba v tabuľkách a lištách, kde plné zaoblenie pôsobí rozbreptane. Monday
+     to má rovnako — ich marketingová stránka má pilulky, samotný nástroj nie. */
+  .btn-pill {
+    @apply rounded-pill px-7 py-3.5 text-base
+           transition-transform duration-fast ease-out
+           hover:-translate-y-0.5 active:translate-y-0;
+  }
+
+  /* Nadpisová plocha sekcie — veľký stupeň, tesné prestrkanie, ľahší rez. */
+  .section-title {
+    @apply text-title font-semibold text-ink-900 dark:text-white;
+  }
+
+  .section-lead {
+    @apply text-lead text-ink-500 dark:text-ink-400;
+  }
+
   .input {
     @apply w-full border border-ink-300 dark:border-white/[0.12] rounded-control px-3 py-2
            bg-white dark:bg-ink-900 text-ink-900 dark:text-ink-100

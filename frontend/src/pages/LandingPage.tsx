@@ -110,7 +110,7 @@ export default function LandingPage() {
               {dark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <Link to="/login" className="btn-ghost text-sm hidden sm:inline-flex">Prihlásiť sa</Link>
-            <Link to="/signup" className="btn-primary text-sm">Vytvoriť účet</Link>
+            <Link to="/signup" className="btn-primary rounded-pill px-5">Vytvoriť účet</Link>
           </div>
         </div>
       </header>
@@ -124,19 +124,19 @@ export default function LandingPage() {
             <span className="badge bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 mb-5">
               Projektový manažment na kritickej ceste
             </span>
-            <h1 className="text-display font-bold">
+            <h1 className="text-display font-semibold text-ink-900 dark:text-white">
               Vieš, ktoré úlohy naozaj{' '}
               <span className="text-brand-500">rozhodujú</span> o termíne?
             </h1>
-            <p className="mt-5 text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="mt-6 section-lead max-w-xl">
               Nodus nerozdá len farebné pruhy. Spočíta kritickú cestu, rezervy a pravdepodobnosť,
               že termín stihneš — a po každej zmene trvania to prepočíta odznova.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-start gap-3">
-              <Link to="/signup" className="btn-primary text-base px-6 py-3">
+              <Link to="/signup" className="btn-primary btn-pill">
                 Vyskúšať zadarmo <ArrowRight size={18} />
               </Link>
-              <Link to="/login" className="btn-outline text-base px-6 py-3">Už mám účet</Link>
+              <Link to="/login" className="btn-outline btn-pill">Už mám účet</Link>
             </div>
             <p className="mt-4 text-xs text-gray-400">
               Bez platobnej karty · Po registrácii ti vieme založiť ukážkový projekt
@@ -151,7 +151,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Odlišovač ──────────────────────────────────────────────────── */}
-      <section className="max-w-5xl mx-auto px-5 py-6">
+      <section className="max-w-5xl mx-auto px-5 py-10">
         <div className="card p-6 sm:p-8 text-center">
           <p className="text-sm uppercase tracking-wide text-gray-400 mb-2">Prečo Nodus</p>
           <p className="text-lg sm:text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -163,14 +163,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Ako to funguje ─────────────────────────────────────────────── */}
-      <section id="ako-to-funguje" className="max-w-6xl mx-auto px-5 py-14 scroll-mt-20">
-        <h2 className="text-title font-bold text-center mb-3">Tri kroky k výpočtu</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-10">
+      <section id="ako-to-funguje" className="max-w-6xl mx-auto px-5 py-20 sm:py-24 scroll-mt-24">
+        <h2 className="section-title text-center mb-4">Tri kroky k výpočtu</h2>
+        <p className="section-lead text-center mb-14 max-w-2xl mx-auto">
           Od prázdneho projektu po kritickú cestu. Nič medzi tým nemusíš riešiť.
         </p>
-        <ol className="grid sm:grid-cols-3 gap-5">
+        <ol className="grid sm:grid-cols-3 gap-6">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
-            <li key={title} className="card p-6 relative">
+            <li key={title} className="card p-7 relative">
               <span className="absolute top-5 right-5 text-3xl font-bold text-gray-200 dark:text-white/[0.07] leading-none">
                 {i + 1}
               </span>
@@ -185,14 +185,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── Funkcie ────────────────────────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-5 py-14">
-        <h2 className="text-title font-bold text-center mb-3">Všetko pre riadenie projektu</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-10">
+      <section className="max-w-6xl mx-auto px-5 py-20 sm:py-24">
+        <h2 className="section-title text-center mb-4">Všetko pre riadenie projektu</h2>
+        <p className="section-lead text-center mb-14 max-w-2xl mx-auto">
           Od plánovania po odovzdanie — s matematickým jadrom.
         </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {FEATURES.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="card-interactive p-6">
+            <div key={title} className="card-interactive p-7">
               <div className="w-11 h-11 rounded-control bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center mb-4">
                 <Icon className="text-brand-500" size={22} />
               </div>
@@ -204,9 +204,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Cenník ─────────────────────────────────────────────────────── */}
-      <section id="cennik" className="max-w-6xl mx-auto px-5 py-14 scroll-mt-20">
-        <h2 className="text-title font-bold text-center mb-3">Cenník</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-10 max-w-xl mx-auto">
+      <section id="cennik" className="max-w-6xl mx-auto px-5 py-20 sm:py-24 scroll-mt-24">
+        <h2 className="section-title text-center mb-4">Cenník</h2>
+        <p className="section-lead text-center mb-14 max-w-2xl mx-auto">
           Dnes je spustený iba plán Free a má všetky funkcie. Platené plány sú zatiaľ
           navrhnuté, nie spustené — líšiť sa budú len stropom na projekty a veľkosť tímu.
         </p>
@@ -255,8 +255,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── Časté otázky ───────────────────────────────────────────────── */}
-      <section className="max-w-3xl mx-auto px-5 py-14">
-        <h2 className="text-title font-bold text-center mb-10">Časté otázky</h2>
+      <section className="max-w-3xl mx-auto px-5 py-20 sm:py-24">
+        <h2 className="section-title text-center mb-14">Časté otázky</h2>
         <div className="space-y-3">
           {FAQ.map(({ q, a }) => (
             <details key={q} className="card p-5 group">
@@ -275,16 +275,18 @@ export default function LandingPage() {
       </section>
 
       {/* ── Výzva ──────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-5 py-16">
-        <div className="rounded-modal p-10 text-center bg-gradient-to-br from-brand-500 to-brand-700 shadow-raised">
-          <h2 className="text-title font-bold text-white">Rozbehni svoj prvý projekt za dve minúty</h2>
+      <section className="max-w-4xl mx-auto px-5 py-20 sm:py-24">
+        <div className="rounded-modal p-12 sm:p-16 text-center bg-gradient-to-br from-brand-500 to-brand-700 shadow-float">
+          <h2 className="text-title font-semibold text-white">Rozbehni svoj prvý projekt za dve minúty</h2>
           <p className="mt-3 text-white/80">
             Vytvor si organizáciu, alebo si nechaj založiť ukážkový projekt a pozri sa na hotový výpočet.
           </p>
           <Link
             to="/signup"
-            className="mt-7 inline-flex items-center gap-2 bg-white text-brand-600 font-semibold px-6 py-3 rounded-control
-                       hover:bg-brand-50 transition duration-fast ease-out"
+            className="mt-8 inline-flex items-center gap-2 bg-white text-brand-600 font-semibold
+                       px-7 py-3.5 rounded-pill shadow-raised
+                       hover:bg-brand-50 hover:-translate-y-0.5
+                       transition duration-fast ease-out"
           >
             Vytvoriť účet zadarmo <ArrowRight size={18} />
           </Link>

@@ -70,17 +70,24 @@ export default {
       },
 
       // Rádiusy podľa úlohy prvku, nie podľa čísla v pixeloch.
+      // Hodnoty kariet a pilulky vychádzajú z merania monday.com (karty 20 px,
+      // tlačidlá plne zaoblené) — nie z odhadu.
       borderRadius: {
-        control: '0.5rem',   //  8px — tlačidlá, vstupy, drobné štítky
-        card:    '0.875rem', // 14px — karty, panely
-        modal:   '1.25rem',  // 20px — modály, veľké plochy
+        control: '0.5rem',   //  8px — vstupy a tlačidlá v aplikácii
+        card:    '1.25rem',  // 20px — karty a panely
+        modal:   '1.5rem',   // 24px — modály, veľké plochy
+        pill:    '9999px',   //       — výzvy na marketingovej stránke
       },
 
       // Výška nad plochou. V tmavom režime tieň nevidno, preto sa tam opiera
       // o jemný svetlý okraj — to rieši `.card` a spol. v index.css.
+      // Monday používa jeden mäkký rozptýlený tieň (0 4px 20px rgba(0,0,0,.1))
+      // namiesto dvoch tvrdších vrstiev. Preto sú tiene väčšie a rozostrenejšie
+      // než pôvodné — plocha tým pôsobí, že sa vznáša, nie že je orámovaná.
       boxShadow: {
-        card:    '0 1px 2px 0 rgb(22 28 43 / 0.04), 0 1px 3px 0 rgb(22 28 43 / 0.06)',
-        raised:  '0 4px 12px -2px rgb(22 28 43 / 0.08), 0 2px 6px -2px rgb(22 28 43 / 0.06)',
+        card:    '0 2px 10px -2px rgb(22 28 43 / 0.07)',
+        raised:  '0 4px 20px 0 rgb(22 28 43 / 0.10)',
+        float:   '0 18px 48px -12px rgb(22 28 43 / 0.22)',
         overlay: '0 16px 40px -8px rgb(22 28 43 / 0.18), 0 4px 12px -4px rgb(22 28 43 / 0.1)',
         glow:    '0 0 0 4px rgb(75 127 255 / 0.12)',
       },
@@ -101,9 +108,14 @@ export default {
 
       // Nadpisy potrebujú tesnejšie riadkovanie a záporné prestrkanie, inak pri
       // veľkých stupňoch pôsobia rozdrobene.
+      // Nadpisy na monday.com majú hrúbku 400 a prestrkanie −0,03 em. Pri Inter
+      // by 400 pôsobilo chudokrvne — Poppins má podstatne sýtejší základný rez.
+      // Zodpovedajúcim prekladom je 600; princíp (veľký stupeň, tesné
+      // prestrkanie, ľahší rez než by človek čakal) ostáva zachovaný.
       fontSize: {
-        display: ['clamp(2.25rem, 1.5rem + 2.6vw, 3.5rem)', { lineHeight: '1.08', letterSpacing: '-0.025em' }],
-        title:   ['clamp(1.65rem, 1.3rem + 1.1vw, 2.25rem)', { lineHeight: '1.15', letterSpacing: '-0.02em' }],
+        display: ['clamp(2.5rem, 1.5rem + 3.2vw, 4.5rem)', { lineHeight: '1.02', letterSpacing: '-0.032em' }],
+        title:   ['clamp(1.75rem, 1.3rem + 1.6vw, 3rem)',  { lineHeight: '1.08', letterSpacing: '-0.028em' }],
+        lead:    ['1.25rem', { lineHeight: '1.6' }],
       },
 
       keyframes: {

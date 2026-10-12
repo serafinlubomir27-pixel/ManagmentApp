@@ -43,7 +43,9 @@ export default function CpmShowcase() {
   const height = TOP + TASKS.length * ROW_H + 10
 
   return (
-    <figure className="card p-5 sm:p-6">
+    <figure className="bg-white dark:bg-surface-raised-dark rounded-card p-5 sm:p-6
+                       border border-ink-200/70 dark:border-white/[0.08]
+                       shadow-float">
       <figcaption className="flex items-baseline justify-between gap-3 mb-4">
         <span className="text-sm font-semibold text-gray-900 dark:text-white">
           Rekonštrukcia pobočky
