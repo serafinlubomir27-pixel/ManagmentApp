@@ -194,3 +194,110 @@ def test_sqlite_connections_are_really_closed():
     import sqlite3
     with pytest.raises(sqlite3.ProgrammingError):
         conn.execute("SELECT 1")
+
+
+# ── Jedno spojenie na request ───────────────────────────────────────────────
+
+def _as_postgres(monkeypatch, pool):
+    """Prepne base_repo do režimu PostgreSQL s podstrčeným poolom."""
+    monkeypatch.setattr(base_repo, "_BACKEND", "postgres")
+    monkeypatch.setattr(base_repo, "_get_pool", lambda: pool)
+
+
+def test_request_shares_one_connection(monkeypatch):
+    """Celý request má dostať to isté spojenie — inak každé volanie
+    repozitára zaplatí vlastný ROLLBACK pri vracaní do poolu."""
+    pool = FakePool()
+    _as_postgres(monkeypatch, pool)
+
+    holder, token = base_repo.begin_request_scope()
+    try:
+        a = base_repo.get_connection()
+        b = base_repo.get_connection()
+        c = base_repo.get_connection()
+        assert a._inner is b._inner is c._inner
+        assert len(pool.handed_out) == 1, "z poolu sa brali ďalšie spojenia"
+    finally:
+        base_repo.end_request_scope(holder, token)
+
+
+def test_close_inside_request_does_not_return_connection(monkeypatch):
+    """Repozitáre volajú close() vo finally. Keby sa tým spojenie vrátilo,
+    ďalšie volanie v tom istom requeste by dostalo iné."""
+    pool = FakePool()
+    _as_postgres(monkeypatch, pool)
+
+    holder, token = base_repo.begin_request_scope()
+    try:
+        conn = base_repo.get_connection()
+        conn.close()
+        conn.close()
+        assert pool.returned == [], "spojenie sa vrátilo už počas requestu"
+        assert base_repo.get_connection()._inner is conn._inner
+    finally:
+        base_repo.end_request_scope(holder, token)
+
+    assert len(pool.returned) == 1, "na konci requestu sa spojenie nevrátilo"
+
+
+def test_connection_is_taken_lazily(monkeypatch):
+    """Nie každý request sa databázy dotkne — brať spojenie dopredu by
+    zbytočne držalo miesto v poole."""
+    pool = FakePool()
+    _as_postgres(monkeypatch, pool)
+
+    holder, token = base_repo.begin_request_scope()
+    assert pool.handed_out == []
+    base_repo.end_request_scope(holder, token)
+
+    assert pool.handed_out == [] and pool.returned == []
+
+
+def test_connection_released_even_when_request_fails(monkeypatch):
+    pool = FakePool()
+    _as_postgres(monkeypatch, pool)
+
+    holder, token = base_repo.begin_request_scope()
+    try:
+        base_repo.get_connection()
+        raise RuntimeError("endpoint spadol")
+    except RuntimeError:
+        pass
+    finally:
+        base_repo.end_request_scope(holder, token)
+
+    assert len(pool.returned) == 1, "spojenie ostalo visieť po chybe"
+
+
+def test_outside_request_behaves_as_before(monkeypatch):
+    """Skripty a migrácie bežia mimo requestu — tam si každé volanie berie
+    a vracia spojenie samostatne."""
+    pool = FakePool()
+    _as_postgres(monkeypatch, pool)
+
+    conn = base_repo.get_connection()
+    assert isinstance(conn, base_repo._PgConnectionWrapper)
+    conn.close()
+    assert len(pool.returned) == 1
+
+
+def test_commit_passes_through_to_real_connection(monkeypatch):
+    """Zapisovacie funkcie commitujú samy za seba — proxy to nesmie prehltnúť."""
+    class CountingConn(FakeConn):
+        def __init__(self):
+            super().__init__()
+            self.commits = 0
+
+    raw = CountingConn()
+    raw.commit = lambda: setattr(raw, "commits", raw.commits + 1)
+    pool = FakePool([raw])
+    _as_postgres(monkeypatch, pool)
+
+    holder, token = base_repo.begin_request_scope()
+    try:
+        base_repo.get_connection().commit()
+        base_repo.get_connection().commit()
+    finally:
+        base_repo.end_request_scope(holder, token)
+
+    assert raw.commits == 2

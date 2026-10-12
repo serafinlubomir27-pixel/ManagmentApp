@@ -34,7 +34,7 @@ if _sentry_dsn:
     except Exception as _exc:  # pragma: no cover — nezhadzuj štart appky
         print(f"[Sentry] init preskočený: {_exc}")
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -42,6 +42,7 @@ from slowapi import _rate_limit_exceeded_handler
 from backend.routers import auth_router, projects_router, tasks_router, team_router, comments_router, notifications_router, calendar_router, invite_router, ai_router, attachments_router, clients_router, org_router, export_router, groups_router
 from backend.ratelimit import limiter
 from repositories.base_repo import get_backend
+from repositories import base_repo
 
 # ── Inicializácia databázy ───────────────────────────────────────────────────
 # SQLite: automaticky vytvor tabuľky pri štarte
@@ -82,6 +83,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Jedno databázové spojenie na request ─────────────────────────────────────
+# Bez tohto si každé volanie repozitára brávalo spojenie z poolu zvlášť. Pool
+# síce vydáva spojenia zadarmo, ale čítacie funkcie necommitujú, takže nechajú
+# otvorenú transakciu a psycopg2 za ne pri vrátení posiela ROLLBACK — ďalšie
+# kolo po sieti. Request s devätnástimi volaniami tak zaplatil osemnásť
+# zbytočných rollbackov.
+#
+# Spojenie sa berie lenivo, až keď sa request databázy naozaj dotkne.
+
+@app.middleware("http")
+async def _db_request_scope(request: Request, call_next):
+    holder, token = base_repo.begin_request_scope()
+    try:
+        return await call_next(request)
+    finally:
+        base_repo.end_request_scope(holder, token)
+
 
 # ── Routery ──────────────────────────────────────────────────────────────────
 app.include_router(auth_router.router)

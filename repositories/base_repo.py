@@ -231,6 +231,74 @@ def close_pool() -> None:
             _pg_pool = None
 
 
+# ── Jedno spojenie na request ──────────────────────────────────────────────
+# Pool urobil získanie spojenia zadarmo (getconn + putconn = 0,0 ms), ale
+# čítacie funkcie necommitujú, takže nechávajú otvorenú transakciu a putconn
+# za ne posiela ROLLBACK — ďalšie kolo po sieti. Namerané: SELECT 1 stojí
+# 32 ms, SELECT 1 + ROLLBACK 101 ms. Request s devätnástimi volaniami tak
+# zaplatí osemnásť zbytočných rollbackov.
+#
+# Preto si request drží jedno spojenie a vráti ho až na konci. Transakčné
+# správanie sa tým nemení: každá zapisovacia funkcia commituje sama za seba
+# (overené staticky — žiadna zapisovacia funkcia commit nevynecháva).
+
+import contextvars  # noqa: E402
+
+# V premennej je zámerne meniteľný obal, nie spojenie. FastAPI púšťa synchrónne
+# endpointy v threadpoole, ktorý kontext iba KOPÍRUJE — zápis do premennej vo
+# vlákne by sa do middleware nevrátil. Mutácia spoločného slovníka áno.
+_request_scope: contextvars.ContextVar = contextvars.ContextVar(
+    "nodus_db_request_scope", default=None,
+)
+
+
+class _ScopedConnection:
+    """Spojenie požičané na dobu requestu — close() ho nevracia.
+
+    Repozitáre volajú close() vo `finally`; keby sa tu spojenie naozaj
+    vracalo, ďalšie volanie v tom istom requeste by dostalo iné.
+    """
+
+    def __init__(self, inner: _PgConnectionWrapper):
+        self._inner = inner
+
+    def cursor(self):
+        return self._inner.cursor()
+
+    def execute(self, sql: str, params=None):
+        return self._inner.execute(sql, params)
+
+    def commit(self):
+        self._inner.commit()
+
+    def rollback(self):
+        self._inner.rollback()
+
+    def close(self):
+        pass  # uvoľní ho end_request_scope na konci requestu
+
+
+def begin_request_scope():
+    """Otvorí rozsah. Spojenie sa berie až pri prvom dotaze — nie každý
+    request sa databázy vôbec dotkne."""
+    holder: dict = {"conn": None}
+    return holder, _request_scope.set(holder)
+
+
+def end_request_scope(holder, token) -> None:
+    """Vráti spojenie do poolu a zatvorí rozsah."""
+    conn = holder.get("conn") if holder else None
+    if holder is not None:
+        holder["conn"] = None
+    if token is not None:
+        try:
+            _request_scope.reset(token)
+        except ValueError:
+            pass  # iný kontext (threadpool) — premenná zanikne sama
+    if conn is not None:
+        conn.close()
+
+
 # ── SQLite row wrapper ─────────────────────────────────────────────────────
 
 class _SqliteCursorWrapper:
@@ -298,11 +366,22 @@ def get_connection():
     """Return a database connection for the configured backend.
 
     SQLite:   lightweight, file-based, no config needed
-    Postgres: requires DATABASE_URL in environment / .env
+    Postgres: z poolu; počas requestu vráti to isté spojenie všetkým volajúcim
     """
-    if _BACKEND == "postgres":
+    if _BACKEND != "postgres":
+        return _get_sqlite_connection()
+
+    holder = _request_scope.get()
+    if holder is None:
+        # Mimo requestu — skripty, migrácie, testy. Spojenie sa berie
+        # a vracia po jednom, presne ako doteraz.
         return _get_pg_connection()
-    return _get_sqlite_connection()
+
+    conn = holder.get("conn")
+    if conn is None:
+        conn = _get_pg_connection()
+        holder["conn"] = conn
+    return _ScopedConnection(conn)
 
 
 def get_backend() -> str:
